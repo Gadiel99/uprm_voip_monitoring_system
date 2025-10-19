@@ -1,25 +1,45 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+## 📞 UPRM Registry Moniotring System with sipXcom
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
+<p align="center"><img src="https://upload.wikimedia.org/wikipedia/en/thumb/6/65/UPR_at_Mayaguez_Seal.svg/250px-UPR_at_Mayaguez_Seal.svg.png" width="200" alt="UPRM logo" style="margin-right: 30px;">
+<img src="https://www.iant.de/wp-content/uploads/2022/10/sipXcom-logo-image_green_blue.horizontal.png" margin-left= "10 px" width="300" alt="sipXcom logo">
 </p>
 
-## About Laravel
+## 🧾 About Project
+The auxiliary services department manages the campus telephone service, for which it has implemented a voice over IP system using the SipXcon platform. A call logging monitoring system is needed to identify service problems on campus.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## 🎯 System Objectives
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+The system aims to:
+- Monitor active and inactive device registrations in real-time.
+- Trigger alerts when thresholds of inactive devices are exceeded.
+- Store historical data in a MariaDB database for visualization and reporting.
+- Integrate data from PostgreSQL and MongoDB (from SipXcom) using an ETL pipeline.
+- Provide a web dashboard with metrics, alerts, and backup management tools.
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## 🧩 System Architecture
+The system follows a **Monolithic MVC-inspired architecture**:
+
+### Architecture Diagram 
+<p align="center"><img src="images\TRIATEK Design Diagram.png" alt="UPRM logo" style="margin-right: 30px;">
+
+### 1. User Interface Layer (View)
+- Interactive Map  
+- Alert Panel  
+- Device Table  
+
+### 2. Business Layer (Controller)
+- Authentication Controller  
+- Alert Controller  
+- Backup Manager  
+
+### 3. Data Interface Layer (Model)
+- Eloquent ORM (Laravel)  
+- ETL Pipeline (for data extraction and transformation)  
+
+**Databases:**
+- **PostgreSQL** and **MongoDB** (SipXcom data sources)  
+- **MariaDB** (application data repository)
+
 
 ## Learning Laravel
 
@@ -29,32 +49,13 @@ You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you
 
 If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
 
-## Laravel Sponsors
+## Project Sponsors
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+We would like to extend our thanks to the following sponsors for lending us the development tools and the resources for this project. 
 
-### Premium Partners
+- **[CTI-RUM](https://www.uprm.edu/cti)**
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
 
-## Contributing
-
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
-
-## Code of Conduct
-
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
-
-## Security Vulnerabilities
-
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
 
 ## License
 
