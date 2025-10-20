@@ -1,7 +1,7 @@
 ## 📞 UPRM Registry Moniotring System with sipXcom
 
 <p align="center"><img src="https://upload.wikimedia.org/wikipedia/en/thumb/6/65/UPR_at_Mayaguez_Seal.svg/250px-UPR_at_Mayaguez_Seal.svg.png" width="200" alt="UPRM logo" style="margin-right: 100px;">
-<img src="https://www.iant.de/wp-content/uploads/2022/10/sipXcom-logo-image_green_blue.horizontal.png" margin-left= "10 px" width="300" alt="sipXcom logo">
+<img src="https://www.iant.de/wp-content/uploads/2022/10/sipXcom-logo-image_green_blue.horizontal.png" margin-left= "100 px" width="300" alt="sipXcom logo">
 </p>
 
 ## 🧾 About Project
