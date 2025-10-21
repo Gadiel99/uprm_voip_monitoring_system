@@ -48,29 +48,29 @@ The system follows a **Monolithic MVC-inspired architecture**:
 
 
     
-<summary><strong> Step 1: Clone the repository</strong></summary>
+<summary><strong> 📄Step 1: Clone the repository</strong></summary>
    
 
     git clone <repository-url>
     cd uprm_viop_monitoring system
 
-<summary><strong> Step 2: Install Dependencies</strong></summary>
+<summary><strong> ⚙️Step 2: Install Dependencies</strong></summary>
     
     
     
     composer install --ignore-platform-req=ext-mongodb
 
-<summary><strong> Step 3: Setup enviroment configuration </strong><summary>
+<summary><strong> 🏕️Step 3: Setup enviroment configuration </strong><summary>
 
 
     cp .env.example .env
 
-<summary><strong> Step 4: Generate application key</strong><summary>
+<summary><strong> 🔑Step 4: Generate application key</strong><summary>
 
 
     php artisan key:generate
 
-<summary><strong> Step 5: Clear configuration cache</strong><summa
+<summary><strong> 🧹Step 5: Clear configuration cache</strong><summa
 
 
 
