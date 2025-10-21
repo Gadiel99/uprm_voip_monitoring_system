@@ -52,6 +52,7 @@ The system follows a **Monolithic MVC-inspired architecture**:
    
 
     git clone <repository-url>
+
     cd uprm_viop_monitoring system
 
 <summary><strong> ⚙️Step 2: Install Dependencies</strong></summary>
@@ -72,9 +73,11 @@ The system follows a **Monolithic MVC-inspired architecture**:
 
 <summary><strong> 🧹Step 5: Clear configuration cache</strong><summa
 
-
-
+    
     php artisan config:clear
+
+
+
 ## Learning Laravel
 
 Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
