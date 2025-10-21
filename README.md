@@ -69,11 +69,14 @@ The system follows a **Monolithic MVC-inspired architecture**:
 <summary><strong> 🔑Step 4: Generate application key</strong><summary>
 
 
+
+
     php artisan key:generate
 
-<summary><strong> 🧹Step 5: Clear configuration cache</strong><summa
+<summary><strong> 🧹Step 5: Clear configuration cache</strong><summary>
 
     
+
     php artisan config:clear
 
 
