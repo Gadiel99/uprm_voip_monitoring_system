@@ -41,6 +41,40 @@ The system follows a **Monolithic MVC-inspired architecture**:
 - **MariaDB** (application data repository)
 
 
+## Setup Instructions
+<div align="center">
+    <h3>To get the web page of this repository to run, you'll need to follow this steps.</h3>
+</div>
+
+
+    
+<summary><strong> Step 1: Clone the repository</strong></summary>
+   
+
+    git clone <repository-url>
+    cd uprm_viop_monitoring system
+
+<summary><strong> Step 2: Install Dependencies</strong></summary>
+    
+    
+    
+    composer install --ignore-platform-req=ext-mongodb
+
+<summary><strong> Step 3: Setup enviroment configuration </strong><summary>
+
+
+    cp .env.example .env
+
+<summary><strong> Step 4: Generate application key</strong><summary>
+
+
+    php artisan key:generate
+
+<summary><strong> Step 5: Clear configuration cache</strong><summa
+
+
+
+    php artisan config:clear
 ## Learning Laravel
 
 Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
