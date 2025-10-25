@@ -10,11 +10,8 @@ class Buildings extends Model
 
     public function devices()
     {
-        return $this->hasMany(Devices::class, 'building_id');
+        return $this->hasMany(Devices::class, 'id');
     }
 
-    public function extensions()
-    {
-        return $this->hasManyThrough(Extensions::class, Devices::class, 'building_id', 'device_id');
-    }
+   
 }
