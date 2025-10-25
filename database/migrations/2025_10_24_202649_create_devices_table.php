@@ -12,11 +12,12 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('devices', function (Blueprint $table) {
-            $table->id();
+            $table->id('device_id');
             $table->foreignId('building_id')->constrained('buildings')->onDelete('cascade');
             $table->string('owner');
             $table->string('ip_address');
             $table->string('mac_address');
+            $table->string('status');
             $table->timestamps('added_device_at');
         });
     }
