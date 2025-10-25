@@ -12,51 +12,53 @@ class ETLService
 {
     public function run(?string $since = null): array
     {
-        // 1. Get call records from PostgreSQL
-        $callRecords = $this->getCallRecordsFromPostgres($since);
+    //     // 1. Get call records from PostgreSQL
+    //     $callRecords = $this->getCallRecordsFromPostgres($since);
 
-        // 2. Get devices from MongoDB
-        $mongoDevices = $this->getDevicesFromMongo($since);
+    //     // 2. Get devices from MongoDB
+    //     $mongoDevices = $this->getDevicesFromMongo($since);
         
-        Log::info('ETL started', [
-            'since' => $since,
-            'postgres_count' => $callRecords->count(),
-            'mongo_count' => count($mongoDevices)
-        ]);
+    //     Log::info('ETL started', [
+    //         'since' => $since,
+    //         'postgres_count' => $callRecords->count(),
+    //         'mongo_count' => count($mongoDevices)
+    //     ]);
         
         
-        // 3. Combine them
-        $combined = $this->combineData($callRecords, $mongoDevices);
+    //     // 3. Combine them
+    //     $combined = $this->combineData($callRecords, $mongoDevices);
         
-        // 4. Save/Update to MariaDB devices table
-        $this->saveToMariaDB($combined);
+    //     // 4. Save/Update to MariaDB devices table
+    //     $this->saveToMariaDB($combined);
         
-        return [
-            'call_records_found' => $callRecords->count(),
-            'mongo_devices_found' => count($mongoDevices),
-            'devices_synced' => $combined->count(),
-        ];
-    }
+    //     return [
+    //         'call_records_found' => $callRecords->count(),
+    //         'mongo_devices_found' => count($mongoDevices),
+    //         'devices_synced' => $combined->count(),
+    //     ];
+    // }
 
-    private function getCallRecordsFromPostgres(?string $since = null): Collection
+    private function getUserFromPostgres(?string $since = null): Collection
     {
-       $query = DB::connection('pgsql')->table('call_records');
-        
+       $query = DB::connection('pgsql')
+        ->table('user')
+        ->select('first_name', 'last_name','user_name');
+        //
         // Only get new/updated records
         if ($since) {
             $timestamp = Carbon::parse($since)->format('Y-m-d H:i:s');
-            $query->where('call_start', '>=', $timestamp);
+            
         }
         
-        return $query->get()->groupBy('device_id');
+        return $query->get()->groupBy('first_name');
     }
 
-    private function getDevicesFromMongo(?string $since = null): array
+    private function getregistrationsFromMongo(?string $since = null): array
     {   
         $filter = [];
         if ($since) {
             $timestamp = Carbon::parse($since);
-            $filter['last_registered'] = ['$gte' => new UTCDateTime($timestamp->timestamp * 1000)];
+            $filter[] = ['$gte' => new UTCDateTime($timestamp->timestamp * 1000)];
         }
         
         $cursor = DB::connection('mongodb')
