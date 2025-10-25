@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('extension', function (Blueprint $table) {
             $table->id();
             $table->string('extension_number');
-            $table->unsignedBigInteger('device_id');
+            $table->foreignId('device_id')->constrained('devices')->onDelete('cascade');
             $table->timestamps();
         });
     }
