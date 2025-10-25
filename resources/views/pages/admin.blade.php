@@ -126,51 +126,76 @@
                 {{-- Critical Phones --}}
                 <h6 class="fw-semibold mt-3">Critical Phones</h6>
                 <p class="text-muted">Phones that trigger alerts when not responding, regardless of building trigger.</p>
-                <button class="btn btn-success mb-3"><i class="bi bi-plus-lg me-2"></i>Add Critical Phone</button>
+                <div class="d-flex justify-content-between align-items-center mb-3">
+    <button class="btn btn-success px-3" data-bs-toggle="modal" data-bs-target="#addCriticalPhoneModal">
+        <i class="bi bi-plus-lg me-2"></i> Add Critical Phone
+    </button>
+    <div class="text-muted small">
+        <i class="bi bi-telephone-inbound me-1 text-success"></i> Only critical phones trigger instant alerts
+    </div>
+</div>
+
 
                 <table class="table table-bordered align-middle">
-                    <thead class="table-light">
-                        <tr>
-                            <th>Phone</th>
-                            <th>MAC Address</th>
-                            <th>Extension</th>
-                            <th>Description</th>
-                            <th class="text-center">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>787-555-0100</td>
-                            <td><code>00:1B:44:11:AA:00</code></td>
-                            <td>1000</td>
-                            <td>Emergency Services</td>
-                            <td class="text-center">
-                                <button class="btn btn-outline-secondary btn-sm me-1"><i class="bi bi-pencil"></i></button>
-                                <button class="btn btn-danger btn-sm"><i class="bi bi-trash"></i></button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>787-555-0200</td>
-                            <td><code>00:1B:44:11:AA:01</code></td>
-                            <td>1001</td>
-                            <td>Security Office</td>
-                            <td class="text-center">
-                                <button class="btn btn-outline-secondary btn-sm me-1"><i class="bi bi-pencil"></i></button>
-                                <button class="btn btn-danger btn-sm"><i class="bi bi-trash"></i></button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>787-555-0300</td>
-                            <td><code>00:1B:44:11:AA:02</code></td>
-                            <td>1002</td>
-                            <td>IT Operations Center</td>
-                            <td class="text-center">
-                                <button class="btn btn-outline-secondary btn-sm me-1"><i class="bi bi-pencil"></i></button>
-                                <button class="btn btn-danger btn-sm"><i class="bi bi-trash"></i></button>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
+    <thead class="table-light">
+        <tr>
+            <th>Phone</th>
+            <th>MAC Address</th>
+            <th>Extension</th>
+            <th>Description</th>
+            <th>Status</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>787-555-0100</td>
+            <td class="text-danger">00:1B:44:11:AA:00</td>
+            <td>1000</td>
+            <td>Emergency Services</td>
+            <td><span class="badge bg-success">Online</span></td>
+            <td>
+                <button class="btn btn-sm btn-outline-secondary me-1" title="Edit">
+                    <i class="bi bi-pencil"></i>
+                </button>
+                <button class="btn btn-sm btn-danger" title="Delete">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </td>
+        </tr>
+        <tr>
+            <td>787-555-0200</td>
+            <td class="text-danger">00:1B:44:11:AA:01</td>
+            <td>1001</td>
+            <td>Security Office</td>
+            <td><span class="badge bg-danger">Offline</span></td>
+            <td>
+                <button class="btn btn-sm btn-outline-secondary me-1" title="Edit">
+                    <i class="bi bi-pencil"></i>
+                </button>
+                <button class="btn btn-sm btn-danger" title="Delete">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </td>
+        </tr>
+        <tr>
+            <td>787-555-0300</td>
+            <td class="text-danger">00:1B:44:11:AA:02</td>
+            <td>1002</td>
+            <td>IT Operations Center</td>
+            <td><span class="badge bg-success">Online</span></td>
+            <td>
+                <button class="btn btn-sm btn-outline-secondary me-1" title="Edit">
+                    <i class="bi bi-pencil"></i>
+                </button>
+                <button class="btn btn-sm btn-danger" title="Delete">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </td>
+        </tr>
+    </tbody>
+</table>
+
 
                 <hr class="my-4">
 
