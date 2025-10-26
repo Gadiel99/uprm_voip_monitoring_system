@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Devices;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
@@ -12,118 +13,152 @@ class ETLService
 {
     public function run(?string $since = null): array
     {
-    //     // 1. Get call records from PostgreSQL
-    //     $callRecords = $this->getCallRecordsFromPostgres($since);
+        // 1. Get users from PostgreSQL
+        $users = $this->getUsersFromPostgres();
 
-    //     // 2. Get devices from MongoDB
-    //     $mongoDevices = $this->getDevicesFromMongo($since);
+        // 2. Get registrations from MongoDB
+        $mongoRegistrations = $this->getRegistrationsFromMongo($since);
         
-    //     Log::info('ETL started', [
-    //         'since' => $since,
-    //         'postgres_count' => $callRecords->count(),
-    //         'mongo_count' => count($mongoDevices)
-    //     ]);
+        Log::info('ETL started', [
+            'since' => $since,
+            'postgres_users_count' => $users->count(),
+            'mongo_registrations_count' => count($mongoRegistrations)
+        ]);
         
+        // 3. Mark all existing devices as inactive first
+        Devices::query()->update(['status' => 'inactive']);
         
-    //     // 3. Combine them
-    //     $combined = $this->combineData($callRecords, $mongoDevices);
+        // 4. Process and save to MariaDB
+        $result = $this->processAndSave($users, $mongoRegistrations);
         
-    //     // 4. Save/Update to MariaDB devices table
-    //     $this->saveToMariaDB($combined);
-        
-    //     return [
-    //         'call_records_found' => $callRecords->count(),
-    //         'mongo_devices_found' => count($mongoDevices),
-    //         'devices_synced' => $combined->count(),
-    //     ];
-    // }
-
-    private function getUserFromPostgres(?string $since = null): Collection
-    {
-       $query = DB::connection('pgsql')
-        ->table('user')
-        ->select('first_name', 'last_name','user_name');
-        //
-        // Only get new/updated records
-        if ($since) {
-            $timestamp = Carbon::parse($since)->format('Y-m-d H:i:s');
-            
-        }
-        
-        return $query->get()->groupBy('first_name');
+        return $result;
     }
 
-    private function getregistrationsFromMongo(?string $since = null): array
+    private function getUsersFromPostgres(): Collection
+    {
+        return DB::connection('pgsql')
+            ->table('users')
+            ->select('first_name', 'last_name', 'user_name')
+            ->get();
+    }
+
+    private function getRegistrationsFromMongo(?string $since = null): array
     {   
         $filter = [];
         if ($since) {
             $timestamp = Carbon::parse($since);
-            $filter[] = ['$gte' => new UTCDateTime($timestamp->timestamp * 1000)];
+            $filter['expirationTime'] = ['$gte' => new UTCDateTime($timestamp->timestamp * 1000)];
         }
         
         $cursor = DB::connection('mongodb')
             ->getDatabase()
-            ->selectCollection('devices')
+            ->selectCollection('registrar')
             ->find($filter);
 
-        $devices = iterator_to_array($cursor);
+        return iterator_to_array($cursor);
+    }
 
-        // Index by device_id
-        $indexed = [];
-        foreach ($devices as $device) {
-            $deviceId = $device->device_id ?? $device['device_id'] ?? null;
-            if ($deviceId) {
-                $indexed[$deviceId] = $device;
+    private function processAndSave(Collection $users, array $mongoRegistrations): array
+    {
+        $devicesCreated = 0;
+        $devicesUpdated = 0;
+
+        // Group registrations by IP address (device)
+        $deviceGroups = [];
+        foreach ($mongoRegistrations as $registration) {
+            $binding = $registration->binding ?? null;
+            $ipAddress = $this->extractIPFromBinding($binding);
+            
+            if ($ipAddress) {
+                if (!isset($deviceGroups[$ipAddress])) {
+                    $deviceGroups[$ipAddress] = [];
+                }
+                $deviceGroups[$ipAddress][] = $registration;
             }
         }
 
-        return $indexed;
-    }
+        // Process each device
+        foreach ($deviceGroups as $ipAddress => $registrations) {
+            $extensionNumbers = []; // Simple array of extension numbers
+            $owners = [];
+            $macAddress = null;
 
-    private function combineData(Collection $callRecordsByDevice, array $mongoDevices): Collection
-    {
-        $result = collect();
+            foreach ($registrations as $registration) {
+                $identity = $registration->identity ?? null;
+                if (!$identity) continue;
 
-        // Start with MongoDB devices as the base
-        foreach ($mongoDevices as $deviceId => $mongoDevice) {
-            // Get the latest call for this device from PostgreSQL
-            $deviceCalls = $callRecordsByDevice->get($deviceId, collect());
-            $latestCall = $deviceCalls->sortByDesc('call_start')->first();
-
-            $result->push([
-                'device_id' => $deviceId,
-                'owner' => $mongoDevice->owner ?? null,
-                'ip_address' => $mongoDevice->ip_address ?? null,
-                'last_registered' => isset($mongoDevice->last_registered) 
-                    ? date('Y-m-d H:i:s', strtotime($mongoDevice->last_registered))
-                    : null,
-                'status' => $mongoDevice->status ?? 'unknown',
-                'building' => $mongoDevice->building ?? null,
+                // Extract extension number
+                $extensionNumber = explode('@', $identity)[0];
                 
-                // Add call info from PostgreSQL if available
-                'call_started' => $latestCall->call_start ?? null,
-                'call_ended' => $latestCall->call_end ?? null,
-                'updated_at' => now(),
-            ]);
+                // Find matching user
+                $user = $users->firstWhere('user_name', $extensionNumber);
+                if (!$user) {
+                    Log::warning("No user found for extension {$extensionNumber}");
+                    continue;
+                }
+
+                $owners[] = trim(($user->first_name ?? '') . ' ' . ($user->last_name ?? ''));
+                
+                // Get MAC address from first registration
+                if (!$macAddress) {
+                    $macAddress = $registration->instrument ?? 'unknown';
+                }
+
+                // Add just the extension number to array
+                $extensionNumbers[] = $extensionNumber;
+            }
+
+            if (empty($extensionNumbers)) {
+                Log::warning("No valid extensions for device IP {$ipAddress}");
+                continue;
+            }
+
+            // Create or update device with all extensions
+            $device = Devices::updateOrCreate(
+                ['ip_address' => $ipAddress],
+                [
+                    'owner' => implode(', ', array_unique($owners)),
+                    'mac_address' => $macAddress,
+                    'extension' => $extensionNumbers, // Store as ["4444", "5555"]
+                    'status' => 'active',
+                    'building_id' => null,
+                ]
+            );
+
+            if ($device->wasRecentlyCreated) {
+                $devicesCreated++;
+                Log::info("✅ Created device: IP={$ipAddress}, Extensions=[" . implode(', ', $extensionNumbers) . "]");
+            } else {
+                $devicesUpdated++;
+                Log::info("🔄 Updated device: IP={$ipAddress}, Extensions=[" . implode(', ', $extensionNumbers) . "]");
+            }
         }
 
-        return $result;
+        $devicesInactive = Devices::where('status', 'inactive')->count();
+
+        Log::info('ETL completed', [
+            'devices_created' => $devicesCreated,
+            'devices_updated' => $devicesUpdated,
+            'devices_active' => count($deviceGroups),
+            'devices_inactive' => $devicesInactive,
+        ]);
+
+        return [
+            'devices_created' => $devicesCreated,
+            'devices_updated' => $devicesUpdated,
+            'devices_active' => count($deviceGroups),
+            'devices_inactive' => $devicesInactive,
+        ];
     }
 
-    private function saveToMariaDB(Collection $data): void
+    private function extractIPFromBinding(?string $binding): ?string
     {
-        if ($data->isEmpty()) {
-            Log::info('No data to sync.');
-            return;
+        if (!$binding) return null;
+        
+        if (preg_match('/@(\d+\.\d+\.\d+\.\d+)/', $binding, $matches)) {
+            return $matches[1];
         }
-
-        foreach ($data as $device) {
-            // Use updateOrInsert for upsert (update if exists, insert if not)
-            DB::table('devices')->updateOrInsert(
-                ['device_id' => $device['device_id']], // Match condition
-                array_merge($device, ['updated_at' => now()]) // Data to update/insert
-            );
-        }
-        Log::info("Synced {$data->count()} devices.");
+        
+        return null;
     }
 }
