@@ -6,11 +6,10 @@ use Illuminate\Database\Eloquent\Model;
 
 class Extensions extends Model
 {
-    // protected $table = 'extension';
-    // protected $guarded = [];
+    protected $table = 'extensions';
+    protected $guarded = [];
    
-    // public function device()
-    // {
-    //     return $this->belongsTo(Devices::class, 'device_id', 'device_id');
-    // }
+    protected $primaryKey = 'extension_number';
+    public $incrementing = false;
+    protected $keyType = 'string';
 }
