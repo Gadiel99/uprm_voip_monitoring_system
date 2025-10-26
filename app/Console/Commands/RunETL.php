@@ -31,9 +31,9 @@ class RunETL extends Command
             $this->table(
                 ['Metric', 'Count'],
                 [
-                    ['Call Records Found (Postgres)', $stats['call_records_found']],
-                    ['Devices Found (Mongo)', $stats['mongo_devices_found']],
-                    ['Devices Synced (MariaDB)', $stats['devices_synced']],
+                    ['Call Records Found (Postgres)', $stats['call_records_found'] ?? 0],
+                    ['Devices Found (Mongo)', $stats['mongo_devices_found'] ?? 0],
+                    ['Devices Synced (MariaDB)', $stats['devices_synced'] ?? 0],
                 ]
             );
             return self::SUCCESS;
