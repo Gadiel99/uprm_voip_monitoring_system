@@ -12,9 +12,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('buildings', function (Blueprint $table) {
-            $table->id();
+            $table->id('building_id');
             $table->string('building_name');
-            $table->string('ip_address');
+            $table->string('server_ip_address');
             $table->integer('offline_devices')->nullable();
             $table->integer('total_devices')->nullable();
         });
