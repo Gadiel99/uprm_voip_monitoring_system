@@ -13,12 +13,14 @@ return new class extends Migration
     {
         Schema::create('devices', function (Blueprint $table) {
             $table->id('device_id');
-            $table->foreignId('building_id')->constrained('buildings')->onDelete('cascade');
             $table->string('owner');
-            $table->string('ip_address');
+            $table->string('ip_address')->unique();
             $table->string('mac_address');
+            $table->json('extension')->nullable();
             $table->string('status');
-            $table->timestamps('added_device_at');
+            $table->foreignId('building_id')->nullable()->constrained('buildings')->onDelete('cascade');
+            $table->timestamps();
+            
         });
     }
 

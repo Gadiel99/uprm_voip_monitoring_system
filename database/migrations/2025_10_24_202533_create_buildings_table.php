@@ -15,8 +15,8 @@ return new class extends Migration
             $table->id();
             $table->string('building_name');
             $table->string('ip_address');
-
-            $table->timestamps();
+            $table->integer('offline_devices')->nullable();
+            $table->integer('total_devices')->nullable();
         });
     }
 
