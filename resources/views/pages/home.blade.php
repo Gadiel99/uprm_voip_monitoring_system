@@ -92,6 +92,42 @@
             <div class="rounded-circle bg-success" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
         </div>
 
+        <div class="position-absolute" style="top: 48%; left: 53%;" data-bs-toggle="tooltip" title="Vagones">
+            <div class="rounded-circle bg-success" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
+        </div>
+
+        <div class="position-absolute" style="top: 40%; left: 30%;" data-bs-toggle="tooltip" title="Natatorio">
+            <div class="rounded-circle bg-success" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
+        </div>
+
+        <div class="position-absolute" style="top: 33%; left: 86%;" data-bs-toggle="tooltip" title="Centro Nuclear">
+            <div class="rounded-circle bg-success" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
+        </div>
+
+        <div class="position-absolute" style="top: 56%; left: 45%;" data-bs-toggle="tooltip" title="Coliseo">
+            <div class="rounded-circle bg-success" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
+        </div>
+
+        <div class="position-absolute" style="top: 58%; left: 53%;" data-bs-toggle="tooltip" title="Gimnacio">
+            <div class="rounded-circle bg-success" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
+        </div>
+
+        <div class="position-absolute" style="top: 60%; left: 66%;" data-bs-toggle="tooltip" title="Servicios Medicos">
+            <div class="rounded-circle bg-success" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
+        </div>
+
+        <div class="position-absolute" style="top: 64%; left: 80%;" data-bs-toggle="tooltip" title="Decanato de Estudiantes">
+            <div class="rounded-circle bg-success" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
+        </div>
+
+        <div class="position-absolute" style="top: 49%; left: 65%;" data-bs-toggle="tooltip" title="Oficina de Facultad">
+            <div class="rounded-circle bg-success" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
+        </div>
+
+        <div class="position-absolute" style="top: 55%; left: 7%;" data-bs-toggle="tooltip" title="Adm.Finca Alzamora">
+            <div class="rounded-circle bg-success" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
+        </div>
+
         <div class="position-absolute" style="top: 56%; left: 65%;" data-bs-toggle="tooltip" title="Biblioteca">
             <div class="rounded-circle bg-success" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
         </div>
