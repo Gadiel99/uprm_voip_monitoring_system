@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Networks extends Model
 {
+    protected $primaryKey = 'network_id';
     protected $guarded = [];
 
     public function buildings()
