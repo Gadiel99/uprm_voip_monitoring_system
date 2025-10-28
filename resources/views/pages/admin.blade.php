@@ -417,86 +417,112 @@
 
 {{-- Modal: Add Server --}}
 <div class="modal fade" id="addServerModal" tabindex="-1" aria-labelledby="addServerModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header bg-success text-white">
-                <h5 class="modal-title"><i class="bi bi-hdd-stack me-2"></i>Add Server</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <form>
-                    <div class="mb-3">
-                        <label class="form-label">Server Name</label>
-                        <input type="text" class="form-control" placeholder="Primary Server">
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">IP Address</label>
-                        <input type="text" class="form-control" placeholder="192.168.1.10">
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Port</label>
-                        <input type="number" class="form-control" placeholder="22">
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Status</label>
-                        <select class="form-select">
-                            <option>Online</option>
-                            <option>Offline</option>
-                        </select>
-                    </div>
-                    <div class="text-end">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-success">Save</button>
-                    </div>
-                </form>
-            </div>
-        </div>
+  <div class="modal-dialog">
+    <div class="modal-content border-0 shadow-sm">
+      <div class="modal-header bg-success text-white">
+        <h5 class="modal-title" id="addServerModalLabel">
+          <i class="bi bi-hdd-stack me-2"></i>Add Server
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body">
+        <form id="addServerForm">
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Server Name</label>
+            <input type="text" class="form-control" placeholder="Primary Server" required>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold">IP Address</label>
+            <input type="text" class="form-control" placeholder="192.168.1.10" required>
+          </div>
+
+          <div class="text-end mt-3">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="button" class="btn btn-success" id="saveServerBtn">Save</button>
+          </div>
+        </form>
+      </div>
     </div>
+  </div>
 </div>
 
 {{-- Modal: Add User --}}
 <div class="modal fade" id="addUserModal" tabindex="-1" aria-labelledby="addUserModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header bg-success text-white">
-                <h5 class="modal-title"><i class="bi bi-person-plus me-2"></i>Add New User</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <form>
-                    <div class="mb-3">
-                        <label class="form-label">Full Name</label>
-                        <input type="text" class="form-control" placeholder="Enter full name">
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Email</label>
-                        <input type="email" class="form-control" placeholder="example@uprm.edu">
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Role</label>
-                        <select class="form-select">
-                            <option>Admin</option>
-                            <option>User</option>
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Status</label>
-                        <select class="form-select">
-                            <option>Active</option>
-                            <option>Inactive</option>
-                        </select>
-                    </div>
-                    <div class="text-end">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-success">Save User</button>
-                    </div>
-                </form>
-            </div>
-        </div>
+  <div class="modal-dialog">
+    <div class="modal-content border-0 shadow-sm">
+      <div class="modal-header bg-success text-white">
+        <h5 class="modal-title" id="addUserModalLabel">
+          <i class="bi bi-person-plus me-2"></i>Add New User
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body">
+        <form id="addUserForm">
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Full Name</label>
+            <input type="text" class="form-control" placeholder="Enter full name" required>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Email</label>
+            <input type="email" class="form-control" placeholder="example@uprm.edu" required>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Role</label>
+            <select class="form-select">
+              <option>Admin</option>
+              <option>User</option>
+            </select>
+          </div>
+
+          <div class="text-end mt-3">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="button" class="btn btn-success" id="saveUserBtn">Save</button>
+          </div>
+        </form>
+      </div>
     </div>
+  </div>
 </div>
 
-{{-- MODAL: Edit Entry (Simulated) --}}
+{{-- Modal: Add Critical Phone --}}
+<div class="modal fade" id="addCriticalPhoneModal" tabindex="-1" aria-labelledby="addCriticalPhoneModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content border-0 shadow-sm">
+      <div class="modal-header bg-success text-white">
+        <h5 class="modal-title" id="addCriticalPhoneModalLabel">
+          <i class="bi bi-telephone-plus me-2"></i>Add Critical Phone
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body">
+        <form id="addCriticalPhoneForm">
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Phone Number</label>
+            <input type="text" class="form-control" placeholder="787-555-XXXX" required>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold">MAC Address</label>
+            <input type="text" class="form-control" placeholder="00:1B:44:11:AA:XX" required>
+          </div>
+
+          <div class="text-end mt-3">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="button" class="btn btn-success" id="saveCriticalPhoneBtn">Save</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+{{-- Edit Modal --}}
 <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
   <div class="modal-dialog">
     <div class="modal-content border-0 shadow-sm">
@@ -533,7 +559,7 @@
   </div>
 </div>
 
-{{-- MODAL: Delete Confirmation (Simulated) --}}
+{{-- Delete Confirmation Modal --}}
 <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
   <div class="modal-dialog">
     <div class="modal-content border-0 shadow-sm">
@@ -554,100 +580,53 @@
   </div>
 </div>
 
-{{-- SCRIPT: Simulated modal actions --}}
+{{-- Scripts for modal logic --}}
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-  const editButtons = document.querySelectorAll('.btn-outline-secondary');
-  const deleteButtons = document.querySelectorAll('.btn-danger');
-
-  // === EDIT BUTTON ===
-  editButtons.forEach(btn => {
+  // === Edit buttons ===
+  document.querySelectorAll('.btn-outline-secondary').forEach(btn => {
     btn.addEventListener('click', (e) => {
       e.preventDefault();
-      const modal = new bootstrap.Modal(document.getElementById('editModal'));
-      modal.show();
+      new bootstrap.Modal(document.getElementById('editModal')).show();
     });
   });
 
-  // === DELETE BUTTON ===
-  deleteButtons.forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      e.preventDefault();
-      const modal = new bootstrap.Modal(document.getElementById('deleteModal'));
-      modal.show();
-    });
+  // === Delete buttons ===
+  document.querySelectorAll('.btn-danger').forEach(btn => {
+    if (!btn.closest('#deleteModal')) { // avoid recursive trigger
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        new bootstrap.Modal(document.getElementById('deleteModal')).show();
+      });
+    }
   });
 
-  // === SAVE EDIT (Simulated) ===
+  // === Save edit (simulated) ===
   document.getElementById('saveEditBtn').addEventListener('click', () => {
     alert('✅ Changes saved (simulated)');
     bootstrap.Modal.getInstance(document.getElementById('editModal')).hide();
   });
 
-  // === CONFIRM DELETE (Simulated) ===
+  // === Confirm delete (simulated) ===
   document.getElementById('confirmDeleteBtn').addEventListener('click', () => {
     alert('🗑️ Entry deleted (simulated)');
     bootstrap.Modal.getInstance(document.getElementById('deleteModal')).hide();
   });
-});
-</script>
 
-{{-- Modal: Add Critical Phone --}}
-<div class="modal fade" id="addCriticalPhoneModal" tabindex="-1" aria-labelledby="addCriticalPhoneModalLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content border-0 shadow-sm">
-      <div class="modal-header bg-success text-white">
-        <h5 class="modal-title" id="addCriticalPhoneModalLabel">
-          <i class="bi bi-telephone-plus me-2"></i>Add Critical Phone
-        </h5>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-      </div>
+  // === Add modals (simulated save) ===
+  document.getElementById('saveServerBtn').addEventListener('click', () => {
+    alert('🖥️ New server added (simulated)');
+    bootstrap.Modal.getInstance(document.getElementById('addServerModal')).hide();
+    document.getElementById('addServerForm').reset();
+  });
 
-      <div class="modal-body">
-        <form id="addCriticalPhoneForm">
-          <div class="mb-3">
-            <label class="form-label fw-semibold">Phone Number</label>
-            <input type="text" class="form-control" placeholder="787-555-XXXX" required>
-          </div>
+  document.getElementById('saveUserBtn').addEventListener('click', () => {
+    alert('👤 New user added (simulated)');
+    bootstrap.Modal.getInstance(document.getElementById('addUserModal')).hide();
+    document.getElementById('addUserForm').reset();
+  });
 
-          <div class="mb-3">
-            <label class="form-label fw-semibold">MAC Address</label>
-            <input type="text" class="form-control" placeholder="00:1B:44:11:AA:XX" required>
-          </div>
-
-          <div class="mb-3">
-            <label class="form-label fw-semibold">Extension</label>
-            <input type="text" class="form-control" placeholder="1000" required>
-          </div>
-
-          <div class="mb-3">
-            <label class="form-label fw-semibold">Description</label>
-            <input type="text" class="form-control" placeholder="Emergency Services, Security Office..." required>
-          </div>
-
-          <div class="mb-3">
-            <label class="form-label fw-semibold">Status</label>
-            <select class="form-select">
-              <option selected>Online</option>
-              <option>Offline</option>
-            </select>
-          </div>
-
-          <div class="text-end mt-3">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-            <button type="button" class="btn btn-success" id="saveCriticalPhoneBtn">Save</button>
-          </div>
-        </form>
-      </div>
-    </div>
-  </div>
-</div>
-
-{{-- Script to simulate adding new critical phone --}}
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-  const saveBtn = document.getElementById('saveCriticalPhoneBtn');
-  saveBtn.addEventListener('click', () => {
+  document.getElementById('saveCriticalPhoneBtn').addEventListener('click', () => {
     alert('📞 New critical phone added (simulated)');
     bootstrap.Modal.getInstance(document.getElementById('addCriticalPhoneModal')).hide();
     document.getElementById('addCriticalPhoneForm').reset();
