@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Networks;
 
 class Buildings extends Model
 {
@@ -10,16 +11,9 @@ class Buildings extends Model
     protected $primaryKey = 'building_id';
     
 
-    public function devices()
+    public function networks()
     {
-        return $this->hasMany(Devices::class, 'building_id', 'building_id');
-    }
-
-    public function updateDeviceCounts()
-    {
-        $this->total_devices = $this->devices()->count();
-        $this->offline_devices = $this->devices()->where('status', 'offline')->count();
-        $this->save();
+        return $this->belongsToMany(Networks::class, 'building_networks', 'building_id', 'network_id');
     }
 
    
