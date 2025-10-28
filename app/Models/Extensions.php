@@ -8,8 +8,10 @@ class Extensions extends Model
 {
     protected $table = 'extensions';
     protected $guarded = [];
-   
-    protected $primaryKey = 'extension_number';
-    public $incrementing = false;
-    protected $keyType = 'string';
+    public function devices()
+    {
+
+        return $this->belongsToMany(Devices::class, 'device_extensions', 'extension_id', 'device_id')
+        ->withTimestamps();
+    }
 }
