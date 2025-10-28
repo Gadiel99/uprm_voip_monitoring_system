@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class Extensions extends Model
 {
     protected $table = 'extensions';
+    protected $primaryKey = 'extension_id';
     protected $guarded = [];
     public function devices()
     {
