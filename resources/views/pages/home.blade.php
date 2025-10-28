@@ -156,6 +156,22 @@
             <div class="rounded-circle bg-success" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
         </div>
 
+        <div class="position-absolute" style="top: 37.5%; left: 17%;" data-bs-toggle="tooltip" title="Edificio A (Hotel Colegial)">
+            <div class="rounded-circle bg-success" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
+        </div>
+
+        <div class="position-absolute" style="top: 37.5%; left: 20.5%;" data-bs-toggle="tooltip" title="Edificio B (Adm.Peq.Negocios y Oficina Adm)">
+            <div class="rounded-circle bg-success" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
+        </div>
+
+        <div class="position-absolute" style="top: 40.5%; left: 16.5%;" data-bs-toggle="tooltip" title="Edificio C (Oficina de Extension Agricola))">
+            <div class="rounded-circle bg-success" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
+        </div>
+
+        <div class="position-absolute" style="top: 39%; left: 19%;" data-bs-toggle="tooltip" title="Edificio D">
+            <div class="rounded-circle bg-success" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
+        </div>
+
         
 
     </div>
