@@ -11,12 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('buildings', function (Blueprint $table) {
-            $table->id('building_id');
-            $table->string('name');
+        Schema::create('networks', function (Blueprint $table) {
+            $table->id('network_id');
+            $table->string('subnet'); // e.g., "10.100.100.0/24"
+            $table->integer('offline_devices')->default(0);
+            $table->integer('total_devices')->default(0);
             $table->timestamps();
-
-           
+            
+            
         });
     }
 
@@ -25,6 +27,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('buildings');
+        Schema::dropIfExists('networks');
     }
 };

@@ -11,19 +11,22 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('devices', function (Blueprint $table) {
-            $table->id('device_id');
-            $table->string('ip_address')->unique();
-            $table->string('status')->default('offline'); // Changed from offline_devices to status
+       Schema::create('building_networks', function (Blueprint $table) {
+            $table->unsignedBigInteger('building_id');
             $table->unsignedBigInteger('network_id');
-            $table->timestamps();
-
+            
+            $table->foreign('building_id')
+                  ->references('building_id')
+                  ->on('buildings')
+                  ->onDelete('cascade');
+                  
             $table->foreign('network_id')
-                  ->references('network_id') // Reference network_id, not id
+                  ->references('network_id')
                   ->on('networks')
                   ->onDelete('cascade');
+                  
+            $table->primary(['building_id', 'network_id']);
         });
-
     }
 
     /**
@@ -31,6 +34,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('devices');
+        Schema::dropIfExists('building_networks');
     }
 };

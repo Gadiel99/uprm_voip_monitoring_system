@@ -12,7 +12,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('extensions', function (Blueprint $table) {
-            $table->id('extension_number');
+            $table->id('extension_id');
+            $table->string('extension_number')->unique();
             $table->string('user_first_name');
             $table->string('user_last_name');
             $table->integer('devices_registered')->default(0); // Count of devices
