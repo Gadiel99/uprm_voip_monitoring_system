@@ -8,6 +8,7 @@ use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
 {
+    
     /**
      * Seed the application's database.
      */
@@ -16,8 +17,14 @@ class DatabaseSeeder extends Seeder
         // User::factory(10)->create();
 
         User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
+            'name' => 'superadmin',
+            'email' => 'superadmin@viop.uprm.com',
+            'role' => 'superadmin'
+        ]);
+
+        $this->call([
+            // 1. Seed MariaDB (buildings & networks) - Add this line!
+            BuildingsNetworksSeeder::class
         ]);
     }
 }
