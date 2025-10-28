@@ -3,17 +3,23 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Networks;
 
 class Devices extends Model
 {
     protected $guarded = [];
-    protected $primaryKey = 'device_id';
+    
+    public function network()
+    {
 
-    protected $casts = [
-        'extensions' => 'array', // Cast 'extensions' JSON column to array
-    ];
-    public function building(){
-        return $this->belongsTo(Buildings::class, 'building_id', 'building_id');
+        return $this->belongsTo(Networks::class, 'network_id', 'network_id');
+    
     }
 
+    public function extension()
+    {
+
+        return $this->belongsToMany(Extensions::class, 'device_extensions', 'device_id', 'extension_id')
+        ->withTimestamps();
+    }
 }
