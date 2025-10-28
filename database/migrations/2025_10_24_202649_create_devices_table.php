@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id('device_id');
             $table->string('ip_address')->unique();
             $table->string('status')->default('offline'); // Changed from offline_devices to status
+            $table->boolean('is_critical')->default(false);
             $table->unsignedBigInteger('network_id');
             $table->timestamps();
 
