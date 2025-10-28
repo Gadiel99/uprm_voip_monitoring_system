@@ -4,7 +4,7 @@ namespace App\Services;
 
 use App\Models\Devices;
 use App\Models\Extensions;
-use App\Models\Buildings;
+use App\Models\Networks;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
@@ -23,13 +23,13 @@ class ETLService
             'mongo_registrations_count' => count($mongoRegistrations)
         ]);
         
-        // IMPORTANT: Mark all devices as offline first
+        // Mark all existing devices as offline first
         Devices::query()->update(['status' => 'offline']);
         
         $result = $this->processAndSave($users, $mongoRegistrations);
         
-        // Update building statistics
-        $this->updateBuildingStats();
+        // Update network statistics
+        $this->updateNetworkStats();
         
         return $result;
     }
@@ -65,7 +65,7 @@ class ETLService
         $extensionsCreated = 0;
         $extensionsUpdated = 0;
 
-        // Group registrations by IP ADDRESS
+        // Group registrations by IP ADDRESS (each IP = one device)
         $deviceGroups = [];
         foreach ($mongoRegistrations as $registration) {
             $binding = $registration->binding ?? null;
@@ -79,14 +79,39 @@ class ETLService
             }
         }
 
-        // Track extension device counts
-        $extensionDeviceCount = [];
-
-        // Process each device that appears in registrar
+        // Process each device that appears in registrar (= online devices)
         foreach ($deviceGroups as $ipAddress => $registrations) {
-            $extensionNumbers = [];
-            $macAddress = null;
+            // Determine network (subnet) from IP address
+            $subnet = $this->getSubnetFromIP($ipAddress);
+            
+            // Find or create network
+            $network = Networks::firstOrCreate(
+                ['subnet' => $subnet],
+                [
+                    'offline_devices' => 0,
+                    'total_devices' => 0,
+                ]
+            );
 
+            // Create or update device - Status = ONLINE because it's in registrar
+            $device = Devices::updateOrCreate(
+                ['ip_address' => $ipAddress],
+                [
+                    'network_id' => $network->network_id,
+                    'status' => 'online', // Device is online if it's in registrar
+                ]
+            );
+
+            if ($device->wasRecentlyCreated) {
+                $devicesCreated++;
+                Log::info("✅ Created device: IP={$ipAddress}, Network={$subnet}, Status=ONLINE");
+            } else {
+                $devicesUpdated++;
+                Log::info("🔄 Updated device: IP={$ipAddress}, Network={$subnet}, Status=ONLINE");
+            }
+
+            // Process extensions for this device
+            $extensionIds = [];
             foreach ($registrations as $registration) {
                 $identity = $registration->identity ?? null;
                 if (!$identity) continue;
@@ -99,74 +124,33 @@ class ETLService
                     continue;
                 }
 
-                // Add to device's extension list
-                if (!in_array($extensionNumber, $extensionNumbers)) {
-                    $extensionNumbers[] = $extensionNumber;
+                // Create or update extension
+                $extension = Extensions::updateOrCreate(
+                    ['extension_number' => $extensionNumber],
+                    [
+                        'user_first_name' => $user->first_name,
+                        'user_last_name' => $user->last_name,
+                    ]
+                );
+
+                if ($extension->wasRecentlyCreated) {
+                    $extensionsCreated++;
+                    Log::info("  ✅ Created extension: {$extensionNumber} ({$user->first_name} {$user->last_name})");
+                } else {
+                    $extensionsUpdated++;
                 }
 
-                // Track device count for this extension
-                if (!isset($extensionDeviceCount[$extensionNumber])) {
-                    $extensionDeviceCount[$extensionNumber] = [
-                        'count' => 0,
-                        'user' => $user
-                    ];
-                }
-                $extensionDeviceCount[$extensionNumber]['count']++;
-
-                // Get MAC address
-                if (!$macAddress) {
-                    $macAddress = $registration->instrument ?? 'unknown';
-                }
+                $extensionIds[] = $extension->extension_id;
             }
 
-            if (empty($extensionNumbers)) {
-                Log::warning("No valid extensions for device IP {$ipAddress}");
-                continue;
-            }
-
-            // Create or update device - Set status to ONLINE because it's in registrar
-            $device = Devices::updateOrCreate(
-                ['ip_address' => $ipAddress],
-                [
-                    'mac_address' => $macAddress,
-                    'extensions' => $extensionNumbers,
-                    'status' => 'online', // Device is ONLINE if it appears in registrar
-                    'building_id' => null,
-                ]
-            );
-
-            if ($device->wasRecentlyCreated) {
-                $devicesCreated++;
-                Log::info("✅ Created device: IP={$ipAddress}, Status=ONLINE, Extensions=[" . implode(', ', $extensionNumbers) . "]");
-            } else {
-                $devicesUpdated++;
-                Log::info("🔄 Updated device: IP={$ipAddress}, Status=ONLINE, Extensions=[" . implode(', ', $extensionNumbers) . "]");
+            // Sync extensions to device (many-to-many relationship via device_extensions pivot)
+            if (!empty($extensionIds)) {
+                $device->extensions()->sync($extensionIds);
+                Log::info("  🔗 Synced " . count($extensionIds) . " extension(s) to device {$ipAddress}");
             }
         }
 
-        // Update extensions table
-        foreach ($extensionDeviceCount as $extensionNumber => $data) {
-            $user = $data['user'];
-            $deviceCount = $data['count'];
-
-            $extension = Extensions::updateOrCreate(
-                ['extension_number' => $extensionNumber],
-                [
-                    'user_first_name' => $user->first_name,
-                    'user_last_name' => $user->last_name,
-                    'devices_registered' => $deviceCount,
-                ]
-            );
-
-            if ($extension->wasRecentlyCreated) {
-                $extensionsCreated++;
-                Log::info("✅ Created extension: {$extensionNumber} ({$deviceCount} devices)");
-            } else {
-                $extensionsUpdated++;
-                Log::info("🔄 Updated extension: {$extensionNumber} ({$deviceCount} devices)");
-            }
-        }
-
+        // Count device statistics
         $devicesOnline = Devices::where('status', 'online')->count();
         $devicesOffline = Devices::where('status', 'offline')->count();
 
@@ -189,13 +173,20 @@ class ETLService
         ];
     }
 
-    private function updateBuildingStats()
+    private function updateNetworkStats()
     {
-        $buildings = Buildings::all();
+        $networks = Networks::all();
         
-        foreach ($buildings as $building) {
-            $building->updateDeviceCounts();
-            Log::info("Updated building stats: {$building->building_name} - Total: {$building->total_devices}, Offline: {$building->offline_devices}");
+        foreach ($networks as $network) {
+            $totalDevices = $network->devices()->count();
+            $offlineDevices = $network->devices()->where('status', 'offline')->count();
+            
+            $network->update([
+                'total_devices' => $totalDevices,
+                'offline_devices' => $offlineDevices,
+            ]);
+            
+            Log::info("📊 Updated network stats: {$network->subnet} - Total: {$totalDevices}, Offline: {$offlineDevices}");
         }
     }
 
@@ -203,10 +194,19 @@ class ETLService
     {
         if (!$binding) return null;
         
+        // Extract IP from binding like "sip:4444@10.100.147.103"
         if (preg_match('/@(\d+\.\d+\.\d+\.\d+)/', $binding, $matches)) {
             return $matches[1];
         }
         
         return null;
+    }
+
+    private function getSubnetFromIP(string $ip): string
+    {
+        // Extract first 3 octets for /24 subnet
+        // Example: 10.100.147.103 -> 10.100.147.0/24
+        $parts = explode('.', $ip);
+        return "{$parts[0]}.{$parts[1]}.{$parts[2]}.0/24";
     }
 }
