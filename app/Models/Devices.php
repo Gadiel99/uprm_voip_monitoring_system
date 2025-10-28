@@ -7,7 +7,8 @@ use App\Models\Networks;
 
 class Devices extends Model
 {
-    protected $guarded = [];
+    protected $primaryKey = 'device_id';
+    protected $fillable = ['ip_address', 'network_id', 'status'];
     
     public function network()
     {
@@ -16,7 +17,7 @@ class Devices extends Model
     
     }
 
-    public function extension()
+    public function extensions()
     {
 
         return $this->belongsToMany(Extensions::class, 'device_extensions', 'device_id', 'extension_id')
