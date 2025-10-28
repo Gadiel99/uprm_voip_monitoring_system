@@ -495,4 +495,166 @@
         </div>
     </div>
 </div>
+
+{{-- MODAL: Edit Entry (Simulated) --}}
+<div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content border-0 shadow-sm">
+      <div class="modal-header bg-success text-white">
+        <h5 class="modal-title" id="editModalLabel">
+          <i class="bi bi-pencil-square me-2"></i>Edit Entry
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <form>
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Name</label>
+            <input type="text" class="form-control" placeholder="Enter name">
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Email</label>
+            <input type="email" class="form-control" placeholder="Enter email">
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Role</label>
+            <select class="form-select">
+              <option>Admin</option>
+              <option>User</option>
+            </select>
+          </div>
+          <div class="text-end">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="button" class="btn btn-success" id="saveEditBtn">Save</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+{{-- MODAL: Delete Confirmation (Simulated) --}}
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content border-0 shadow-sm">
+      <div class="modal-header bg-danger text-white">
+        <h5 class="modal-title" id="deleteModalLabel">
+          <i class="bi bi-trash me-2"></i>Delete Confirmation
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body text-center">
+        <p class="fw-semibold mb-3">Are you sure you want to delete this entry?</p>
+        <div class="text-end">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Delete</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{{-- SCRIPT: Simulated modal actions --}}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const editButtons = document.querySelectorAll('.btn-outline-secondary');
+  const deleteButtons = document.querySelectorAll('.btn-danger');
+
+  // === EDIT BUTTON ===
+  editButtons.forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      const modal = new bootstrap.Modal(document.getElementById('editModal'));
+      modal.show();
+    });
+  });
+
+  // === DELETE BUTTON ===
+  deleteButtons.forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      const modal = new bootstrap.Modal(document.getElementById('deleteModal'));
+      modal.show();
+    });
+  });
+
+  // === SAVE EDIT (Simulated) ===
+  document.getElementById('saveEditBtn').addEventListener('click', () => {
+    alert('✅ Changes saved (simulated)');
+    bootstrap.Modal.getInstance(document.getElementById('editModal')).hide();
+  });
+
+  // === CONFIRM DELETE (Simulated) ===
+  document.getElementById('confirmDeleteBtn').addEventListener('click', () => {
+    alert('🗑️ Entry deleted (simulated)');
+    bootstrap.Modal.getInstance(document.getElementById('deleteModal')).hide();
+  });
+});
+</script>
+
+{{-- Modal: Add Critical Phone --}}
+<div class="modal fade" id="addCriticalPhoneModal" tabindex="-1" aria-labelledby="addCriticalPhoneModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content border-0 shadow-sm">
+      <div class="modal-header bg-success text-white">
+        <h5 class="modal-title" id="addCriticalPhoneModalLabel">
+          <i class="bi bi-telephone-plus me-2"></i>Add Critical Phone
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body">
+        <form id="addCriticalPhoneForm">
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Phone Number</label>
+            <input type="text" class="form-control" placeholder="787-555-XXXX" required>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold">MAC Address</label>
+            <input type="text" class="form-control" placeholder="00:1B:44:11:AA:XX" required>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Extension</label>
+            <input type="text" class="form-control" placeholder="1000" required>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Description</label>
+            <input type="text" class="form-control" placeholder="Emergency Services, Security Office..." required>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Status</label>
+            <select class="form-select">
+              <option selected>Online</option>
+              <option>Offline</option>
+            </select>
+          </div>
+
+          <div class="text-end mt-3">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="button" class="btn btn-success" id="saveCriticalPhoneBtn">Save</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+{{-- Script to simulate adding new critical phone --}}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const saveBtn = document.getElementById('saveCriticalPhoneBtn');
+  saveBtn.addEventListener('click', () => {
+    alert('📞 New critical phone added (simulated)');
+    bootstrap.Modal.getInstance(document.getElementById('addCriticalPhoneModal')).hide();
+    document.getElementById('addCriticalPhoneForm').reset();
+  });
+});
+</script>
+
+
+
 @endsection
