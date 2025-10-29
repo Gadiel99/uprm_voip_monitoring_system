@@ -267,17 +267,7 @@
                     </a>
                 </li>
 
-                @if (! $isUserPreview)
-                    <li class="nav-item mb-2">
-                        <a
-                            href="{{ url('/settings') }}"
-                            class="nav-link {{ request()->is('settings') ? 'active' : '' }}"
-                        >
-                            <i class="bi bi-gear me-2"></i>
-                            Settings
-                        </a>
-                    </li>
-                @endif
+                
 
                 <li class="nav-item">
                     <a
