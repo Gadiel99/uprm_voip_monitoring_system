@@ -167,8 +167,7 @@
                     </ul>
                 </div>
 
-                {{-- Dark mode placeholder --}}
-                <i class="bi bi-moon text-dark"></i>
+                
 
                 {{-- User Dropdown --}}
                 <div class="dropdown">
