@@ -1,6 +1,8 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\DevicesController;
+use App\Http\Controllers\AdminUserController;
 
 /*
 |--------------------------------------------------------------------------
@@ -10,9 +12,11 @@ use Illuminate\Support\Facades\Route;
 Route::middleware('auth')->group(function () {
     Route::view('/', 'pages.home')->name('dashboard');
     Route::view('/alerts', 'pages.alerts')->name('alerts');
-    Route::view('/devices', 'pages.devices')->name('devices');
+
+    Route::get('/devices', [DevicesController::class, 'index'])->name('devices');
+    Route::get('/devices/building/{building}', [DevicesController::class, 'byBuilding'])->name('devices.byBuilding');
+
     Route::view('/reports', 'pages.reports')->name('reports');
-    Route::view('/admin', 'pages.admin')->name('admin');
     Route::view('/settings', 'pages.settings')->name('settings');
     Route::view('/help', 'pages.help')->name('help');
 
@@ -30,7 +34,23 @@ Route::middleware('auth')->group(function () {
 
 /*
 |--------------------------------------------------------------------------
+| Admin-only (auth + admin middleware)
+|--------------------------------------------------------------------------
+*/
+Route::middleware(['auth', 'admin'])->group(function () {
+
+    // 👉 Redirige /admin directamente a /admin/users
+    Route::get('/admin', fn () => redirect()->route('admin.users.index'))->name('admin');
+
+    Route::get('/admin/users', [AdminUserController::class, 'index'])->name('admin.users.index');
+    Route::post('/admin/users', [AdminUserController::class, 'store'])->name('admin.users.store');
+    Route::patch('/admin/users/{user}/role', [AdminUserController::class, 'updateRole'])->name('admin.users.updateRole');
+    Route::delete('/admin/users/{user}', [AdminUserController::class, 'destroy'])->name('admin.users.destroy');
+});
+
+/*
+|--------------------------------------------------------------------------
 | Breeze Authentication Routes
 |--------------------------------------------------------------------------
 */
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';

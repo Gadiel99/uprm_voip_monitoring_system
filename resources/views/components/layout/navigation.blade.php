@@ -7,3 +7,13 @@
   <li class="nav-item"><a class="nav-link {{ $active === 'reports' ? 'active' : '' }}" href="#">Reportes</a></li>
   <li class="nav-item"><a class="nav-link {{ $active === 'admin' ? 'active' : '' }}" href="#">Admin</a></li>
 </ul>
+
+
+@admin
+<li class="nav-item">
+    <a href="{{ route('admin') }}"
+       class="nav-link {{ request()->is('admin*') ? 'active' : '' }}">
+       <i class="bi bi-shield-lock me-1"></i> Admin
+    </a>
+</li>
+@endadmin
