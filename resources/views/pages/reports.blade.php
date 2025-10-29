@@ -8,7 +8,7 @@
     <div class="card border-0 shadow-sm p-4 mb-4">
         <h5 class="fw-semibold mb-3">Device Reports Search</h5>
 
-        {{-- Search Filters --}}
+        {{-- Search Filters (Top Row) --}}
         <div class="row g-3 align-items-end mb-3">
             <div class="col-md-4">
                 <label class="form-label">User</label>
@@ -19,24 +19,44 @@
                 <input type="text" class="form-control bg-light" placeholder="Search by MAC address...">
             </div>
             <div class="col-md-4">
-                <label class="form-label">Building</label>
-                <select class="form-select bg-light">
-                    <option selected>All Buildings</option>
-                    <option>Engineering Complex</option>
-                    <option>Computer Science Department</option>
-                    <option>Library</option>
-                    <option>Student Center</option>
-                </select>
+                <label class="form-label">IP Address</label>
+                <input type="text" class="form-control bg-light" placeholder="Search by IP address...">
             </div>
         </div>
 
-        <div class="d-flex gap-2">
-            <button class="btn btn-dark">
-                <i class="bi bi-search me-2"></i> Search
-            </button>
-            <button class="btn btn-outline-secondary">
-                <i class="bi bi-arrow-counterclockwise me-2"></i> Reset
-            </button>
+        {{-- Search Filters (Bottom Row) --}}
+        <div class="row g-3 align-items-end">
+            <div class="col-md-4">
+                <label class="form-label">Status</label>
+                <select class="form-select bg-light">
+                    <option selected>All Status</option>
+                    <option>Online</option>
+                    <option>Offline</option>
+                    <option>Critical</option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Building</label>
+                <select class="form-select bg-light">
+                    <option selected>All Buildings</option>
+                    <option>Stefani</option>
+                    <option>General Library</option>
+                    <option>Student Center</option>
+                    <option>Engineering Complex</option>
+                    <option>Computer Science Department</option>
+                    <option>Administration</option>
+                    <option>Physics</option>
+                    <option>Chardon</option>
+                </select>
+            </div>
+            <div class="col-md-4 d-flex justify-content-end align-items-center gap-3">
+                <button class="btn btn-success px-5 py-2">
+                    <i class="bi bi-search me-2"></i> Search
+                </button>
+                <button class="btn btn-outline-secondary px-4 py-2">
+                    <i class="bi bi-arrow-counterclockwise me-2"></i> Reset
+                </button>
+            </div>
         </div>
     </div>
 

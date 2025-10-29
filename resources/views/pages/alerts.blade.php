@@ -47,10 +47,9 @@
     <div id="alertOverview">
         <div class="card border-0 shadow-sm p-4 mb-4">
             <div class="d-flex justify-content-between align-items-center mb-3">
-                <h6 class="fw-semibold">Sorted by: Severity Level</h6>
+                <h6 class="fw-semibold">Critical Buildings</h6>
                 <div>
                     <span class="badge bg-danger text-white me-2">1 Critical</span>
-                    <span class="badge bg-secondary text-white">2 Resolved</span>
                 </div>
             </div>
 
@@ -59,10 +58,8 @@
                     <tr>
                         <th>Status</th>
                         <th>Building</th>
-                        <th>Alert</th>
                         <th>Offline Devices</th>
                         <th>Severity</th>
-                        <th>Location</th>
                         <th>Time</th>
                     </tr>
                 </thead>
@@ -70,28 +67,22 @@
                     <tr class="clickable-row" onclick="showBuilding('Stefani', 121, 155)">
                         <td><i class="bi bi-exclamation-triangle text-danger"></i></td>
                         <td>Stefani</td>
-                        <td><strong>Critical CPU Overload</strong><br><small>CPU usage at 95%+ for 10+ minutes.</small></td>
                         <td>121 / 155</td>
                         <td><span class="badge badge-critical">CRITICAL</span></td>
-                        <td>Server Room</td>
                         <td>2 minutes ago</td>
                     </tr>
                     <tr class="clickable-row" onclick="showBuilding('General Library', 8, 40)">
                         <td><i class="bi bi-exclamation-circle text-warning"></i></td>
                         <td>General Library</td>
-                        <td><strong>Memory Usage Warning</strong><br><small>85% usage across multiple devices.</small></td>
                         <td>8 / 40</td>
                         <td><span class="badge badge-warning">WARNING</span></td>
-                        <td>Floor 3</td>
                         <td>15 minutes ago</td>
                     </tr>
                     <tr class="clickable-row" onclick="showBuilding('Student Center', 0, 30)">
                         <td><i class="bi bi-check-circle text-success"></i></td>
                         <td>Student Center</td>
-                        <td><strong>System Uptime Check</strong><br><small>All systems running normally.</small></td>
                         <td>0 / 30</td>
                         <td><span class="badge badge-normal">NORMAL</span></td>
-                        <td>IT Room</td>
                         <td>2 hours ago</td>
                     </tr>
                 </tbody>

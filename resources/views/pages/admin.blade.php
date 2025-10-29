@@ -25,6 +25,32 @@
         background-color: #fdeaea;
         color: #c82333;
     }
+
+    /* === Consistent Button Styles === */
+    .btn {
+        transition: all 0.2s ease-in-out;
+    }
+    .btn-success {
+        background-color: #00844b;
+        border-color: #00844b;
+    }
+    .btn-success:hover {
+        background-color: #006f3f;
+        border-color: #006f3f;
+    }
+    .btn-outline-secondary:hover {
+        background-color: #f1f3f4;
+        color: #000;
+    }
+    .btn-danger:hover {
+        background-color: #c82333;
+        border-color: #c82333;
+        color: #fff;
+    }
+    .btn-secondary:hover {
+        background-color: #6c757d;
+        color: #fff;
+    }
 </style>
 
 <div class="container-fluid">
@@ -78,10 +104,10 @@
                 </div>
                 <h5 class="fw-semibold mt-4 mb-3">Backup Operations</h5>
                 <div class="d-flex align-items-center gap-2">
-                    <button class="btn btn-success">
+                    <button class="btn btn-success" aria-label="Create and Download Backup">
                         <i class="bi bi-archive me-2"></i> Create Backup & Download (ZIP)
                     </button>
-                    <button class="btn btn-outline-secondary">
+                    <button class="btn btn-outline-secondary" aria-label="Restore Backup">
                         <i class="bi bi-upload me-2"></i> Restore from Backup
                     </button>
                 </div>
@@ -92,30 +118,29 @@
         </div>
 
         {{-- LOGS --}}
-<div class="tab-pane fade" id="logs" role="tabpanel" aria-labelledby="logs-tab">
-    <div class="card border-0 shadow-sm p-4 mb-4">
-        <h5 class="fw-semibold mb-3">System Logs</h5>
+        <div class="tab-pane fade" id="logs" role="tabpanel" aria-labelledby="logs-tab">
+            <div class="card border-0 shadow-sm p-4 mb-4">
+                <h5 class="fw-semibold mb-3">System Logs</h5>
 
-        {{-- Log Search --}}
-        <div class="d-flex mb-3">
-            <input type="text" class="form-control bg-light" placeholder="Search logs by message, source, or user...">
-            <button class="btn btn-dark ms-2">
-                <i class="bi bi-search me-1"></i> Search
-            </button>
+                {{-- Log Search --}}
+                <div class="d-flex mb-3">
+                    <input type="text" class="form-control bg-light" placeholder="Search logs by message, source, or user...">
+                    <button class="btn btn-dark ms-2" aria-label="Search logs">
+                        <i class="bi bi-search me-1"></i> Search
+                    </button>
+                </div>
+                <small class="text-muted d-block mb-3">Note: Logs are read-only and cannot be altered</small>
+
+                {{-- Example log entries --}}
+                <div class="bg-light rounded p-3">
+                    <code>[2025-10-21 19:42:11] INFO: System backup completed successfully.</code><br>
+                    <code>[2025-10-21 19:40:05] WARNING: CPU usage exceeded 85% threshold.</code><br>
+                    <code>[2025-10-21 19:32:47] INFO: New user “admin2” created.</code><br>
+                    <code>[2025-10-21 19:20:14] ERROR: Database connection timeout on backup node.</code><br>
+                    <code>[2025-10-21 19:15:08] INFO: Server reboot scheduled for maintenance.</code>
+                </div>
+            </div>
         </div>
-        <small class="text-muted d-block mb-3">Note: Logs are read-only and cannot be altered</small>
-
-        {{-- Example log entries --}}
-        <div class="bg-light rounded p-3">
-            <code>[2025-10-21 19:42:11] INFO: System backup completed successfully.</code><br>
-            <code>[2025-10-21 19:40:05] WARNING: CPU usage exceeded 85% threshold.</code><br>
-            <code>[2025-10-21 19:32:47] INFO: New user “admin2” created.</code><br>
-            <code>[2025-10-21 19:20:14] ERROR: Database connection timeout on backup node.</code><br>
-            <code>[2025-10-21 19:15:08] INFO: Server reboot scheduled for maintenance.</code>
-        </div>
-    </div>
-</div>
-
 
         {{-- SETTINGS --}}
         <div class="tab-pane fade" id="settings" role="tabpanel" aria-labelledby="settings-tab">
@@ -127,74 +152,58 @@
                 <h6 class="fw-semibold mt-3">Critical Phones</h6>
                 <p class="text-muted">Phones that trigger alerts when not responding, regardless of building trigger.</p>
                 <div class="d-flex justify-content-between align-items-center mb-3">
-    <button class="btn btn-success px-3" data-bs-toggle="modal" data-bs-target="#addCriticalPhoneModal">
-        <i class="bi bi-plus-lg me-2"></i> Add Critical Phone
-    </button>
-    <div class="text-muted small">
-        <i class="bi bi-telephone-inbound me-1 text-success"></i> Only critical phones trigger instant alerts
-    </div>
-</div>
-
+                    <button class="btn btn-success px-3" data-bs-toggle="modal" data-bs-target="#addCriticalPhoneModal" aria-label="Add Critical Phone">
+                        <i class="bi bi-plus-lg me-2"></i> Add Critical Phone
+                    </button>
+                    <div class="text-muted small">
+                        <i class="bi bi-telephone-inbound me-1 text-success"></i> Only critical phones trigger bell alerts
+                    </div>
+                </div>
 
                 <table class="table table-bordered align-middle">
-    <thead class="table-light">
-        <tr>
-            <th>Phone</th>
-            <th>MAC Address</th>
-            <th>Extension</th>
-            <th>Description</th>
-            <th>Status</th>
-            <th>Actions</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>787-555-0100</td>
-            <td class="text-danger">00:1B:44:11:AA:00</td>
-            <td>1000</td>
-            <td>Emergency Services</td>
-            <td><span class="badge bg-success">Online</span></td>
-            <td>
-                <button class="btn btn-sm btn-outline-secondary me-1" title="Edit">
-                    <i class="bi bi-pencil"></i>
-                </button>
-                <button class="btn btn-sm btn-danger" title="Delete">
-                    <i class="bi bi-trash"></i>
-                </button>
-            </td>
-        </tr>
-        <tr>
-            <td>787-555-0200</td>
-            <td class="text-danger">00:1B:44:11:AA:01</td>
-            <td>1001</td>
-            <td>Security Office</td>
-            <td><span class="badge bg-danger">Offline</span></td>
-            <td>
-                <button class="btn btn-sm btn-outline-secondary me-1" title="Edit">
-                    <i class="bi bi-pencil"></i>
-                </button>
-                <button class="btn btn-sm btn-danger" title="Delete">
-                    <i class="bi bi-trash"></i>
-                </button>
-            </td>
-        </tr>
-        <tr>
-            <td>787-555-0300</td>
-            <td class="text-danger">00:1B:44:11:AA:02</td>
-            <td>1002</td>
-            <td>IT Operations Center</td>
-            <td><span class="badge bg-success">Online</span></td>
-            <td>
-                <button class="btn btn-sm btn-outline-secondary me-1" title="Edit">
-                    <i class="bi bi-pencil"></i>
-                </button>
-                <button class="btn btn-sm btn-danger" title="Delete">
-                    <i class="bi bi-trash"></i>
-                </button>
-            </td>
-        </tr>
-    </tbody>
-</table>
+                    <thead class="table-light">
+                        <tr>
+                            <th>Phone</th>
+                            <th>MAC Address</th>
+                            <th>Extension</th>
+                            <th>Description</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>787-555-0100</td>
+                            <td class="text-danger">00:1B:44:11:AA:00</td>
+                            <td>1000</td>
+                            <td>Emergency Services</td>
+                            <td><span class="badge bg-success">Online</span></td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-secondary me-1" title="Edit" aria-label="Edit phone">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <button class="btn btn-sm btn-danger" title="Delete" aria-label="Delete phone">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>787-555-0200</td>
+                            <td class="text-danger">00:1B:44:11:AA:01</td>
+                            <td>1001</td>
+                            <td>Security Office</td>
+                            <td><span class="badge bg-danger">Offline</span></td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-secondary me-1" title="Edit" aria-label="Edit phone">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <button class="btn btn-sm btn-danger" title="Delete" aria-label="Delete phone">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
 
 
                 <hr class="my-4">
@@ -633,7 +642,6 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 </script>
-
 
 
 @endsection
