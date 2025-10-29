@@ -36,14 +36,16 @@ class BuildingsNetworksSeeder extends Seeder
         ]);
 
         
-        $this->command->info('✅ Created Building: ' . $cti->name);
-        $this->command->info('✅ Created Network: ' . $network1->subnet . ' (network_id: ' . $network1->network_id . ')');
-        $this->command->info('✅ Created Network: ' . $network2->subnet . ' (network_id: ' . $network2->network_id . ')');
-        $this->command->info('✅ Attached networks to building');
-        
-        $this->command->newLine();
-        $this->command->info('📊 Summary:');
-        $this->command->info('   Buildings: ' . Buildings::count());
-        $this->command->info('   Networks: ' . Networks::count());
+        if ($this->command) {
+            $this->command->info('✅ Created Building: ' . $cti->name);
+            $this->command->info('✅ Created Network: ' . $network1->subnet . ' (network_id: ' . $network1->network_id . ')');
+            $this->command->info('✅ Created Network: ' . $network2->subnet . ' (network_id: ' . $network2->network_id . ')');
+            $this->command->info('✅ Attached networks to building');
+            
+            $this->command->newLine();
+            $this->command->info('📊 Summary:');
+            $this->command->info('   Buildings: ' . Buildings::count());
+            $this->command->info('   Networks: ' . Networks::count());
+        }
     }
 }
