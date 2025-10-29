@@ -45,7 +45,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {{-- ======= Destacados (como tenías) ======= --}}
+                    {{-- ======= Destacados ======= --}}
                     <tr class="clickable-row" onclick="showBuilding('Stefani', 121, 155)">
                         <td><i class="bi bi-exclamation-triangle text-danger"></i></td>
                         <td>Stefani</td>
@@ -68,7 +68,7 @@
                         <td>2 hours ago</td>
                     </tr>
 
-                    {{-- ======= Resto de edificios (placeholders NORMAL) ======= --}}
+                    {{-- =======  edificios (placeholders NORMAL) ======= --}}
                     <tr class="clickable-row" onclick="showBuilding('Celis', 0, 24)">
                         <td><i class="bi bi-check-circle text-success"></i></td><td>Celis</td><td>0 / 24</td><td><span class="badge badge-normal">NORMAL</span></td><td>just now</td>
                     </tr>
