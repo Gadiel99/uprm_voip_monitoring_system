@@ -103,8 +103,34 @@
         tooltipTriggerList.forEach(el => new bootstrap.Tooltip(el));
     });
 </script>
-<!-- === TEMPORAL COORDINATE HELPER === -->
+
 <script>
+window.addEventListener('load', () => {
+    const markers = document.querySelectorAll('.marker');
+    console.log(`✅ Found ${markers.length} markers`);
+
+    markers.forEach(marker => {
+        marker.style.cursor = 'pointer';
+        marker.addEventListener('click', () => {
+            const building =
+                marker.getAttribute('title') ||
+                marker.getAttribute('aria-label') ||
+                marker.getAttribute('data-bs-original-title');
+
+            if (building) {
+                console.log(`➡ Redirecting to: /alerts?building=${building}`);
+                window.location.href = `/alerts?building=${encodeURIComponent(building)}`;
+            } else {
+                console.warn("⚠️ Marker without title:", marker);
+            }
+        });
+    });
+});
+</script>
+
+
+<!-- === TEMPORAL COORDINATE HELPER === -->
+<!--<script>
 document.addEventListener('DOMContentLoaded', function () {
     const mapWrapper = document.querySelector('.map-wrapper');
 
@@ -134,6 +160,6 @@ document.addEventListener('DOMContentLoaded', function () {
         coordBox.textContent = 'Move cursor over map...';
     });
 });
-</script>
+</script>-->
 
 @endsection
