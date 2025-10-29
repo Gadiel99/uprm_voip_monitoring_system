@@ -34,6 +34,12 @@ class ETLService
         return $result;
     }
 
+    /* Extract Stage */
+    
+    /**
+     * Extract from PostgresSQL Database
+     * @return Collection<int, \stdClass>
+     */
     private function getUsersFromPostgres(): Collection
     {
         return DB::connection('pgsql')
@@ -42,6 +48,11 @@ class ETLService
             ->get();
     }
 
+    /**
+     * Extrat from MongoDB Database
+     * @param mixed $since
+     * @return array
+     */
     private function getRegistrationsFromMongo(?string $since = null): array
     {   
         $filter = [];
@@ -58,6 +69,64 @@ class ETLService
         return iterator_to_array($cursor);
     }
 
+    /* Transform & Load Stage */
+
+    /**
+     * Gets the network statistics and updates the networks table
+     * @return void
+     */
+    private function updateNetworkStats()
+    {
+        $networks = Networks::all();
+        
+        foreach ($networks as $network) {
+            $totalDevices = $network->devices()->count();
+            $offlineDevices = $network->devices()->where('status', 'offline')->count();
+            
+            $network->update([
+                'total_devices' => $totalDevices,
+                'offline_devices' => $offlineDevices,
+            ]);
+            
+            Log::info("📊 Updated network stats: {$network->subnet} - Total: {$totalDevices}, Offline: {$offlineDevices}");
+        }
+    }
+
+    /**
+     * Function to extract IP address from binding string.
+     * @param string|null $binding
+     * @return string|null
+     */
+    private function extractIPFromBinding(?string $binding): ?string
+    {
+        if (!$binding) return null;
+        
+        // Extract IP from binding like "sip:4444@10.100.147.103"
+        if (preg_match('/@(\d+\.\d+\.\d+\.\d+)/', $binding, $matches)) {
+            return $matches[1];
+        }
+        
+        return null;
+    }
+
+    /**
+     * Function to get subnet from IP address
+     * @param string $ip
+     * @return string
+     */
+    private function getSubnetFromIP(string $ip): string
+    {
+        // Extract first 3 octets for /24 subnet
+        // Example: 10.100.147.103 -> 10.100.147.0/24
+        $parts = explode('.', $ip);
+        return "{$parts[0]}.{$parts[1]}.{$parts[2]}.0/24";
+    }
+    /**
+     * Summary of processAndSave
+     * @param \Illuminate\Support\Collection $users
+     * @param array $mongoRegistrations
+     * @return array{devices_created: int, devices_offline: mixed, devices_online: mixed, devices_updated: int, extensions_created: int, extensions_updated: int}
+     */
     private function processAndSave(Collection $users, array $mongoRegistrations): array
     {
         $devicesCreated = 0;
@@ -79,7 +148,7 @@ class ETLService
             }
         }
 
-        // Process each device that appears in registrar (= online devices)
+        // Process each device that appears in registrar means that it's online.
         foreach ($deviceGroups as $ipAddress => $registrations) {
             // Determine network (subnet) from IP address
             $subnet = $this->getSubnetFromIP($ipAddress);
@@ -114,6 +183,7 @@ class ETLService
             $extensionIds = [];
             foreach ($registrations as $registration) {
                 $identity = $registration->identity ?? null;
+                
                 if (!$identity) continue;
 
                 $extensionNumber = explode('@', $identity)[0];
@@ -173,40 +243,5 @@ class ETLService
         ];
     }
 
-    private function updateNetworkStats()
-    {
-        $networks = Networks::all();
-        
-        foreach ($networks as $network) {
-            $totalDevices = $network->devices()->count();
-            $offlineDevices = $network->devices()->where('status', 'offline')->count();
-            
-            $network->update([
-                'total_devices' => $totalDevices,
-                'offline_devices' => $offlineDevices,
-            ]);
-            
-            Log::info("📊 Updated network stats: {$network->subnet} - Total: {$totalDevices}, Offline: {$offlineDevices}");
-        }
-    }
-
-    private function extractIPFromBinding(?string $binding): ?string
-    {
-        if (!$binding) return null;
-        
-        // Extract IP from binding like "sip:4444@10.100.147.103"
-        if (preg_match('/@(\d+\.\d+\.\d+\.\d+)/', $binding, $matches)) {
-            return $matches[1];
-        }
-        
-        return null;
-    }
-
-    private function getSubnetFromIP(string $ip): string
-    {
-        // Extract first 3 octets for /24 subnet
-        // Example: 10.100.147.103 -> 10.100.147.0/24
-        $parts = explode('.', $ip);
-        return "{$parts[0]}.{$parts[1]}.{$parts[2]}.0/24";
-    }
+    
 }
