@@ -12,7 +12,12 @@ use MongoDB\BSON\UTCDateTime;
 use Illuminate\Support\Carbon;
 
 class ETLService
-{
+{   
+    /**
+     * Main ETL function
+     * @param mixed $since
+     * @return array{devices_created: int, devices_offline: mixed, devices_online: mixed, devices_updated: int, extensions_created: int, extensions_updated: int}
+     */
     public function run(?string $since = null): array
     {
         $users = $this->getUsersFromPostgres();
