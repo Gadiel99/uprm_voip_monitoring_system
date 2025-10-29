@@ -209,34 +209,23 @@
                 <hr class="my-4">
 
                 {{-- Alert Thresholds --}}
-                <h6 class="fw-semibold">Alert Thresholds</h6>
-                <div class="row g-4 mt-2">
-                    <div class="col-md-4">
-                        <label class="form-label fw-semibold">Green Status (Below)</label>
-                        <div class="input-group">
-                            <input type="number" class="form-control" value="10">
-                            <span class="input-group-text">%</span>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label fw-semibold">Yellow Status (Between)</label>
-                        <div class="input-group">
-                            <input type="number" class="form-control" value="10">
-                            <span class="input-group-text">%</span>
-                            <input type="number" class="form-control" value="25">
-                            <span class="input-group-text">%</span>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label fw-semibold">Red Status (Above)</label>
-                        <div class="input-group">
-                            <input type="number" class="form-control" value="25">
-                            <span class="input-group-text">%</span>
-                        </div>
-                    </div>
-                </div>
+<h6 class="fw-semibold">Alert Thresholds</h6>
+<p class="text-muted small mb-3">Set the percentage range that defines warning conditions across the system.</p>
 
-                <hr class="my-4">
+<div class="row g-4 mt-2">
+    <div class="col-md-6">
+        <label class="form-label fw-semibold">Yellow Warning Status (Between)</label>
+        <div class="input-group">
+            <input type="number" class="form-control" value="10">
+            <span class="input-group-text">%</span>
+            <input type="number" class="form-control" value="25">
+            <span class="input-group-text">%</span>
+        </div>
+    </div>
+</div>
+
+<hr class="my-4">
+
 
                 {{-- Alert Frequency Configuration --}}
                 <h6 class="fw-semibold mb-3">Alert Frequency Configuration</h6>
