@@ -40,7 +40,7 @@ I've created a comprehensive database testing suite for your UPRM VoIP Monitorin
    - Relationship setup
    - Initial values validation
 
-## 📊 Automated Reporting
+## Reporting
 
 You have **2 custom Artisan commands** that automatically generate test documentation:
 
@@ -76,7 +76,7 @@ php artisan test:run-parse --format=both
 - `docs/testing/test-results.csv` - Test results spreadsheet
 - `docs/testing/TEST_RESULTS.md` - Test results documentation
 
-## 📝 Documentation Files
+## Documentation Files
 
 I created comprehensive documentation in `docs/testing/`:
 
@@ -85,7 +85,7 @@ I created comprehensive documentation in `docs/testing/`:
 3. **TEST_RESULTS.md** - Auto-generated test execution results
 4. **README.md** - Quick reference guide for developers
 
-## 🚀 How to Run Tests
+## How to Run Tests
 
 ### Run All Tests
 ```bash
@@ -107,7 +107,7 @@ php artisan test tests/Unit/Database/SeederTest.php
 ./vendor/bin/pest --coverage
 ```
 
-## 📤 How to Submit to Your Professor
+## How to Submit to Your Professor
 
 ### Option 1: Excel Spreadsheet (Recommended)
 
@@ -197,17 +197,6 @@ uprm_voip_monitoring_system/
 4. **Module Organization** - Tests grouped by module (Models, Database, Services)
 5. **Comprehensive Documentation** - Professional test plan and reports
 6. **Easy to Extend** - Add new tests following the same pattern
-
-## 🎓 For Your Professor
-
-The testing suite demonstrates:
-
-- ✅ **Comprehensive Coverage** - All database models and operations tested
-- ✅ **Professional Approach** - Following Laravel/Pest best practices
-- ✅ **Automated Testing** - All tests pass automatically
-- ✅ **Documentation** - Complete test plan and reports
-- ✅ **Maintainability** - Easy to add new tests
-- ✅ **Quality Assurance** - Ensures database integrity and reliability
 
 ## 🔧 Maintenance
 
