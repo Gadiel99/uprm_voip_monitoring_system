@@ -4,14 +4,10 @@
 <h4 class="fw-semibold mb-4">UPRM Campus Map - System Status</h4>
 
 <div class="card border-0 shadow-sm p-4 mb-4">
-    <div class="position-relative bg-white rounded-3 overflow-hidden" 
-         style="border: 1px solid #dee2e6; height: 75vh;"> <!-- Reduced height -->
-
+    {{-- === MAP WRAPPER WITH FIXED ASPECT RATIO === --}}
+    <div class="map-wrapper mx-auto position-relative rounded-3 overflow-hidden border">
         <!-- Campus Map -->
-        <img src="{{ asset('images/MapaRUM.jpeg') }}" 
-             alt="UPRM Campus Map" 
-             class="position-absolute top-0 start-0 w-100 h-100" 
-             style="object-fit: contain;">
+        <img src="{{ asset('images/MapaRUM.jpeg') }}" alt="UPRM Campus Map" class="map-image">
 
         <!-- Legend -->
         <div class="position-absolute top-0 start-0 bg-white bg-opacity-90 border rounded shadow-sm m-3 p-2 small text-start" 
@@ -23,165 +19,121 @@
             <small class="text-muted">Click markers for details</small>
         </div>
 
-        <!-- Interactive markers in the map -->
-        <div class="position-absolute" style="top: 60%; left: 77%;" data-bs-toggle="tooltip" title="Celis">
-            <div class="rounded-circle bg-success" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
-        </div>
-
-        <div class="position-absolute" style="top: 52%; left: 82%;" data-bs-toggle="tooltip" title="Stefani">
-            <div class="rounded-circle bg-success" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
-        </div>
-
-        <div class="position-absolute" style="top: 33.5%; left: 71%;" data-bs-toggle="tooltip" title="Biologia">
-            <div class="rounded-circle bg-success" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
-        </div>
-
-        <div class="position-absolute" style="top: 63%; left: 76%;" data-bs-toggle="tooltip" title="DeDiego">
-            <div class="rounded-circle bg-success" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
-        </div>
-
-        <div class="position-absolute" style="top: 59%; left: 86%;" data-bs-toggle="tooltip" title="Luchetti">
-            <div class="rounded-circle bg-success" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
-        </div>
-
-        <div class="position-absolute" style="top: 56%; left: 84%;" data-bs-toggle="tooltip" title="ROTC">
-            <div class="rounded-circle bg-success" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
-        </div>
-
-        <div class="position-absolute" style="top: 30%; left: 32%;" data-bs-toggle="tooltip" title="Adm.Empresas">
-            <div class="rounded-circle bg-success" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
-        </div>
-
-        <div class="position-absolute" style="top: 63%; left: 66%;" data-bs-toggle="tooltip" title="Musa">
-            <div class="rounded-circle bg-success" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
-        </div>
-
-        <div class="position-absolute" style="top: 53%; left: 75%;" data-bs-toggle="tooltip" title="Chardon">
-            <div class="rounded-circle bg-success" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
-        </div>
-
-        <div class="position-absolute" style="top: 62%; left: 72%;" data-bs-toggle="tooltip" title="Monzon">
-            <div class="rounded-circle bg-success" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
-        </div>
-
-        <div class="position-absolute" style="top: 47%; left: 69%;" data-bs-toggle="tooltip" title="Sanchez Hidalgo">
-            <div class="rounded-circle bg-success" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
-        </div>
-
-        <div class="position-absolute" style="top: 45%; left: 75%;" data-bs-toggle="tooltip" title="Fisica">
-            <div class="rounded-circle bg-success" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
-        </div>
-
-        <div class="position-absolute" style="top: 44%; left: 77%;" data-bs-toggle="tooltip" title="Geologia">
-            <div class="rounded-circle bg-success" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
-        </div>
-
-        <div class="position-absolute" style="top: 44%; left: 79%;" data-bs-toggle="tooltip" title="Ciencias Marinas">
-            <div class="rounded-circle bg-success" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
-        </div>
-
-        <div class="position-absolute" style="top: 44%; left: 62%;" data-bs-toggle="tooltip" title="Quimica">
-            <div class="rounded-circle bg-success" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
-        </div>
-
-        <div class="position-absolute" style="top:44%; left: 62%;" data-bs-toggle="tooltip" title="Piñero">
-            <div class="rounded-circle bg-success" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
-        </div>
-
-        <div class="position-absolute" style="top: 50%; left: 58%;" data-bs-toggle="tooltip" title="Enfermeria">
-            <div class="rounded-circle bg-success" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
-        </div>
-
-        <div class="position-absolute" style="top: 48%; left: 53%;" data-bs-toggle="tooltip" title="Vagones">
-            <div class="rounded-circle bg-success" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
-        </div>
-
-        <div class="position-absolute" style="top: 40%; left: 30%;" data-bs-toggle="tooltip" title="Natatorio">
-            <div class="rounded-circle bg-success" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
-        </div>
-
-        <div class="position-absolute" style="top: 33%; left: 86%;" data-bs-toggle="tooltip" title="Centro Nuclear">
-            <div class="rounded-circle bg-success" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
-        </div>
-
-        <div class="position-absolute" style="top: 56%; left: 45%;" data-bs-toggle="tooltip" title="Coliseo">
-            <div class="rounded-circle bg-success" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
-        </div>
-
-        <div class="position-absolute" style="top: 58%; left: 53%;" data-bs-toggle="tooltip" title="Gimnacio">
-            <div class="rounded-circle bg-success" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
-        </div>
-
-        <div class="position-absolute" style="top: 60%; left: 66%;" data-bs-toggle="tooltip" title="Servicios Medicos">
-            <div class="rounded-circle bg-success" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
-        </div>
-
-        <div class="position-absolute" style="top: 64%; left: 80%;" data-bs-toggle="tooltip" title="Decanato de Estudiantes">
-            <div class="rounded-circle bg-success" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
-        </div>
-
-        <div class="position-absolute" style="top: 49%; left: 65%;" data-bs-toggle="tooltip" title="Oficina de Facultad">
-            <div class="rounded-circle bg-success" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
-        </div>
-
-        <div class="position-absolute" style="top: 55%; left: 7%;" data-bs-toggle="tooltip" title="Adm.Finca Alzamora">
-            <div class="rounded-circle bg-success" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
-        </div>
-
-        <div class="position-absolute" style="top: 56%; left: 65%;" data-bs-toggle="tooltip" title="Biblioteca">
-            <div class="rounded-circle bg-success" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
-        </div>
-
-        <div class="position-absolute" style="top: 57%; left: 72%;" data-bs-toggle="tooltip" title="Centro de Estudiantes">
-            <div class="rounded-circle bg-success" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
-        </div>
-
-        <div class="position-absolute" style="top: 48%; left: 81%;" data-bs-toggle="tooltip" title="Terrats">
-            <div class="rounded-circle bg-success" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
-        </div>
-
-        <div class="position-absolute" style="top: 28%; left: 59%;" data-bs-toggle="tooltip" title="Ing.Civil">
-            <div class="rounded-circle bg-success" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
-        </div>
-
-        <div class="position-absolute" style="top: 49%; left: 78%;" data-bs-toggle="tooltip" title="Ing.Industrial">
-            <div class="rounded-circle bg-success" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
-        </div>
-
-        <div class="position-absolute" style="top: 32%; left: 54%;" data-bs-toggle="tooltip" title="Ing.Quimica">
-            <div class="rounded-circle bg-success" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
-        </div>
-
-        <div class="position-absolute" style="top: 43%; left: 50%;" data-bs-toggle="tooltip" title="Ing.Agricola">
-            <div class="rounded-circle bg-success" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
-        </div>
-
-        <div class="position-absolute" style="top: 37.5%; left: 17%;" data-bs-toggle="tooltip" title="Edificio A (Hotel Colegial)">
-            <div class="rounded-circle bg-success" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
-        </div>
-
-        <div class="position-absolute" style="top: 37.5%; left: 20.5%;" data-bs-toggle="tooltip" title="Edificio B (Adm.Peq.Negocios y Oficina Adm)">
-            <div class="rounded-circle bg-success" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
-        </div>
-
-        <div class="position-absolute" style="top: 40.5%; left: 16.5%;" data-bs-toggle="tooltip" title="Edificio C (Oficina de Extension Agricola))">
-            <div class="rounded-circle bg-success" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
-        </div>
-
-        <div class="position-absolute" style="top: 39%; left: 19%;" data-bs-toggle="tooltip" title="Edificio D">
-            <div class="rounded-circle bg-success" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
-        </div>
-
-        
-
+        <!-- === INTERACTIVE MARKERS === -->
+        <div class="marker" style="top: 71.3%; left: 78.3%;" title="Celis"></div>
+        <div class="marker" style="top: 56.5%; left: 82.5%;" title="Stefani"></div>
+        <div class="marker" style="top: 18.5%; left: 72%;" title="Biologia"></div>
+        <div class="marker" style="top: 78%; left: 76.7%;" title="DeDiego"></div>
+        <div class="marker" style="top: 70%; left: 86.4%;" title="Luchetti"></div>
+        <div class="marker" style="top: 63.5%; left: 85.4%;" title="ROTC"></div>
+        <div class="marker" style="top: 13%; left: 33%;" title="Adm.Empresas"></div>
+        <div class="marker" style="top: 78.5%; left: 67%;" title="Musa"></div>
+        <div class="marker" style="top: 58.3%; left: 75.9%;" title="Chardon"></div>
+        <div class="marker" style="top: 75.8%; left: 72.5%;" title="Monzon"></div>
+        <div class="marker" style="top: 46.5%; left: 70.1%;" title="Sanchez Hidalgo"></div>
+        <div class="marker" style="top: 41%; left: 76%;" title="Fisica"></div>
+        <div class="marker" style="top: 40%; left: 78%;" title="Geologia"></div>
+        <div class="marker" style="top: 39%; left: 80%;" title="Ciencias Marinas"></div>
+        <div class="marker" style="top: 40%; left: 63%;" title="Quimica"></div>
+        <div class="marker" style="top: 85%; left: 60.5%;" title="Piñero"></div>
+        <div class="marker" style="top: 51.5%; left: 59%;" title="Enfermeria"></div>
+        <div class="marker" style="top: 48%; left: 53%;" title="Vagones"></div>
+        <div class="marker" style="top: 32.6%; left: 30.5%;" title="Natatorio"></div>
+        <div class="marker" style="top: 18.2%; left: 86.5%;" title="Centro Nuclear"></div>
+        <div class="marker" style="top: 64%; left: 46%;" title="Coliseo"></div>
+        <div class="marker" style="top: 66.7%; left: 54.1%;" title="Gimnacio"></div>
+        <div class="marker" style="top: 71%; left: 67%;" title="Servicios Medicos"></div>
+        <div class="marker" style="top: 79%; left: 80.5%;" title="Decanato de Estudiantes"></div>
+        <div class="marker" style="top: 49.7%; left: 66%;" title="Oficina de Facultad"></div>
+        <div class="marker" style="top: 62%; left: 8%;" title="Adm.Finca Alzamora"></div>
+        <div class="marker" style="top: 62.5%; left: 65.8%;" title="Biblioteca"></div>
+        <div class="marker" style="top: 64.8%; left: 72.6%;" title="Centro de Estudiantes"></div>
+        <div class="marker" style="top: 48%; left: 81%;" title="Terrats"></div>
+        <div class="marker" style="top: 7.1%; left: 59.8%;" title="Ing.Civil"></div>
+        <div class="marker" style="top: 49%; left: 78%;" title="Ing.Industrial"></div>
+        <div class="marker" style="top: 17.7%; left: 55.7%;" title="Ing.Quimica"></div>
+        <div class="marker" style="top: 38.1%; left: 50.9%;" title="Ing.Agricola"></div>
+        <div class="marker" style="top: 26.9%; left: 18.2%;" title="Edificio A (Hotel Colegial)"></div>
+        <div class="marker" style="top: 33%; left: 17.6%;" title="Edificio B (Adm.Peq.Negocios y Oficina Adm)"></div>
+        <div class="marker" style="top: 26.8%; left: 21.8%;" title="Edificio C (Oficina de Extension Agricola)"></div>
+        <div class="marker" style="top: 29.3%; left: 20%;" title="Edificio D"></div>
     </div>
 </div>
 
+<style>
+/* === MAP STYLING FOR STABILITY === */
+.map-wrapper {
+    width: 100%;
+    max-width: 1600px;
+    aspect-ratio: 2202 / 1199; /* exact ratio of your image */
+    position: relative;
+    overflow: hidden;
+    border: 1px solid #dee2e6;
+}
+
+.map-image {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.marker {
+    position: absolute;
+    width: 18px;
+    height: 18px;
+    background-color: #198754;
+    border: 2px solid white;
+    border-radius: 50%;
+    cursor: pointer;
+    transform: translate(-50%, -50%);
+    transition: transform 0.15s ease, box-shadow 0.2s ease;
+}
+
+.marker:hover {
+    transform: translate(-50%, -50%) scale(1.25);
+    box-shadow: 0 0 6px rgba(0, 0, 0, 0.2);
+    z-index: 10;
+}
+</style>
+
 <script>
-    // Enable tooltips for hover effect
+    // Enable Bootstrap tooltips for marker hover
     document.addEventListener('DOMContentLoaded', function () {
-        const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
-        [...tooltipTriggerList].map(el => new bootstrap.Tooltip(el));
+        const tooltipTriggerList = document.querySelectorAll('[title]');
+        tooltipTriggerList.forEach(el => new bootstrap.Tooltip(el));
     });
 </script>
+<!-- === TEMPORAL COORDINATE HELPER === -->
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const mapWrapper = document.querySelector('.map-wrapper');
+
+    // Create floating coordinate box
+    const coordBox = document.createElement('div');
+    coordBox.style.position = 'fixed';
+    coordBox.style.bottom = '10px';
+    coordBox.style.right = '10px';
+    coordBox.style.background = 'rgba(0, 0, 0, 0.8)';
+    coordBox.style.color = '#fff';
+    coordBox.style.padding = '8px 12px';
+    coordBox.style.borderRadius = '8px';
+    coordBox.style.fontFamily = 'monospace';
+    coordBox.style.fontSize = '0.9rem';
+    coordBox.style.zIndex = '9999';
+    coordBox.textContent = 'Move cursor over map...';
+    document.body.appendChild(coordBox);
+
+    mapWrapper.addEventListener('mousemove', function (e) {
+        const rect = mapWrapper.getBoundingClientRect();
+        const top = ((e.clientY - rect.top) / rect.height) * 100;
+        const left = ((e.clientX - rect.left) / rect.width) * 100;
+        coordBox.textContent = `top: ${top.toFixed(1)}%; left: ${left.toFixed(1)}%;`;
+    });
+
+    mapWrapper.addEventListener('mouseleave', () => {
+        coordBox.textContent = 'Move cursor over map...';
+    });
+});
+</script>
+
 @endsection
