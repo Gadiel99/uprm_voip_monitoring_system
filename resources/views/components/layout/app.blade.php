@@ -263,24 +263,12 @@
                 <li class="nav-item mb-2">
                     <a
                         href="{{ url('/') }}"
-                        class="nav-link {{ request()->is('/') || request()->is('alerts') || request()->is('devices') || request()->is('reports') || request()->is('admin') ? 'active' : '' }}"
+                        class="nav-link {{ request()->is('/') || request()->is('alerts') || request()->is('devices') || request()->is('reports') || request()->is('admin') || request()->is('admin/*') ? 'active' : '' }}"
                     >
                         <i class="bi bi-speedometer2 me-2"></i>
                         Dashboard
                     </a>
                 </li>
-
-                @if (! $isUserPreview)
-                    <li class="nav-item mb-2">
-                        <a
-                            href="{{ url('/settings') }}"
-                            class="nav-link {{ request()->is('settings') ? 'active' : '' }}"
-                        >
-                            <i class="bi bi-gear me-2"></i>
-                            Settings
-                        </a>
-                    </li>
-                @endif
 
                 <li class="nav-item">
                     <a
@@ -304,59 +292,42 @@
                 request()->is('alerts') ||
                 request()->is('devices') ||
                 request()->is('reports') ||
-                request()->is('admin')
+                request()->is('admin') ||
+                request()->is('admin/*')
             )
                 <ul class="nav nav-tabs ps-3 pt-2">
-
                     <li class="nav-item">
-                        <a
-                            href="{{ url('/') }}"
-                            class="nav-link {{ request()->is('/') ? 'active' : '' }}"
-                        >
+                        <a href="{{ url('/') }}" class="nav-link {{ request()->is('/') ? 'active' : '' }}">
                             Home
                         </a>
                     </li>
-
                     <li class="nav-item">
-                        <a
-                            href="{{ url('/alerts') }}"
-                            class="nav-link {{ request()->is('alerts') ? 'active' : '' }}"
-                        >
+                        <a href="{{ url('/alerts') }}" class="nav-link {{ request()->is('alerts') ? 'active' : '' }}">
                             Alerts
                         </a>
                     </li>
-
                     <li class="nav-item">
-                        <a
-                            href="{{ url('/devices') }}"
-                            class="nav-link {{ request()->is('devices') ? 'active' : '' }}"
-                        >
+                        <a href="{{ url('/devices') }}" class="nav-link {{ request()->is('devices') ? 'active' : '' }}">
                             Devices
                         </a>
                     </li>
-
                     <li class="nav-item">
-                        <a
-                            href="{{ url('/reports') }}"
-                            class="nav-link {{ request()->is('reports') ? 'active' : '' }}"
-                        >
+                        <a href="{{ url('/reports') }}" class="nav-link {{ request()->is('reports') ? 'active' : '' }}">
                             Reports
                         </a>
                     </li>
-
                     @admin
                         @if (! $isUserPreview)
                             <li class="nav-item">
                                 <a
-                                    href="{{ url('/admin') }}"
-                                    class="nav-link {{ request()->is('admin') ? 'active' : '' }}"
+                                    href="{{ route('admin.users.index') }}"
+                                    class="nav-link {{ request()->is('admin') || request()->is('admin/*') ? 'active' : '' }}"
                                 >
                                     Admin
                                 </a>
                             </li>
                         @endif
                     @endadmin
-
                 </ul>
             @endif
 
