@@ -1,5 +1,5 @@
 <?php
-// filepath: database/seeders/MongoRegistrarSeeder.php
+// filepath: database/seeders/MongoSeeder.php
 
 namespace Database\Seeders;
 
@@ -10,15 +10,20 @@ use Carbon\Carbon;
 
 class MongoSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
         $this->command->info('📡 Seeding MongoDB registrar collection...');
+        $this->command->newLine();
         
+        // Clear existing test data
+        DB::connection('mongodb')
+            ->selectCollection('registrar')
+            ->deleteMany([
+                'identity' => ['$in' => ['4444@uprm.edu', '4445@uprm.edu', '5555@uprm.edu']]
+            ]);
+
         $registrations = [
-            // Device 1: 10.100.147.103 with extension 4444
+            // Device 1: 10.100.147.103 with extension 4444 - MAC: 4825674c55a1
             [
                 '_id' => '68f00e90cb49cb4bd61a9ec',
                 'binding' => 'sip:4444@10.100.147.103',
@@ -30,7 +35,7 @@ class MongoSeeder extends Seeder
                 'gruu' => null,
                 'identity' => '4444@uprm.edu',
                 'instanceId' => null,
-                'instrument' => '4825674c55a1',
+                'instrument' => '4825574c55a2', 
                 'localAddress' => '136.145.71.54/RegDB::_bindingsNameSpace',
                 'path' => '',
                 'qvalue' => 0,
@@ -39,7 +44,7 @@ class MongoSeeder extends Seeder
                 'uri' => 'sip:4444@uprm.edu',
             ],
             
-            // Device 2: 10.100.100.11 with extension 4444
+            // Device 2: 10.100.100.11 with extension 4444 - MAC: aa11bb22cc33 (DIFFERENT MAC)
             [
                 '_id' => '68f92475b6cb49cb6bd70cf58',
                 'binding' => 'sip:4444@10.100.100.11',
@@ -51,7 +56,7 @@ class MongoSeeder extends Seeder
                 'gruu' => null,
                 'identity' => '4444@uprm.edu',
                 'instanceId' => null,
-                'instrument' => '4825674c55a1',
+                'instrument' => 'aa11bb22cc33', 
                 'localAddress' => '136.145.71.54/RegDB::_bindingsNameSpace',
                 'path' => '',
                 'qvalue' => 0,
@@ -60,7 +65,7 @@ class MongoSeeder extends Seeder
                 'uri' => 'sip:4444@uprm.edu',
             ],
             
-            // Device 2: 10.100.100.11 with extension 5555 (same device, different extension)
+            // Device 2: 10.100.100.11 with extension 5555 (SAME device as above)
             [
                 '_id' => '68f92475b6cb49cb6bd70cf5a',
                 'binding' => 'sip:5555@10.100.100.11',
@@ -72,7 +77,7 @@ class MongoSeeder extends Seeder
                 'gruu' => null,
                 'identity' => '5555@uprm.edu',
                 'instanceId' => null,
-                'instrument' => '4825674c55a1',
+                'instrument' => 'aa11bb22cc33', 
                 'localAddress' => '136.145.71.54/RegDB::_bindingsNameSpace',
                 'path' => '',
                 'qvalue' => 0,
@@ -81,7 +86,7 @@ class MongoSeeder extends Seeder
                 'uri' => 'sip:5555@uprm.edu',
             ],
             
-            // Device 3: 10.100.100.12 with extension 4445
+            // Device 3: 10.100.100.12 with extension 4445 - MAC: 4825674b686e
             [
                 '_id' => '68f93cc10cb49cb4bd71013a',
                 'binding' => 'sip:4445@10.100.100.12',
@@ -93,7 +98,7 @@ class MongoSeeder extends Seeder
                 'gruu' => null,
                 'identity' => '4445@uprm.edu',
                 'instanceId' => null,
-                'instrument' => '4825674b686e',
+                'instrument' => '4825674b686e', // ✅ Device 3 MAC (already unique)
                 'localAddress' => '136.145.71.54/RegDB::_bindingsNameSpace',
                 'path' => '',
                 'qvalue' => 0,
@@ -103,34 +108,28 @@ class MongoSeeder extends Seeder
             ],
         ];
 
-        // Clear existing test registrations
-        DB::connection('mongodb')
-            ->getDatabase()
-            ->selectCollection('registrar')
-            ->deleteMany([
-                'identity' => ['$in' => ['4444@uprm.edu', '4445@uprm.edu', '5555@uprm.edu']]
-            ]);
-
-        // Insert registrations
-        $collection = DB::connection('mongodb')
-            ->selectCollection('registrar');
+        $collection = DB::connection('mongodb')->selectCollection('registrar');
 
         foreach ($registrations as $registration) {
-            $result = $collection->insertOne($registration);
+            $collection->insertOne($registration);
             
             $binding = $registration['binding'];
             $identity = $registration['identity'];
             $instrument = $registration['instrument'];
             
             $this->command->info("   ✅ {$identity}");
-            $this->command->info("      Binding: {$binding}");
-            $this->command->info("      Instrument (MAC): {$instrument}");
+            $this->command->info("      @ {$binding}");
+            $this->command->info("      MAC: {$instrument}");
         }
 
         $totalRegistrations = $collection->countDocuments();
         
         $this->command->newLine();
-        $this->command->info("✅ MongoDB seeded successfully!");
-        $this->command->info("   Total registrations: {$totalRegistrations}");
+        $this->command->info("✅ MongoDB seeded: {$totalRegistrations} registrations");
+        $this->command->newLine();
+        $this->command->info("📊 Summary:");
+        $this->command->info("   - Device 1: 10.100.147.103 (MAC: 4825674c55a1) → Extension 4444");
+        $this->command->info("   - Device 2: 10.100.100.11 (MAC: aa11bb22cc33) → Extensions 4444, 5555");
+        $this->command->info("   - Device 3: 10.100.100.12 (MAC: 4825674b686e) → Extension 4445");
     }
 }
