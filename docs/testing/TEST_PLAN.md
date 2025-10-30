@@ -61,9 +61,9 @@ Testing covers:
 ### 3.1 Setup
 - **OS:** Windows
 - **PHP Version:** 8.x
-- **Laravel Version:** 11.x
-- **Database (Testing):** SQLite (in-memory)
-- **Database (Production):** MySQL/PostgreSQL/MongoDB
+- **Laravel Version:** 12.x
+- **Database (Testing):** MariaDB (local)
+- **Database (Production):** MariaDB/PostgreSQL/MongoDB
 
 ### 3.2 Configuration
 ```php
@@ -130,18 +130,6 @@ Testing covers:
 - ✅ Seeded data has correct values
 - ✅ Seeded networks have zero initial devices
 
-### 4.3 Service Tests
-
-#### ETL Service
-- ⏳ ETL extracts data from PostgreSQL
-- ⏳ ETL extracts data from MongoDB
-- ⏳ ETL transforms data correctly
-- ⏳ ETL loads data to database
-- ⏳ ETL handles errors gracefully
-- ⏳ ETL updates device status
-- ⏳ ETL syncs extensions to devices
-- ⏳ ETL updates network statistics
-
 ## 5. Test Execution
 
 ### 5.1 Running Tests
@@ -164,11 +152,6 @@ php artisan test --testsuite=Feature
 php artisan test tests/Unit/Models/BuildingTest.php
 ```
 
-#### Run with Coverage
-```bash
-./vendor/bin/pest --coverage
-./vendor/bin/pest --coverage-html=docs/testing/coverage
-```
 
 ### 5.2 Automated Test Reporting
 
@@ -190,7 +173,6 @@ php artisan test:run-parse --format=both
 
 ### 6.1 Test Metrics
 - All unit tests pass: ✅ **48/48 PASSING** (October 30, 2025)
-- Code coverage ≥ 80%: ⏳ In Progress
 - No critical bugs: ✅ **0 Critical Bugs**
 - Performance tests pass: 📅 Planned
 
@@ -229,34 +211,18 @@ php artisan test:run-parse --format=both
 - ✅ Database migration tests complete
 - ✅ Database seeder tests complete
 - 📅 ETL service tests
-- 📅 Full test coverage
-- 📅 CI/CD integration
 
-## 9. Risks and Mitigation
 
-### 9.1 Risks
-| Risk | Impact | Probability | Mitigation |
-|------|--------|-------------|------------|
-| External database unavailable | High | Medium | Use in-memory SQLite for tests |
-| Test data inconsistency | Medium | Low | Use database refresh between tests |
-| Slow test execution | Low | Medium | Optimize queries, use parallel testing |
-| Missing edge cases | Medium | Medium | Code review, peer testing |
+## 9. Resources
 
-## 10. Resources
-
-### 10.1 Documentation
+### 9.1 Documentation
 - Pest PHP: https://pestphp.com/
 - Laravel Testing: https://laravel.com/docs/testing
 - GitHub Repository: https://github.com/Gadiel99/uprm_voip_monitoring_system
 
-### 10.2 Team
-- **Database Lead:** [Your Name]
-- **QA Lead:** TBD
-- **Dev Team:** Project members
+## 10. Appendix
 
-## 11. Appendix
-
-### 11.1 Test File Structure
+### 10.1 Test File Structure
 ```
 tests/
 ├── Unit/
@@ -273,7 +239,7 @@ tests/
         └── ETLServiceTest.php
 ```
 
-### 11.2 Commands Reference
+### 10.2 Commands Reference
 ```bash
 # Generate test reports
 php artisan test:report --format=csv
