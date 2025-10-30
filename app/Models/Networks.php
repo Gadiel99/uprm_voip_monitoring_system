@@ -35,12 +35,12 @@ class Networks extends Model
     }
 
  
-    // public function updateDeviceCounts()
-    // {
+    public function updateDeviceCounts()
+    {
         
-    //     $this->total_devices = $this->devices()->count();
-    //     $this->offline_devices = $this->devices()->where('status', 'offline')->count();
-    //     $this->save();
+        $this->total_devices = $this->devices()->count();
+        $this->offline_devices = $this->devices()->where('status', 'offline')->count();
+        $this->save();
     
-    // }
+    }
 }
