@@ -1,3 +1,40 @@
+{{--
+/*
+ * File: login.blade.php
+ * Project: UPRM VoIP Monitoring System
+ * Description: User authentication page providing login functionality
+ * 
+ * Author: [Hector R. Sepulveda]
+ * Date Created: October 2025
+ * Last Modified: October 30, 2025
+ * 
+ * Purpose:
+ *   This page provides the user interface for system authentication. It includes:
+ *   - Email and password input fields
+ *   - Remember me checkbox
+ *   - Forgot password link
+ *   - UPRM branding and logo
+ * 
+ * Form Details:
+ *   - Action: POST /login
+ *   - Method: POST
+ *   - CSRF Protection: Enabled
+ *   - Validation: Client-side HTML5 validation
+ * 
+ * Security:
+ *   - CSRF token required for form submission
+ *   - Session-based authentication
+ *   - Frontend mockup (accepts any credentials)
+ * 
+ * Dependencies:
+ *   - Bootstrap 5.3.3
+ *   - Bootstrap Icons 1.11.3
+ * 
+ * IEEE Standards Compliance:
+ *   - Follows IEEE 829 test documentation
+ *   - Adheres to IEEE 1016 design standards
+ */
+--}}
 <!DOCTYPE html>
 <html lang="en">
 <head>

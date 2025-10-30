@@ -1,3 +1,39 @@
+{{--
+/*
+ * File: app.blade.php
+ * Project: UPRM VoIP Monitoring System
+ * Description: Main application layout template providing the overall structure
+ *              for the monitoring system interface including navigation, sidebar,
+ *              and content areas.
+ * 
+ * Author: [Hector R. sepulveda]
+ * Date Created: October 2025
+ * Last Modified: October 30, 2025
+ * 
+ * Purpose:
+ *   This file serves as the master layout for the entire application. It includes:
+ *   - Top navigation bar with user menu and notifications
+ *   - Left sidebar with main navigation links
+ *   - Dashboard tabs for different system sections
+ *   - Account settings modal
+ *   - User preview mode functionality
+ * 
+ * Dependencies:
+ *   - Bootstrap 5.3.3 (CSS framework)
+ *   - Bootstrap Icons 1.11.3
+ *   - Laravel Blade templating engine
+ * 
+ * Usage:
+ *   @extends('components.layout.app')
+ *   @section('content')
+ *       <!-- Page content here -->
+ *   @endsection
+ * 
+ * IEEE Standards Compliance:
+ *   - Follows IEEE 829 documentation standards
+ *   - Adheres to IEEE 1016 software design description
+ */
+--}}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -5,27 +41,44 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>UPRM Monitoring System</title>
 
-    {{-- Bootstrap 5 CSS/JS --}}
+    {{-- External CSS and JavaScript Libraries --}}
+    {{-- Bootstrap 5.3.3 - Frontend CSS framework --}}
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
-    {{-- Bootstrap Icons --}}
+    {{-- Bootstrap Icons 1.11.3 - Icon library --}}
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
 
     <style>
+        /*
+         * Section: Custom CSS Styles
+         * Description: Application-wide styling definitions following UPRM branding guidelines
+         * Color Scheme:
+         *   - Primary Green: #00844b (UPRM institutional color)
+         *   - Background: #f8f9fa (Light gray)
+         *   - Text: #333 (Dark gray)
+         */
+
         /* Global body styling */
         body {
             background-color: #f8f9fa;
             font-family: 'Segoe UI', sans-serif;
         }
 
-        /* Navbar styling */
+        /* 
+         * Component: Top Navigation Bar
+         * Purpose: Main navigation container at top of page
+         */
         .navbar {
             background-color: #ffffff;
             border-bottom: 1px solid #dee2e6;
         }
 
-        /* Sidebar container */
+        /* 
+         * Component: Left Sidebar
+         * Purpose: Main navigation menu container
+         * Dimensions: 240px width, 100vh height
+         */
         .sidebar {
             width: 240px;
             min-height: 100vh;
@@ -34,7 +87,7 @@
             padding-top: 1rem;
         }
 
-        /* Sidebar links */
+        /* Sidebar navigation links - default state */
         .sidebar .nav-link {
             color: #333;
             font-weight: 500;
@@ -42,32 +95,40 @@
             margin: 3px 0;
         }
 
-        /* Active sidebar link */
+        /* Sidebar navigation links - active state */
         .sidebar .nav-link.active {
             background-color: #d7f5df;
             color: #198754 !important;
             font-weight: 600;
         }
 
-        /* Top tabs styling */
+        /* 
+         * Component: Dashboard Tab Navigation
+         * Purpose: Secondary navigation for main dashboard sections
+         */
         .nav-tabs {
             border-bottom: 1px solid #dee2e6;
             background-color: #fff;
         }
 
+        /* Active tab indicator with UPRM green underline */
         .nav-tabs .nav-link.active {
             border-bottom: 3px solid #00844b;
             color: #00844b !important;
             font-weight: 600;
         }
 
+        /* Tab hover effect */
         .nav-tabs .nav-link:hover {
             background-color: #f1f3f4;
             color: #00844b;
             transition: all 0.2s ease;
         }
 
-        /* Main content container */
+        /* 
+         * Component: Main Content Area
+         * Purpose: Container for page-specific content
+         */
         main {
             background-color: #fff;
             border-radius: 8px;
@@ -75,7 +136,10 @@
             box-shadow: 0 0 8px rgba(0, 0, 0, 0.05);
         }
 
-        /* Account modal tabs */
+        /* 
+         * Component: Account Settings Modal Pills
+         * Purpose: Tab navigation within account settings modal
+         */
         .nav-pills .nav-link {
             color: #000;
             border-radius: 8px;
@@ -83,17 +147,18 @@
             font-weight: 500;
         }
 
+        /* Active pill tab with UPRM green background */
         .nav-pills .nav-link.active {
             background-color: #00844b !important;
             color: #fff !important;
         }
 
-        /* Modal box styling */
+        /* Modal dialog styling */
         .modal-content {
             border-radius: 16px;
         }
 
-        /* Dark button styling */
+        /* Dark button variant */
         .btn-dark {
             background-color: #0b0b0b;
             border: none;
@@ -148,7 +213,7 @@
     <nav class="navbar navbar-expand-lg sticky-top">
         <div class="container-fluid">
 
-            {{-- Brand logo and name --}}
+            {{-- University logo and name --}}
             <a class="navbar-brand d-flex align-items-center" href="{{ url('/') }}">
                 <img src="{{ asset('images/logo-uprm.png') }}" alt="UPRM Logo" height="36" class="me-2">
                 <span class="fw-semibold text-dark">UPRM Monitoring System</span>

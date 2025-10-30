@@ -1,3 +1,93 @@
+{{--
+/*
+ * File: alerts.blade.php
+ * Project: UPRM VoIP Monitoring System
+ * Description: Alert management interface with two-level drill-down view
+ * 
+ * Author: [Hector R. Sepulveda]
+ * Date Created: October 2025
+ * Last Modified: October 30, 2025
+ * 
+ * Purpose:
+ *   This page provides a comprehensive alert monitoring system with drill-down capability.
+ *   Users can view building-level alerts and drill into individual device alerts.
+ * 
+ * Features:
+ *   - Two-level navigation (Building Overview → Device Details)
+ *   - Color-coded severity badges (Critical/Medium/Low)
+ *   - Clickable rows for drill-down
+ *   - Return navigation between views
+ *   - Real-time alert status display
+ *   - UPRM green theme (#00844b)
+ * 
+ * View Levels:
+ *   Level 1: Building Overview (alertOverview)
+ *     - Shows buildings with alert counts
+ *     - Displays offline device counts
+ *     - Severity indicators
+ *     - Timestamp information
+ *     - Columns: Status | Building | Offline Devices | Severity | Time
+ *   
+ *   Level 2: Device Details (buildingDetail)
+ *     - Shows individual devices in selected building
+ *     - Device-specific alert information
+ *     - Return button to overview
+ *     - Columns: Status | Device ID | Location | Issue | Severity | Time
+ * 
+ * Severity Levels:
+ *   - Critical (Red - #dc3545): Immediate action required
+ *     System failure or major outage affecting multiple devices
+ *   
+ *   - Medium (Yellow - #ffc107): Warning condition
+ *     Monitor closely, potential issue developing
+ *   
+ *   - Low (Green - #198754): Informational
+ *     Routine event or resolved issue
+ * 
+ * Interactive Elements:
+ *   - Clickable rows: onclick="showBuilding(name, offline, total)"
+ *     Navigates from building overview to device details
+ *   
+ *   - Return button: onclick="returnToOverview()"
+ *     Navigates back to building overview
+ * 
+ * Sample Data:
+ *   Building Overview:
+ *     - Stefani: 121/155 offline (Critical)
+ *     - Facundo Bueso: 2/25 offline (Medium)
+ *     - Chemistry: 1/40 offline (Low)
+ *   
+ *   Device Details (Stefani):
+ *     - 8 device alerts with various severities
+ *     - Issues: No connectivity, packet loss, unstable connection
+ * 
+ * JavaScript Functions:
+ *   - showBuilding(name, offline, total): Displays device details for building
+ *   - returnToOverview(): Returns to building overview
+ *   - Updates building name, device count dynamically
+ * 
+ * Styling Features:
+ *   - UPRM green active state (#00844b)
+ *   - Hover effects on clickable rows (#f3f7f3)
+ *   - Rounded cards (border-radius: 12px)
+ *   - Shadow effects for depth
+ *   - Smooth transitions (0.15s ease)
+ * 
+ * Color Coding:
+ *   - Critical badges: Red background, white text
+ *   - Warning badges: Yellow background, black text
+ *   - Normal badges: Green background, white text
+ * 
+ * Dependencies:
+ *   - Bootstrap 5.3.3
+ *   - Bootstrap Icons (bi bi-*)
+ * 
+ * IEEE Standards Compliance:
+ *   - Follows IEEE 1016 software design description
+ *   - Adheres to IEEE 829 test documentation standards
+ *   - Implements IEEE 730 quality assurance practices
+ */
+--}}
 @extends('components.layout.app')
 
 @section('content')

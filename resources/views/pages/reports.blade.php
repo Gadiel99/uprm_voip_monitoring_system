@@ -1,3 +1,65 @@
+{{--
+/*
+ * File: reports.blade.php
+ * Project: UPRM VoIP Monitoring System
+ * Description: Device search and reporting interface with filtering capabilities
+ * 
+ * Author: [Hector R. Sepulveda]
+ * Date Created: October 2025
+ * Last Modified: October 30, 2025
+ * 
+ * Purpose:
+ *   This page provides advanced search and filtering capabilities for device reports.
+ *   Users can search by multiple criteria and view aggregated system statistics.
+ * 
+ * Features:
+ *   - Multi-criteria search interface
+ *   - Dynamic results table with color-coded status badges
+ *   - System overview statistics cards
+ *   - Real-time client-side filtering
+ *   - Reset functionality to clear all filters
+ * 
+ * Search Filters:
+ *   - User: Text search by assigned user name
+ *   - MAC Address: Filter by network MAC address
+ *   - IP Address: Filter by IP address
+ *   - Status: Dropdown (Online/Offline/Critical)
+ *   - Building: Dropdown selection from 8 buildings
+ * 
+ * Results Table Columns:
+ *   - User (assigned user name)
+ *   - MAC Address (network identifier)
+ *   - IP Address (device IP)
+ *   - Status (color-coded badge)
+ *   - Building (location)
+ * 
+ * System Overview Cards:
+ *   - Total Devices: Count of registered devices
+ *   - Active Now: Currently online devices
+ *   - Inactive: Offline devices  
+ *   - Buildings: Total monitored locations
+ * 
+ * Status Badge Colors:
+ *   - Online: Green (bg-success)
+ *   - Offline: Red (bg-danger)
+ *   - Critical: Yellow (bg-warning)
+ * 
+ * Data Handling:
+ *   - Static demo dataset (6 sample devices)
+ *   - Client-side JavaScript filtering
+ *   - No backend API calls
+ *   - Case-insensitive search matching
+ * 
+ * Dependencies:
+ *   - Bootstrap 5.3.3
+ *   - Vanilla JavaScript (no external libraries)
+ * 
+ * IEEE Standards Compliance:
+ *   - Follows IEEE 1016 software design description
+ *   - Adheres to IEEE 829 test documentation standards
+ *   - Implements IEEE 730 quality assurance practices
+ */
+--}}
 @extends('components.layout.app')
 
 @section('content')

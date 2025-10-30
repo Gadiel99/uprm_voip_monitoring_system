@@ -1,3 +1,72 @@
+{{--
+/*
+ * File: help.blade.php
+ * Project: UPRM VoIP Monitoring System
+ * Description: Comprehensive user guide and system documentation
+ * 
+ * Author: [Hector R. Sepulveda]
+ * Date Created: October 2025
+ * Last Modified: October 30, 2025
+ * 
+ * Purpose:
+ *   This page provides complete documentation for system users, covering all
+ *   features, workflows, and configuration options. It serves as the primary
+ *   reference guide for the monitoring system.
+ * 
+ * Documentation Sections:
+ *   1. Getting Started
+ *      - Dashboard overview
+ *      - Monitor alerts
+ *      - Device management
+ *      - System health diagnostics
+ *   
+ *   2. Working with Alerts
+ *      - Severity level definitions (Critical/Medium/Low)
+ *      - Alert actions and acknowledgment
+ *      - Building summaries
+ *   
+ *   3. Device Monitoring
+ *      - Status indicators (Online/Offline)
+ *      - Filtering by building
+ *      - Device information fields
+ *   
+ *   4. Configuring Thresholds & Notifications
+ *      - Access settings navigation
+ *      - Threshold types (Warning/Critical)
+ *      - Alert frequency configuration
+ *      - Notification preferences (Email/Push)
+ *   
+ *   5. Running Diagnostics
+ *      - Automated diagnostic tests
+ *      - Health summary color codes
+ *      - Network/Database/Backup checks
+ *   
+ *   6. Admin Management
+ *      - Access control
+ *      - Admin panel sub-tabs (Backup/Logs/Settings/Servers/Users)
+ *      - User role management
+ * 
+ * Severity Level Definitions:
+ *   - Critical (Red): Immediate action required, system failure/major outage
+ *   - Medium (Yellow): Warning condition, monitor closely
+ *   - Low (Blue): Informational, routine or resolved event
+ * 
+ * Target Audience:
+ *   - System administrators
+ *   - Network operators
+ *   - Technical support staff
+ *   - New users requiring onboarding
+ * 
+ * Dependencies:
+ *   - Bootstrap 5.3.3 for styling
+ *   - Bootstrap Icons for visual indicators
+ * 
+ * IEEE Standards Compliance:
+ *   - Follows IEEE 1063 software user documentation
+ *   - Adheres to IEEE 1016 design description standards
+ *   - Implements IEEE 730 quality assurance documentation
+ */
+--}}
 @extends('components.layout.app')
 
 @section('content')

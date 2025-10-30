@@ -1,3 +1,78 @@
+{{--
+/*
+ * File: admin.blade.php
+ * Project: UPRM VoIP Monitoring System
+ * Description: Administrative control panel with system configuration and management tools
+ * 
+ * Author: [Hector R. Sepulveda]
+ * Date Created: October 2025
+ * Last Modified: October 30, 2025
+ * 
+ * Purpose:
+ *   This page provides administrators with centralized access to system configuration,
+ *   maintenance, monitoring logs, server management, and user administration.
+ * 
+ * Access Control:
+ *   - Restricted to users with administrative privileges
+ *   - Visible only in left sidebar for authorized users
+ *   - Requires authentication and admin role
+ * 
+ * Main Features (5 Tabs):
+ *   1. Backup
+ *      - Manual backup trigger
+ *      - Automated backup schedule display
+ *      - Backup completion confirmation
+ *   
+ *   2. Logs
+ *      - Real-time system log viewer
+ *      - Log filtering by severity
+ *      - Sample log entries with timestamps
+ *   
+ *   3. Settings
+ *      - Threshold configurations (Warning/Critical)
+ *      - Notification preferences (Email/Push)
+ *      - Alert frequency settings
+ *      - Save functionality with confirmation
+ *   
+ *   4. Servers
+ *      - Server status dashboard
+ *      - Health check interface
+ *      - Color-coded status indicators (Operational/Warning)
+ *   
+ *   5. Users
+ *      - User management table
+ *      - Role assignment
+ *      - User information display (Name/Email/Role)
+ * 
+ * Tab Navigation:
+ *   - Bootstrap nav-tabs for tabbed interface
+ *   - Active tab highlighting
+ *   - Click-to-switch functionality
+ *   - Persistent state during page session
+ * 
+ * Configuration Options:
+ *   Settings Tab:
+ *     - Warning Threshold: Numeric input (default: 75)
+ *     - Critical Threshold: Numeric input (default: 90)
+ *     - Alert Frequency: Dropdown (Instant/Every 5/15/30 minutes)
+ *     - Notification Type: Checkboxes (Email/Push)
+ * 
+ * User Management:
+ *   Table Columns:
+ *     - Name (user full name)
+ *     - Email (contact address)
+ *     - Role (Admin/User)
+ * 
+ * Dependencies:
+ *   - Bootstrap 5.3.3 for tab navigation and styling
+ *   - Bootstrap Icons for visual indicators
+ * 
+ * IEEE Standards Compliance:
+ *   - Follows IEEE 1016 software design description
+ *   - Adheres to IEEE 829 test documentation standards
+ *   - Implements IEEE 730 quality assurance practices
+ */
+--}}
 @extends('components.layout.app')
 
 @section('content')

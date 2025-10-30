@@ -1,3 +1,70 @@
+{{--
+/*
+ * File: welcome.blade.php
+ * Project: UPRM VoIP Monitoring System
+ * Description: Landing page / public welcome page for the monitoring system
+ * 
+ * Author: [Hector R. Sepulveda]
+ * Date Created: October 2025
+ * Last Modified: October 30, 2025
+ * 
+ * Purpose:
+ *   Serves as the initial landing page for visitors before authentication.
+ *   May also serve as a default Laravel welcome page or public information page.
+ * 
+ * Features:
+ *   - Responsive layout design
+ *   - Bootstrap 5.3.3 styling
+ *   - Bootstrap Icons integration
+ *   - Sidebar navigation structure
+ *   - Interactive map container placeholder
+ *   - UPRM branding elements
+ * 
+ * Layout Structure:
+ *   - Navbar: Top navigation bar with UPRM logo
+ *   - Sidebar: Left sidebar (250px fixed width, full height)
+ *   - Main Content: Map container with rounded corners and shadow
+ * 
+ * Styling Features:
+ *   - Background: Light gray (#f8f9fa)
+ *   - Sidebar: White with right border separator
+ *   - Active links: Light green background (#d1e7dd)
+ *   - Map container: White with rounded corners and shadow
+ *   - Navbar logo height: 40px
+ * 
+ * Responsive Design:
+ *   - Fixed sidebar width: 250px
+ *   - Full viewport height layout (100vh)
+ *   - Flexible main content area
+ *   - Bootstrap grid system compatible
+ * 
+ * Branding:
+ *   - Title: "UPRM Monitoring System"
+ *   - Color scheme: UPRM green (#0f5132, #d1e7dd)
+ *   - Logo integration ready
+ * 
+ * Page Metadata:
+ *   - Character set: UTF-8
+ *   - Viewport: Responsive (width=device-width, initial-scale=1)
+ *   - Language: Dynamic (from app locale)
+ * 
+ * Dependencies:
+ *   - Bootstrap 5.3.3 CSS (CDN)
+ *   - Bootstrap 5.3.3 JS Bundle with Popper (CDN)
+ *   - Bootstrap Icons 1.11.3 (CDN)
+ * 
+ * Usage Context:
+ *   - Default route landing page
+ *   - Public-facing information page
+ *   - Pre-authentication welcome screen
+ *   - Potential redirect after logout
+ * 
+ * IEEE Standards Compliance:
+ *   - Follows IEEE 1016 software design description
+ *   - Adheres to web accessibility standards
+ *   - Implements responsive design best practices
+ */
+--}}
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>

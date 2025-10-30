@@ -1,3 +1,49 @@
+{{--
+/*
+ * File: home.blade.php
+ * Project: UPRM VoIP Monitoring System
+ * Description: Interactive campus map interface displaying building status markers
+ * 
+ * Author: [Hector R.Sepulveda]
+ * Date Created: October 2025
+ * Last Modified: October 30, 2025
+ * 
+ * Purpose:
+ *   This page displays an interactive map of the UPRM campus with clickable building
+ *   markers. Each marker represents a monitored building and displays its current
+ *   device status through color coding.
+ * 
+ * Features:
+ *   - Interactive UPRM campus map (2202x1199 px)
+ *   - 37 building markers with positioning
+ *   - Color-coded status indicators (green/yellow/red)
+ *   - Click-to-navigate functionality to building details
+ *   - Responsive design with fixed aspect ratio
+ *   - Bootstrap tooltip integration
+ * 
+ * Marker Color Codes:
+ *   - Green (#198754): Normal operation (<10% devices offline)
+ *   - Yellow/Warning: Warning status (10-25% devices offline)
+ *   - Red/Critical: Critical status (>25% devices offline)
+ * 
+ * Interaction:
+ *   - Clicking a marker redirects to: /alerts?building={buildingName}
+ *   - Hover displays building name via Bootstrap tooltip
+ * 
+ * Technical Notes:
+ *   - Marker positions use percentage-based coordinates (top%, left%)
+ *   - Map maintains 2202:1199 aspect ratio for accuracy
+ *   - JavaScript event listeners enable marker interactivity
+ * 
+ * Dependencies:
+ *   - Bootstrap 5.3.3 (tooltips)
+ *   - Campus map image: public/images/MapaRUM.jpeg
+ * 
+ * IEEE Standards Compliance:
+ *   - Follows IEEE 1016 software design description
+ *   - Adheres to IEEE 730 software quality assurance
+ */
+--}}
 @extends('components.layout.app')
 
 @section('content')
