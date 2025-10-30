@@ -11,7 +11,7 @@
 
         <!-- Legend -->
         <div class="position-absolute top-0 start-0 bg-white bg-opacity-90 border rounded shadow-sm m-3 p-2 small text-start" 
-             style="line-height: 1.3; border-left: 3px solid #00844b;">
+             style="line-height: 1.3; border-left: 3px solid #00844b;"> 
             <strong class="text-dark">Map Legend</strong><br>
             <span class="text-success">● Normal</span><br>
             <span class="text-warning">● Warning</span><br>
@@ -20,7 +20,8 @@
         </div>
 
         <!-- === INTERACTIVE MARKERS === -->
-        <div class="marker" style="top: 71.3%; left: 78.3%;" title="Celis"></div>
+        <!-- ===To move markers change numbers beside %  === -->
+        <div class="marker" style="top: 71.3%; left: 78.3%;" title="Celis"></div> 
         <div class="marker" style="top: 56.5%; left: 82.5%;" title="Stefani"></div>
         <div class="marker" style="top: 18.5%; left: 72%;" title="Biologia"></div>
         <div class="marker" style="top: 78%; left: 76.7%;" title="DeDiego"></div>
@@ -65,7 +66,7 @@
 .map-wrapper {
     width: 100%;
     max-width: 1600px;
-    aspect-ratio: 2202 / 1199; /* exact ratio of your image */
+    aspect-ratio: 2202 / 1199; /* exact ratio of map */
     position: relative;
     overflow: hidden;
     border: 1px solid #dee2e6;
