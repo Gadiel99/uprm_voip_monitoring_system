@@ -22,16 +22,16 @@ Route::middleware('auth')->group(function () {
     Route::view('/settings', 'pages.settings')->name('settings');
     Route::view('/help', 'pages.help')->name('help');
 
-    // Opcional: User Preview toggle
+    // Opcional: User Preview toggle (solo admins/superadmins)
     Route::post('/enter-user-preview', function () {
         session()->put('user_preview', true);
         return back();
-    })->name('enter.user.preview');
+    })->middleware('admin')->name('enter.user.preview');
 
     Route::post('/exit-user-preview', function () {
         session()->forget('user_preview');
         return back();
-    })->name('exit.user.preview');
+    })->middleware('admin')->name('exit.user.preview');
 
     // Profile routes (unificar edición en PATCH /profile)
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

@@ -200,28 +200,28 @@
                         </li>
 
                         {{-- Role switch --}}
-                        @if ($isUserPreview)
-                            <li>
-                                <form action="{{ url('/exit-user-preview') }}" method="POST">
-                                    @csrf
-                                   <button type="submit" class="dropdown-item fw-semibold" style="color: #007bff !important;">
-    <i class="bi bi-eye-slash me-2" style="color: #007bff !important;"></i>Exit User Preview
-</button>
-
-
-                                </form>
-                            </li>
-                        @else
-                            <li>
-                                <form action="{{ url('/enter-user-preview') }}" method="POST">
-                                    @csrf
-                                    <button type="submit" class="dropdown-item">
-                                        <i class="bi bi-eye me-2 text-secondary"></i>
-                                        User Preview
-                                    </button>
-                                </form>
-                            </li>
-                        @endif
+                        @admin
+                            @if ($isUserPreview)
+                                <li>
+                                    <form action="{{ url('/exit-user-preview') }}" method="POST">
+                                        @csrf
+                                        <button type="submit" class="dropdown-item fw-semibold" style="color: #007bff !important;">
+                                            <i class="bi bi-eye-slash me-2" style="color: #007bff !important;"></i>Exit User Preview
+                                        </button>
+                                    </form>
+                                </li>
+                            @else
+                                <li>
+                                    <form action="{{ url('/enter-user-preview') }}" method="POST">
+                                        @csrf
+                                        <button type="submit" class="dropdown-item">
+                                            <i class="bi bi-eye me-2 text-secondary"></i>
+                                            User Preview
+                                        </button>
+                                    </form>
+                                </li>
+                            @endif
+                        @endadmin
 
                         <li><hr class="dropdown-divider"></li>
 
@@ -344,16 +344,18 @@
                         </a>
                     </li>
 
-                    @if (! $isUserPreview)
-                        <li class="nav-item">
-                            <a
-                                href="{{ url('/admin') }}"
-                                class="nav-link {{ request()->is('admin') ? 'active' : '' }}"
-                            >
-                                Admin
-                            </a>
-                        </li>
-                    @endif
+                    @admin
+                        @if (! $isUserPreview)
+                            <li class="nav-item">
+                                <a
+                                    href="{{ url('/admin') }}"
+                                    class="nav-link {{ request()->is('admin') ? 'active' : '' }}"
+                                >
+                                    Admin
+                                </a>
+                            </li>
+                        @endif
+                    @endadmin
 
                 </ul>
             @endif
