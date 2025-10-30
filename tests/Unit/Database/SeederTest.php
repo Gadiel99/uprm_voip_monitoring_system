@@ -22,7 +22,8 @@ test('buildings networks seeder attaches networks to building', function () {
     $seeder = new BuildingsNetworksSeeder();
     $seeder->run();
 
-    $building = Buildings::first();
+    // Stefani building has 2 networks
+    $building = Buildings::where('name', 'Stefani')->first();
     
     expect($building->networks)->toHaveCount(2);
 });
@@ -31,17 +32,17 @@ test('seeded building has correct name', function () {
     $seeder = new BuildingsNetworksSeeder();
     $seeder->run();
 
-    $building = Buildings::where('name', 'CTI')->first();
+    $building = Buildings::where('name', 'Stefani')->first();
     
     expect($building)->not->toBeNull()
-        ->and($building->name)->toBe('CTI');
+        ->and($building->name)->toBe('Stefani');
 });
 
 test('seeded networks have correct subnets', function () {
     $seeder = new BuildingsNetworksSeeder();
     $seeder->run();
 
-    $network1 = Networks::where('subnet', '10.100.0.0/24')->first();
+    $network1 = Networks::where('subnet', '10.100.100.0/24')->first();
     $network2 = Networks::where('subnet', '10.100.147.0/24')->first();
     
     expect($network1)->not->toBeNull()
