@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>UPRM Monitoring System</title>
 
-    {{-- Bootstrap 5 --}}
+    {{-- Bootstrap 5 CSS/JS --}}
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
@@ -13,18 +13,19 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
 
     <style>
+        /* Global body styling */
         body {
             background-color: #f8f9fa;
             font-family: 'Segoe UI', sans-serif;
         }
 
-        /* Navbar */
+        /* Navbar styling */
         .navbar {
             background-color: #ffffff;
             border-bottom: 1px solid #dee2e6;
         }
 
-        /* Sidebar */
+        /* Sidebar container */
         .sidebar {
             width: 240px;
             min-height: 100vh;
@@ -33,6 +34,7 @@
             padding-top: 1rem;
         }
 
+        /* Sidebar links */
         .sidebar .nav-link {
             color: #333;
             font-weight: 500;
@@ -40,13 +42,14 @@
             margin: 3px 0;
         }
 
+        /* Active sidebar link */
         .sidebar .nav-link.active {
             background-color: #d7f5df;
             color: #198754 !important;
             font-weight: 600;
         }
 
-        /* Top tabs */
+        /* Top tabs styling */
         .nav-tabs {
             border-bottom: 1px solid #dee2e6;
             background-color: #fff;
@@ -64,6 +67,7 @@
             transition: all 0.2s ease;
         }
 
+        /* Main content container */
         main {
             background-color: #fff;
             border-radius: 8px;
@@ -71,7 +75,7 @@
             box-shadow: 0 0 8px rgba(0, 0, 0, 0.05);
         }
 
-        /* Account Settings Modal Styles */
+        /* Account modal tabs */
         .nav-pills .nav-link {
             color: #000;
             border-radius: 8px;
@@ -84,16 +88,18 @@
             color: #fff !important;
         }
 
+        /* Modal box styling */
         .modal-content {
             border-radius: 16px;
         }
 
+        /* Dark button styling */
         .btn-dark {
             background-color: #0b0b0b;
             border: none;
         }
 
-        /* Notifications dropdown */
+        /* Notification dropdown */
         .dropdown-menu {
             border-radius: 10px;
             border: none;
@@ -124,6 +130,7 @@
             animation: slideDown 0.3s ease;
         }
 
+        /* Banner slide-in animation */
         @keyframes slideDown {
             from { opacity: 0; transform: translateY(-5px); }
             to { opacity: 1; transform: translateY(0); }
@@ -133,6 +140,7 @@
 
 <body>
     @php
+        // Check if user preview mode is active
         $isUserPreview = session('user_preview', false);
     @endphp
 
@@ -140,6 +148,7 @@
     <nav class="navbar navbar-expand-lg sticky-top">
         <div class="container-fluid">
 
+            {{-- Brand logo and name --}}
             <a class="navbar-brand d-flex align-items-center" href="{{ url('/') }}">
                 <img src="{{ asset('images/logo-uprm.png') }}" alt="UPRM Logo" height="36" class="me-2">
                 <span class="fw-semibold text-dark">UPRM Monitoring System</span>
@@ -147,7 +156,7 @@
 
             <div class="d-flex align-items-center gap-3">
 
-                {{-- Notifications (frontend only) --}}
+                {{-- Notifications dropdown --}}
                 <div class="dropdown">
                     <a href="#" class="text-dark position-relative" data-bs-toggle="dropdown" aria-expanded="false">
                         <i class="bi bi-bell fs-5"></i>
@@ -167,9 +176,7 @@
                     </ul>
                 </div>
 
-                
-
-                {{-- User Dropdown --}}
+                {{-- User account dropdown --}}
                 <div class="dropdown">
                     <a
                         class="d-flex align-items-center text-decoration-none text-dark dropdown-toggle"
@@ -178,13 +185,13 @@
                     >
                        <i class="bi bi-person-circle me-1"></i>
                         <span id="userNameDisplay">Admin</span>
-
                     </a>
 
                     <ul class="dropdown-menu dropdown-menu-end shadow-sm">
 
                         <li class="dropdown-header fw-semibold px-3">My Account</li>
 
+                        {{-- Open account settings modal --}}
                         <li>
                             <a
                                 class="dropdown-item"
@@ -197,16 +204,14 @@
                             </a>
                         </li>
 
-                        {{-- Role switch --}}
+                        {{-- User preview mode toggle --}}
                         @if ($isUserPreview)
                             <li>
                                 <form action="{{ url('/exit-user-preview') }}" method="POST">
                                     @csrf
-                                   <button type="submit" class="dropdown-item fw-semibold" style="color: #007bff !important;">
-    <i class="bi bi-eye-slash me-2" style="color: #007bff !important;"></i>Exit User Preview
-</button>
-
-
+                                    <button type="submit" class="dropdown-item fw-semibold" style="color: #007bff !important;">
+                                        <i class="bi bi-eye-slash me-2" style="color: #007bff !important;"></i>Exit User Preview
+                                    </button>
                                 </form>
                             </li>
                         @else
@@ -223,7 +228,7 @@
 
                         <li><hr class="dropdown-divider"></li>
 
-                        {{-- Logout (submits POST /logout) --}}
+                        {{-- Logout action --}}
                         <li>
                             <form id="logoutForm" action="{{ url('/logout') }}" method="POST" class="d-none">
                                 @csrf
@@ -258,6 +263,7 @@
         <div class="sidebar p-3">
             <ul class="nav flex-column">
 
+                {{-- Dashboard link --}}
                 <li class="nav-item mb-2">
                     <a
                         href="{{ url('/') }}"
@@ -268,8 +274,7 @@
                     </a>
                 </li>
 
-                
-
+                {{-- Help link --}}
                 <li class="nav-item">
                     <a
                         href="{{ url('/help') }}"
@@ -283,10 +288,10 @@
             </ul>
         </div>
 
-        {{-- Main content --}}
+        {{-- Main content area --}}
         <div class="flex-grow-1">
 
-            {{-- Dashboard tabs (only on dashboard routes) --}}
+            {{-- Dashboard top tabs (conditional render) --}}
             @if (
                 request()->is('/') ||
                 request()->is('alerts') ||
@@ -332,6 +337,7 @@
                         </a>
                     </li>
 
+                    {{-- Admin tab only if not in user preview --}}
                     @if (! $isUserPreview)
                         <li class="nav-item">
                             <a
@@ -346,6 +352,7 @@
                 </ul>
             @endif
 
+            {{-- Page content injection --}}
             <main class="m-4">
                 @yield('content')
             </main>
@@ -363,14 +370,16 @@
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content border-0 shadow-lg rounded-4">
 
+                {{-- Modal header --}}
                 <div class="modal-header border-0 pb-0">
                     <h5 class="modal-title fw-semibold" id="accountSettingsLabel">Account Settings</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
 
+                {{-- Modal body --}}
                 <div class="modal-body">
 
-                    {{-- Modal Tabs --}}
+                    {{-- Account modal tabs --}}
                     <ul class="nav nav-pills mb-4 justify-content-center" id="accountTab" role="tablist">
                         <li class="nav-item">
                             <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#profileTab" type="button">
@@ -396,7 +405,7 @@
 
                     <div class="tab-content">
 
-                        {{-- Profile Picture --}}
+                        {{-- Profile Picture tab --}}
                         <div class="tab-pane fade show active text-center" id="profileTab" role="tabpanel">
                             <div class="mb-3">
                                 <img
@@ -414,7 +423,7 @@
                             <p class="text-muted small">Recommended: Square image, at least 400x400px</p>
                         </div>
 
-                        {{-- Username --}}
+                        {{-- Username tab --}}
                         <div class="tab-pane fade" id="usernameTab" role="tabpanel">
                             <label class="form-label fw-semibold">Current Username</label>
                             <input type="text" class="form-control mb-3" value="Admin User" readonly>
@@ -425,7 +434,7 @@
                             <button class="btn btn-dark w-100">Update Username</button>
                         </div>
 
-                        {{-- Email --}}
+                        {{-- Email tab --}}
                         <div class="tab-pane fade" id="emailTab" role="tabpanel">
                             <label class="form-label fw-semibold">Current Email</label>
                             <input type="email" class="form-control mb-3" value="admin@uprm.edu" readonly>
@@ -436,7 +445,7 @@
                             <button class="btn btn-dark w-100">Update Email</button>
                         </div>
 
-                        {{-- Password --}}
+                        {{-- Password tab --}}
                         <div class="tab-pane fade" id="passwordTab" role="tabpanel">
                             <label class="form-label fw-semibold">Current Password</label>
                             <input type="password" class="form-control mb-3" placeholder="Enter current password">
@@ -463,23 +472,24 @@
         </div>
     </div>
 
+    {{-- Frontend demo JS for account settings --}}
     <script>
 document.addEventListener('DOMContentLoaded', () => {
     console.log("🧩 Account Settings Frontend Demo Active");
 
-    // === Load stored profile info ===
+    // Load stored demo account info
     const saved = JSON.parse(localStorage.getItem('demoAccountInfo')) || {
         username: 'Admin User',
         email: 'admin@uprm.edu',
     };
 
-    // Fill modal fields
+    // Fill modal display fields
     document.querySelectorAll('#usernameTab input[readonly]').forEach(el => el.value = saved.username);
     document.querySelectorAll('#emailTab input[readonly]').forEach(el => el.value = saved.email);
     document.querySelector('#profileTab h6').innerText = saved.username;
     document.querySelector('#profileTab small').innerText = saved.email;
 
-    // === Update Username ===
+    // Update Username handler
     document.querySelector('#usernameTab button').addEventListener('click', () => {
         const newUsername = document.querySelector('#usernameTab input[placeholder]').value.trim();
         if (!newUsername) return alert('⚠️ Please enter a new username.');
@@ -487,7 +497,7 @@ document.addEventListener('DOMContentLoaded', () => {
         saved.username = newUsername;
         localStorage.setItem('demoAccountInfo', JSON.stringify(saved));
 
-        // Update display
+        // Update displayed username
         document.querySelector('#profileTab h6').innerText = newUsername;
         document.querySelectorAll('#usernameTab input[readonly]').forEach(el => el.value = newUsername);
         if (document.querySelector('#userNameDisplay')) {
@@ -497,7 +507,7 @@ document.addEventListener('DOMContentLoaded', () => {
         alert('✅ Username updated (frontend demo only)');
     });
 
-    // === Update Email ===
+    // Update Email handler
     document.querySelector('#emailTab button').addEventListener('click', () => {
         const newEmail = document.querySelector('#emailTab input[placeholder]').value.trim();
         if (!newEmail.includes('@')) return alert('⚠️ Enter a valid email address.');
@@ -505,13 +515,14 @@ document.addEventListener('DOMContentLoaded', () => {
         saved.email = newEmail;
         localStorage.setItem('demoAccountInfo', JSON.stringify(saved));
 
+        // Update displayed email
         document.querySelector('#profileTab small').innerText = newEmail;
         document.querySelectorAll('#emailTab input[readonly]').forEach(el => el.value = newEmail);
 
         alert('✅ Email updated (frontend demo only)');
     });
 
-    // === Update Password ===
+    // Update Password handler
     document.querySelector('#passwordTab button').addEventListener('click', () => {
         const current = document.querySelector('#passwordTab input[placeholder="Enter current password"]').value;
         const newPass = document.querySelector('#passwordTab input[placeholder="Enter new password"]').value;
@@ -526,34 +537,34 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 </script>
 
+{{-- Simulated notifications demo --}}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const notifContent = document.getElementById('notif-content');
+    const notifBadge = document.getElementById('notif-badge');
 
-    {{-- Simulated notifications --}}
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const notifContent = document.getElementById('notif-content');
-            const notifBadge = document.getElementById('notif-badge');
+    // Demo notifications data
+    const notifications = [
+        { title: 'Emergency Services', desc: 'Phone 787-555-0100 is offline', level: 'critical' },
+        { title: 'Security Office', desc: 'Phone 787-555-0200 is offline', level: 'warning' }
+    ];
 
-            // Static demo data
-            const notifications = [
-                { title: 'Emergency Services', desc: 'Phone 787-555-0100 is offline', level: 'critical' },
-                { title: 'Security Office', desc: 'Phone 787-555-0200 is offline', level: 'warning' }
-            ];
+    // Populate notifications if any
+    if (notifications.length > 0) {
+        notifBadge.classList.remove('d-none');
+        notifBadge.textContent = notifications.length;
 
-            if (notifications.length > 0) {
-                notifBadge.classList.remove('d-none');
-                notifBadge.textContent = notifications.length;
-
-                notifContent.innerHTML = notifications.map(n => `
-                    <li class="dropdown-item d-flex align-items-start gap-2">
-                        <i class="bi bi-exclamation-octagon text-danger fs-5"></i>
-                        <div>
-                            <div class="fw-semibold text-danger">${n.title}</div>
-                            <small class="text-muted">${n.desc}</small>
-                        </div>
-                    </li>
-                `).join('');
-            }
-        });
-    </script>
+        notifContent.innerHTML = notifications.map(n => `
+            <li class="dropdown-item d-flex align-items-start gap-2">
+                <i class="bi bi-exclamation-octagon text-danger fs-5"></i>
+                <div>
+                    <div class="fw-semibold text-danger">${n.title}</div>
+                    <small class="text-muted">${n.desc}</small>
+                </div>
+            </li>
+        `).join('');
+    }
+});
+</script>
 </body>
 </html>

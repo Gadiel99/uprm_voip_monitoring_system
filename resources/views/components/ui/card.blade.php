@@ -1,3 +1,4 @@
+<!-- Reusable card component: displays a title, optional description, and slot content -->
 @props(['title', 'description' => null])
 
 <div class="card shadow-sm mb-3">

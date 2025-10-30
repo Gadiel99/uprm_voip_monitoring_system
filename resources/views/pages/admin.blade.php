@@ -433,7 +433,7 @@ function enableTableActions(tableId) {
             cells.forEach((cell, index) => {
                 const value = cell.textContent.trim();
 
-                // Status column? Make it a select
+                // Status column. Make it a select
                 if (cell.innerText.includes('Online') || cell.innerText.includes('Offline')) {
                     const select = document.createElement('select');
                     select.className = 'form-select form-select-sm';
@@ -480,7 +480,7 @@ function enableTableActions(tableId) {
     });
 }
 
-/* ADD FUNCTIONS (unchanged) */
+/* ADD FUNCTIONS  */
 function onAddCritical(ev) {
     ev.preventDefault();
     const ip = document.getElementById('critical_ip').value.trim();

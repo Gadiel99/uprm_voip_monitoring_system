@@ -1,3 +1,4 @@
+<!-- Sidebar navigation component: displays vertical menu and highlights active section using the 'active' prop -->
 @props(['active' => 'dashboard'])
 
 <div class="d-flex flex-column flex-shrink-0 p-3 bg-light border-end" style="width: 250px; min-height: 100vh;">

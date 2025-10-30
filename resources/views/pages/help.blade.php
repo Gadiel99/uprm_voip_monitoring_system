@@ -2,25 +2,44 @@
 
 @section('content')
 <div class="container-fluid">
+    {{-- Navigation tabs at the top --}}
     <ul class="nav nav-tabs ps-3 pt-2 mb-4">
         <li class="nav-item">
+            {{-- Active tab for How To guide --}}
             <a class="nav-link active" href="#">How To</a>
         </li>
     </ul>
 
+    {{-- Main card container for the How To guide --}}
     <div class="card border-0 shadow-sm p-4">
         <h4 class="fw-semibold mb-4">How to Use the Monitoring System</h4>
 
         {{-- ================= GETTING STARTED ================= --}}
+        {{-- Overview instructions for first-time users --}}
         <h6 class="fw-bold">Getting Started</h6>
         <ol class="mb-4">
-            <li><strong>Dashboard Overview:</strong> Start at the <strong>Home</strong> tab to view the interactive campus map and latest system reports. Each marker represents a building and is color-coded by alert severity. Click a building marker to open its detailed view in the <strong>Alerts</strong> tab.</li>
-            <li><strong>Monitor Alerts:</strong> Go to the <strong>Alerts</strong> tab to see current notifications. Critical alerts require immediate attention and are highlighted in red. You can sort alerts by <em>severity</em> or <em>alphabetically</em> in <strong>Admin → Settings</strong>.</li>
-            <li><strong>Device Management:</strong> Use the <strong>Devices</strong> tab to monitor all connected phones. Click on any device row to open its <strong>activity graph</strong> for the past month (green = active, red = inactive).</li>
-            <li><strong>System Health:</strong> The <strong>Diagnostics</strong> tab provides metrics for devices and buildings across all monitored servers.</li>
+            <li>
+                <strong>Dashboard Overview:</strong> Start at the <strong>Home</strong> tab to view the interactive campus map and latest system reports. 
+                Each marker represents a building and is color-coded by alert severity. 
+                Click a building marker to open its detailed view in the <strong>Alerts</strong> tab.
+            </li>
+            <li>
+                <strong>Monitor Alerts:</strong> Go to the <strong>Alerts</strong> tab to see current notifications. 
+                Critical alerts require immediate attention and are highlighted in red. 
+                You can sort alerts by <em>severity</em> or <em>alphabetically</em> in <strong>Admin → Settings</strong>.
+            </li>
+            <li>
+                <strong>Device Management:</strong> Use the <strong>Devices</strong> tab to monitor all connected phones. 
+                Click on any device row to open its <strong>activity graph</strong> for the past month 
+                (green = active, red = inactive).
+            </li>
+            <li>
+                <strong>System Health:</strong> The <strong>Diagnostics</strong> tab provides metrics for devices and buildings across all monitored servers.
+            </li>
         </ol>
 
         {{-- ================= ALERTS ================= --}}
+        {{-- Instructions on how to work with system alerts --}}
         <h6 class="fw-bold">Working with Alerts</h6>
 
         <h6 class="fw-semibold mt-3">Understanding Severity Levels:</h6>
@@ -30,18 +49,27 @@
             <li><span class="text-info fw-bold">Low:</span> Informational — routine or resolved system event</li>
         </ul>
 
-        <p><strong>Alert Actions:</strong> Click any alert to view detailed information, acknowledge warnings, or mark issues as resolved. Building summaries show total affected devices and time since last update.</p>
+        {{-- Instructions for interacting with alerts --}}
+        <p>
+            <strong>Alert Actions:</strong> Click any alert to view detailed information, acknowledge warnings, or mark issues as resolved. 
+            Building summaries show total affected devices and time since last update.
+        </p>
 
         {{-- ================= DEVICES ================= --}}
+        {{-- How to monitor and interpret device status --}}
         <h6 class="fw-bold mt-4">Device Monitoring</h6>
         <h6 class="fw-semibold">Status Indicators:</h6>
         <ul class="mb-3">
             <li><span class="text-success fw-bold">Online:</span> Device is connected and functioning normally</li>
             <li><span class="text-danger fw-bold">Offline:</span> Device is not responding or disconnected</li>
         </ul>
-        <p>Use the <strong>Devices</strong> tab to filter devices by building and quickly identify issues. Each entry shows the device’s server, user, MAC, and IP address.</p>
+        <p>
+            Use the <strong>Devices</strong> tab to filter devices by building and quickly identify issues. 
+            Each entry shows the device’s server, user, MAC, and IP address.
+        </p>
 
         {{-- ================= SETTINGS ================= --}}
+        {{-- How to configure thresholds and notifications --}}
         <h6 class="fw-bold mt-4">Configuring Thresholds & Notifications</h6>
         <ul class="mb-3">
             <li><strong>Access Settings:</strong> Go to <strong>Admin → Settings</strong> to configure alert thresholds, notification rules, and sorting preferences.</li>
@@ -52,10 +80,12 @@
         </ul>
 
         {{-- ================= DIAGNOSTICS ================= --}}
+        {{-- Explains how to run system diagnostic tests --}}
         <h6 class="fw-bold mt-4">Running Diagnostics</h6>
         <ul>
             <li><strong>Diagnostic Tests:</strong> Run automated tests to verify network connectivity, database performance, backup integrity, and system response time.</li>
-            <li><strong>Health Summary:</strong> Results are color-coded for clarity — 
+            <li>
+                <strong>Health Summary:</strong> Results are color-coded for clarity — 
                 <span class="text-success fw-bold">Green</span> (Normal), 
                 <span class="text-warning fw-bold">Yellow</span> (Warning), 
                 <span class="text-danger fw-bold">Red</span> (Critical).
@@ -63,6 +93,7 @@
         </ul>
 
         {{-- ================= ADMIN ================= --}}
+        {{-- Information for system administrators --}}
         <h6 class="fw-bold mt-4">Admin Management</h6>
         <ul>
             <li><strong>Access Control:</strong> Only administrators can view and modify the <strong>Admin</strong> tab.</li>

@@ -2,22 +2,31 @@
 
 @section('content')
 <style>
+    /* Card styling with rounded corners and soft shadow */
     .card {
         border-radius: 12px;
         box-shadow: 0 0 10px rgba(0,0,0,0.05);
     }
+
+    /* Highlight table rows on hover */
     .table-hover tbody tr:hover {
         background-color: #f1f3f4;
         cursor: pointer;
     }
+
+    /* Online badge styling */
     .badge-online {
         background-color: #e6f9ed;
         color: #00844b;
     }
+
+    /* Offline badge styling */
     .badge-offline {
         background-color: #fdeaea;
         color: #c82333;
     }
+
+    /* Small hint text for clickable rows */
     .click-hint {
         color: #00844b;
         font-weight: 600;
@@ -28,6 +37,7 @@
     <h4 class="fw-semibold mb-4">Device Management</h4>
 
     {{-- TABLE: BUILDINGS OVERVIEW --}}
+    {{-- Shows a summary of all buildings and their device counts --}}
     <div id="buildingOverview">
         <div class="card border-0 shadow-sm p-4 mb-4">
             <h5 class="fw-semibold mb-3">Buildings Overview</h5>
@@ -43,6 +53,7 @@
                     </tr>
                 </thead>
                 <tbody>
+                    {{-- Example buildings with sample data --}}
                     <tr onclick="showBuildingDevices('Stefani')">
                         <td><i class="bi bi-building me-2 text-success"></i> Stefani</td>
                         <td>155</td>
@@ -67,13 +78,16 @@
     </div>
 
     {{-- TABLE: DEVICES PER BUILDING --}}
+    {{-- Displays all devices for the selected building --}}
     <div id="buildingDevices" class="d-none">
         <div class="card border-0 shadow-sm p-4 mb-4">
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <div>
+                    {{-- Title will dynamically show building name --}}
                     <h5 class="fw-semibold mb-0" id="buildingTitle">Building Devices</h5>
                     <small class="click-hint">(Click row to view graph)</small>
                 </div>
+                {{-- Button to go back to overview --}}
                 <button class="btn btn-outline-secondary btn-sm" onclick="goBack()">
                     <i class="bi bi-arrow-left me-1"></i> Return
                 </button>
@@ -90,24 +104,28 @@
                     </tr>
                 </thead>
                 <tbody id="deviceTableBody">
-                    {{-- Populated dynamically --}}
+                    {{-- Device rows will be populated dynamically via JS --}}
                 </tbody>
             </table>
         </div>
     </div>
 </div>
 
-{{-- === MODAL: DEVICE GRAPH === --}}
+{{-- MODAL: DEVICE GRAPH --}}
+{{-- Modal displays activity chart for selected device --}}
 <div class="modal fade" id="deviceGraphModal" tabindex="-1" aria-labelledby="deviceGraphModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered modal-lg">
     <div class="modal-content">
       <div class="modal-header">
+        {{-- Device title dynamically updated --}}
         <h5 class="modal-title" id="deviceGraphModalLabel">Device Activity</h5>
       </div>
       <div class="modal-body">
+        {{-- Chart.js canvas --}}
         <canvas id="deviceActivityChart" height="100"></canvas>
       </div>
       <div class="modal-footer">
+        {{-- Close modal --}}
         <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
           <i class="bi bi-arrow-left me-1"></i> Return
         </button>
@@ -116,10 +134,11 @@
   </div>
 </div>
 
-{{-- Chart.js CDN --}}
+{{-- Chart.js library --}}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script>
+/* Sample device data for each building */
 const buildingDevicesData = {
     "Stefani": [
         { id: "DEV-1001", user: "admin", phone: "787-555-0101", mac: "00:1B:44:11:3A:B7", ip: "192.168.1.10" },
@@ -137,14 +156,20 @@ const buildingDevicesData = {
 
 let chartInstance = null;
 
+/* Show all devices for the selected building */
 function showBuildingDevices(name) {
+    // Hide overview and show devices table
     document.getElementById('buildingOverview').classList.add('d-none');
     document.getElementById('buildingDevices').classList.remove('d-none');
+
+    // Update building title
     document.getElementById('buildingTitle').innerText = name + " — Devices";
 
+    // Clear previous device rows
     const tbody = document.getElementById('deviceTableBody');
     tbody.innerHTML = '';
 
+    // Add device rows dynamically
     buildingDevicesData[name].forEach(device => {
         tbody.innerHTML += `
             <tr onclick="openDeviceGraph('${device.id}')">
@@ -157,23 +182,30 @@ function showBuildingDevices(name) {
     });
 }
 
+/* Go back to the buildings overview */
 function goBack() {
     document.getElementById('buildingDevices').classList.add('d-none');
     document.getElementById('buildingOverview').classList.remove('d-none');
 }
 
+/* Open modal and display device activity chart */
 function openDeviceGraph(deviceId) {
     const modal = new bootstrap.Modal(document.getElementById('deviceGraphModal'));
+
+    // Display current month in modal title
     const currentMonth = new Date().toLocaleString('default', { month: 'long', year: 'numeric' });
     document.getElementById('deviceGraphModalLabel').innerText = `Device Activity — ${deviceId} (${currentMonth})`;
     modal.show();
 
+    // Generate sample labels (days 1–30) and sample data (all inactive)
     const labels = Array.from({length: 30}, (_, i) => i + 1);
-    const data = Array.from({length: 30}, () => 0); // All inactive by default
+    const data = Array.from({length: 30}, () => 0); // All inactive
     const pointColors = data.map(v => v === 0 ? 'red' : '#00844b');
 
+    // Destroy previous chart instance to avoid duplication
     if (chartInstance) chartInstance.destroy();
 
+    // Initialize new Chart.js line chart
     const ctx = document.getElementById('deviceActivityChart').getContext('2d');
     chartInstance = new Chart(ctx, {
         type: 'line',
@@ -190,18 +222,18 @@ function openDeviceGraph(deviceId) {
             }]
         },
         options: {
-            animation: false,
+            animation: false, // Disable animations for faster rendering
             plugins: {
-                legend: { display: false }
+                legend: { display: false } // Hide legend
             },
             scales: {
                 y: {
                     min: 0,
                     max: 1,
-                    ticks: { stepSize: 1 }
+                    ticks: { stepSize: 1 } // Only show 0 or 1
                 },
                 x: {
-                    title: { display: true, text: 'Days (1–30)' }
+                    title: { display: true, text: 'Days (1–30)' } // X-axis label
                 }
             }
         }

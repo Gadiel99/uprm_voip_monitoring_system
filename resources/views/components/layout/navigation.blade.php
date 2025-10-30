@@ -1,3 +1,4 @@
+<!-- Top navigation tabs component: highlights the active section based on the passed 'active' prop -->
 @props(['active' => 'home'])
 
 <ul class="nav nav-tabs mb-4">
