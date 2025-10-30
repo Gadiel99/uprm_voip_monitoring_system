@@ -75,6 +75,7 @@ class BuildingsNetworksSeeder extends Seeder
             $building = Buildings::create([
                 'name' => $buildingData['name'],
             ]);
+            // Increment building count
             $totalBuildings++;
             
             $this->command->info("✅ {$building->name}");
@@ -90,8 +91,10 @@ class BuildingsNetworksSeeder extends Seeder
                     ]
                 );
                 
+                // Collect network IDs for attaching later
                 $networkIds[] = $network->network_id;
                 
+                // Increment network count only if newly created
                 if ($network->wasRecentlyCreated) {
                     $totalNetworks++;
                     $this->command->info("   📡 Created network: {$subnet}");
