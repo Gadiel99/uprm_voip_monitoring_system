@@ -7,12 +7,32 @@ use Illuminate\Http\Request;
 use Illuminate\Validation\Rules\Password;
 use Illuminate\Support\Facades\Hash;
 
+/**
+ * Controlador de Administración de Usuarios.
+ *
+ * - Lista usuarios y métricas (admins/super admins).
+ * - Crea usuarios (solo super_admin puede crear admin/super_admin).
+ * - Cambia roles (solo super_admin; con salvaguardas: no a sí mismo, no super_admin).
+ * - Elimina usuarios (no permite borrarse a sí mismo ni al super_admin; admin no borra admin).
+ *
+ * Todas las acciones devuelven a la pestaña Users del panel de Admin con mensajes flash.
+ */
 class AdminUserController extends Controller
 {
-    // Lista de usuarios y formulario de creación
+    /**
+     * Muestra la lista de usuarios y badges de conteos.
+     *
+     * @return \Illuminate\Contracts\View\View
+     */
     public function index()
     {
-        $users = \App\Models\User::orderByRaw("FIELD(role,'superadmin','super_admin','admin','user')")
+        $users = \App\Models\User::orderByRaw("
+                CASE LOWER(REPLACE(role, '_',''))
+                    WHEN 'superadmin' THEN 0
+                    WHEN 'admin' THEN 1
+                    ELSE 2
+                END
+            ")
             ->orderBy('name')
             ->get();
 
@@ -29,9 +49,18 @@ class AdminUserController extends Controller
         ]);
     }
 
-
-
-    // Crear usuario
+    /**
+     * Crea un nuevo usuario.
+     *
+     * Validación:
+     * - name/email/password requeridos.
+     * - role: user|admin|super_admin (solo super_admin puede crear roles elevados).
+     * Reglas:
+     * - Único super_admin en el sistema.
+     *
+     * @param  Request  $request
+     * @return \Illuminate\Http\RedirectResponse
+     */
     public function store(Request $request)
     {
         $request->validate([
@@ -64,7 +93,17 @@ class AdminUserController extends Controller
         return back()->with('status', 'User created.');
     }
 
-    // Cambiar rol (solo super_admin)
+    /**
+     * Actualiza el rol de un usuario (solo super_admin).
+     *
+     * Restricciones:
+     * - No modificar rol de super_admin.
+     * - No cambiarse el rol a sí mismo.
+     *
+     * @param  Request $request
+     * @param  User    $user
+     * @return \Illuminate\Http\RedirectResponse
+     */
     public function updateRole(Request $request, User $user)
     {
         $request->validate([
@@ -90,7 +129,18 @@ class AdminUserController extends Controller
         return back()->with('status', 'Role updated.');
     }
 
-    // Eliminar usuario
+    /**
+     * Elimina un usuario con políticas de seguridad.
+     *
+     * Reglas:
+     * - No se puede borrar al super_admin.
+     * - Un admin no puede borrar a otro admin.
+     * - Un usuario no puede borrarse a sí mismo.
+     *
+     * @param  Request $request
+     * @param  User    $user
+     * @return \Illuminate\Http\RedirectResponse
+     */
     public function destroy(Request $request, User $user)
     {
         $actor = $request->user();

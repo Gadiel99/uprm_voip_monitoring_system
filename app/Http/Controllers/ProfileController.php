@@ -13,15 +13,34 @@ use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
 use Illuminate\View\View;
 
+/**
+ * Controlador de Perfil del usuario autenticado.
+ *
+ * - Edit: muestra la vista dedicada (opcional).
+ * - Update: actualiza nombre/email (marca email como no verificado si cambia).
+ * - updateUsername/updateEmail/updatePassword: flujos por pestaña (modal).
+ * - destroy: elimina la cuenta previa confirmación de contraseña.
+ * - targetUrl: retorna a la URL/anchor deseado (misma página + modal abierto).
+ */
 class ProfileController extends Controller
 {
-    /** (Opcional) Vista dedicada de perfil */
+    /**
+     * Vista de edición de perfil (opcional).
+     *
+     * @param  Request $request
+     * @return View
+     */
     public function edit(Request $request): View
     {
         return view('profile.edit', ['user' => $request->user()]);
     }
 
-    /** Actualiza nombre y email juntos (si usas la vista dedicada) */
+    /**
+     * Actualiza nombre y correo (vista dedicada).
+     *
+     * @param  ProfileUpdateRequest $request
+     * @return RedirectResponse
+     */
     public function update(ProfileUpdateRequest $request): RedirectResponse
     {
         $user = $request->user();
@@ -38,7 +57,12 @@ class ProfileController extends Controller
             ->with('account_tab', $request->input('tab', 'username'));
     }
 
-    /** Tab: Username */
+    /**
+     * Pestaña: Username (actualiza solo el nombre).
+     *
+     * @param  Request $request
+     * @return RedirectResponse
+     */
     public function updateUsername(Request $request): RedirectResponse
     {
         $validated = $request->validate([
@@ -52,7 +76,12 @@ class ProfileController extends Controller
             ->with('account_tab', 'username');
     }
 
-    /** Tab: Email */
+    /**
+     * Pestaña: Email (actualiza solo el correo).
+     *
+     * @param  Request $request
+     * @return RedirectResponse
+     */
     public function updateEmail(Request $request): RedirectResponse
     {
         $validated = $request->validate([
@@ -74,7 +103,12 @@ class ProfileController extends Controller
             ->with('account_tab', 'email');
     }
 
-    /** Tab: Password */
+    /**
+     * Pestaña: Password (requiere contraseña actual + confirmación).
+     *
+     * @param  Request $request
+     * @return RedirectResponse
+     */
     public function updatePassword(Request $request): RedirectResponse
     {
         $request->validate([
@@ -91,7 +125,16 @@ class ProfileController extends Controller
             ->with('account_tab', 'password');
     }
 
-    /** Danger: Delete account (pide contraseña actual) */
+    /**
+     * Elimina la cuenta del usuario (requiere contraseña actual).
+     *
+     * Pasos:
+     * - Valida contraseña con bag 'userDeletion'.
+     * - Cierra sesión, elimina usuario, invalida sesión y tokens.
+     *
+     * @param  Request $request
+     * @return RedirectResponse
+     */
     public function destroy(Request $request): RedirectResponse
     {
         $request->validateWithBag('userDeletion', [
@@ -107,6 +150,17 @@ class ProfileController extends Controller
         return Redirect::to('/');
     }
 
+    /**
+     * Determina a qué URL regresar después de actualizar (misma página/modal).
+     *
+     * Reglas:
+     * - Usa 'return_to' si es relativo o del mismo host.
+     * - Usa Referer si coincide host.
+     * - Fallback: dashboard.
+     *
+     * @param  Request $request
+     * @return string
+     */
     private function targetUrl(Request $request): string
     {
         $host = parse_url(config('app.url') ?: url('/'), PHP_URL_HOST);

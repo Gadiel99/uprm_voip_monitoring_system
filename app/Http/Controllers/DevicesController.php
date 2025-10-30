@@ -5,11 +5,22 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
+/**
+ * Controlador de Dispositivos.
+ *
+ * - index(): resumen por edificio con conteos online/offline (joins a través de pivotes).
+ * - byBuilding(): detalle por edificio con dispositivos y extensiones asociadas.
+ */
 class DevicesController extends Controller
 {
     /**
-     * Vista principal: edificios + teléfonos + conteos de dispositivos
-     * usando el pivot building_networks → networks → devices.
+     * Resumen de edificios y conteos de dispositivos (online/offline).
+     *
+     * Joins:
+     * buildings -> building_networks -> networks -> devices
+     * + extensiones agrupadas por building.
+     *
+     * @return \Illuminate\Contracts\View\View
      */
     public function index()
     {
@@ -47,8 +58,14 @@ class DevicesController extends Controller
     }
 
     /**
-     * Vista de detalle por edificio: lista los dispositivos del edificio
-     * (devices que caen en networks vinculadas al building vía building_networks).
+     * Detalle de dispositivos por edificio.
+     *
+     * Joins:
+     * devices -> networks -> building_networks (por building_id)
+     * + extensiones agrupadas por device.
+     *
+     * @param  int|string $buildingId
+     * @return \Illuminate\Contracts\View\View|\Symfony\Component\HttpFoundation\Response
      */
     public function byBuilding($buildingId)
     {

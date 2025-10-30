@@ -1,3 +1,5 @@
+# Mantiene vacía la carpeta storage/app en el repositorio,
+# pero permite versionar subcarpetas específicas (private/ y public/).
 *
 !private/
 !public/

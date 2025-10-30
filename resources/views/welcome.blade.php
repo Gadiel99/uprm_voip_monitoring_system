@@ -42,7 +42,7 @@
 </head>
 
 <body>
-    {{-- Navbar superior --}}
+    {{-- Navbar superior: branding, notificaciones y menú de usuario --}}
     <nav class="navbar navbar-expand-lg bg-white border-bottom">
         <div class="container-fluid">
             <a class="navbar-brand d-flex align-items-center" href="#">
@@ -51,7 +51,6 @@
             </a>
             <div class="d-flex align-items-center gap-3">
                 <i class="bi bi-bell"></i>
-                <i class="bi bi-moon"></i>
                 <div class="dropdown">
                     <a class="d-flex align-items-center text-decoration-none dropdown-toggle" href="#" data-bs-toggle="dropdown">
                         <i class="bi bi-person-circle me-1"></i> {{ auth()->check() ? (auth()->user()->name ?: auth()->user()->email) : 'Guest' }}
@@ -66,7 +65,7 @@
     </nav>
 
     <div class="d-flex">
-        {{-- Sidebar --}}
+        {{-- Sidebar: navegación estática de ejemplo (Dashboard/Settings/Help) --}}
         <div class="sidebar d-flex flex-column p-3">
             <ul class="nav flex-column">
                 <li class="nav-item mb-2">
@@ -87,7 +86,7 @@
             </ul>
         </div>
 
-        {{-- Contenido principal --}}
+        {{-- Contenido principal: leyenda + imagen del mapa del campus --}}
         <main class="flex-grow-1 p-4">
             <h5 class="fw-semibold mb-3">UPRM Campus Map - System Status</h5>
             <div class="map-container">

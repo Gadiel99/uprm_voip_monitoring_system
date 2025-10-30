@@ -10,10 +10,22 @@ use App\Models\Buildings;
 use App\Models\Networks;
 use App\Models\Devices;
 
+/**
+ * Controlador del panel de administración (dashboard).
+ *
+ * - Recolecta métricas básicas (usuarios, edificios, redes, dispositivos).
+ * - Obtiene listados recientes y colecciones “best-effort” (si falta tabla, devuelve vacío).
+ * - Extrae un tail del archivo laravel.log para el tab de Logs.
+ *
+ * Nota: Todos los métodos “safe*” atrapan excepciones para no romper la vista si faltan tablas/seeds.
+ */
 class AdminController extends Controller
 {
     /**
-     * Show the admin dashboard populated from the database.
+     * Renderiza el dashboard de administración con datos de BD y logs recientes.
+     *
+     * @param  Request  $request
+     * @return \Illuminate\Contracts\View\View
      */
     public function index(Request $request)
     {
@@ -42,6 +54,12 @@ class AdminController extends Controller
         ]);
     }
 
+    /**
+     * Cuenta registros de un modelo de forma segura.
+     *
+     * @param  class-string $modelClass
+     * @return int
+     */
     private function safeCount(string $modelClass): int
     {
         try {
@@ -52,6 +70,13 @@ class AdminController extends Controller
         }
     }
 
+    /**
+     * Obtiene los últimos N registros de un modelo de forma segura.
+     *
+     * @param  class-string $modelClass
+     * @param  int          $limit
+     * @return \Illuminate\Support\Collection
+     */
     private function safeLatest(string $modelClass, int $limit = 8)
     {
         try {
@@ -62,6 +87,13 @@ class AdminController extends Controller
         }
     }
 
+    /**
+     * Obtiene todos los registros (columnas específicas) de forma segura.
+     *
+     * @param  class-string $modelClass
+     * @param  array<string> $columns
+     * @return \Illuminate\Support\Collection
+     */
     private function safeAll(string $modelClass, array $columns = ['*'])
     {
         try {
@@ -72,6 +104,12 @@ class AdminController extends Controller
         }
     }
 
+    /**
+     * Lee eficientemente las últimas N líneas del log de Laravel.
+     *
+     * @param  int $lines
+     * @return array<int,string>
+     */
     private function tailLaravelLog(int $lines = 100): array
     {
         $logFile = storage_path('logs/laravel.log');

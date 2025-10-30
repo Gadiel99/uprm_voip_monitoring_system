@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <!-- Layout principal Bootstrap para toda la app autenticada.
+         Incluye estilos de navbar, sidebar y pestañas superiores (Home/Alerts/Devices/Reports/Admin). -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>UPRM Monitoring System</title>
@@ -134,11 +136,9 @@
 </head>
 
 <body>
-    @php
-        $isUserPreview = session('user_preview', false);
-    @endphp
+    @php $isUserPreview = session('user_preview', false); @endphp
 
-    {{-- Navbar --}}
+    {{-- Navbar: branding, notificaciones, menú de usuario y "User Preview" --}}
     <nav class="navbar navbar-expand-lg sticky-top">
         <div class="container-fluid">
 
@@ -255,8 +255,7 @@
     @endif
 
     <div class="d-flex">
-
-        {{-- Sidebar --}}
+        {{-- Sidebar: navegación lateral simple (Dashboard/Help) --}}
         <div class="sidebar p-3">
             <ul class="nav flex-column">
 
@@ -283,10 +282,8 @@
             </ul>
         </div>
 
-        {{-- Main content --}}
         <div class="flex-grow-1">
-
-            {{-- Dashboard tabs (only on dashboard routes) --}}
+            {{-- Tabs de Dashboard visibles en rutas específicas --}}
             @if (
                 request()->is('/') ||
                 request()->is('alerts') ||
@@ -337,7 +334,7 @@
         </div>
     </div>
 
-    {{-- Account Settings Modal --}}
+    {{-- Modal de Configuración de Cuenta: pestañas Perfil/Usuario/Email/Password con formularios --}}
     <div class="modal fade" id="accountSettingsModal" tabindex="-1" aria-labelledby="accountSettingsLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content border-0 shadow-lg rounded-4">

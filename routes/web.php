@@ -6,23 +6,52 @@ use App\Http\Controllers\AdminUserController;
 use App\Http\Controllers\AccountController;
 use App\Http\Controllers\ProfileController; // <-- add
 
+/**
+ * Controllers overview:
+ *
+ * - DevicesController:
+ *     GET /devices                -> index(): Show devices overview with buildings table.
+ *     GET /devices/building/{b}   -> byBuilding(): Filter devices by building slug/name.
+ *
+ * - AdminUserController (admin-only):
+ *     GET    /admin/users                 -> index(): Render Admin page with Users tab (DB-backed).
+ *     POST   /admin/users                 -> store(): Create a new user (name, email, password, role).
+ *     PATCH  /admin/users/{user}/role     -> updateRole(): Change role (user|admin). Self and super_admin safe-guards.
+ *     DELETE /admin/users/{user}          -> destroy(): Delete user (blocked for self and super_admin).
+ *     (Optional mock endpoints reserved for Settings/Critical Devices if later wired)
+ *
+ * - ProfileController (authenticated):
+ *     GET    /profile                     -> edit(): Profile settings page (tabs for username/email/password).
+ *     PATCH  /profile                     -> update(): Update name/email (with validation).
+ *     PATCH  /profile/password            -> updatePassword(): Update password (current + confirmation).
+ *     DELETE /profile                     -> destroy(): Delete current user after password confirmation.
+ *
+ * - AccountController:
+ *     Reserved for future account UX flows (not wired in routes currently).
+ */
+
 /*
 |--------------------------------------------------------------------------
 | Protected Pages (require login)
 |--------------------------------------------------------------------------
 */
 Route::middleware('auth')->group(function () {
+    // Dashboard and tabs (server-rendered pages)
     Route::view('/', 'pages.home')->name('dashboard');
     Route::view('/alerts', 'pages.alerts')->name('alerts');
 
+    // Devices: building-level browsing
     Route::get('/devices', [DevicesController::class, 'index'])->name('devices');
     Route::get('/devices/building/{building}', [DevicesController::class, 'byBuilding'])->name('devices.byBuilding');
 
     Route::view('/reports', 'pages.reports')->name('reports');
-    Route::view('/settings', 'pages.settings')->name('settings');
+
+    // Deprecated: standalone Settings page (Admin->Settings mock-up remains within Admin)
+    // Route::view('/settings', 'pages.settings')->name('settings');
+
     Route::view('/help', 'pages.help')->name('help');
 
-    // Opcional: User Preview toggle (solo admins/superadmins)
+    // User Preview (admins only): toggles limited UI without leaving session
     Route::post('/enter-user-preview', function () {
         session()->put('user_preview', true);
         return back();
@@ -33,7 +62,7 @@ Route::middleware('auth')->group(function () {
         return back();
     })->middleware('admin')->name('exit.user.preview');
 
-    // Profile routes (unificar edición en PATCH /profile)
+    // Profile management routes (Breeze-like)
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::patch('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password');
@@ -49,17 +78,25 @@ Route::middleware('auth')->group(function () {
 /*
 |--------------------------------------------------------------------------
 | Admin-only (auth + admin middleware)
+| Renders Admin page with mock-up tabs (Backup/Logs/Settings/Servers) and
+| a server-driven Users tab backed by AdminUserController.
 |--------------------------------------------------------------------------
 */
 Route::middleware(['auth', 'admin'])->group(function () {
 
-    // 👉 Redirige /admin directamente a /admin/users
+    // Redirect /admin to Users tab controller
     Route::get('/admin', fn () => redirect()->route('admin.users.index'))->name('admin');
 
+    // Users management (DB-backed)
     Route::get('/admin/users', [AdminUserController::class, 'index'])->name('admin.users.index');
     Route::post('/admin/users', [AdminUserController::class, 'store'])->name('admin.users.store');
     Route::patch('/admin/users/{user}/role', [AdminUserController::class, 'updateRole'])->name('admin.users.updateRole');
     Route::delete('/admin/users/{user}', [AdminUserController::class, 'destroy'])->name('admin.users.destroy');
+
+    // Placeholders for future functionality (Admin->Settings mock-up)
+    // Route::post('/admin/critical-devices', [AdminUserController::class, 'criticalStore'])->name('admin.critical.store');
+    // Route::patch('/admin/critical-devices/{device}', [AdminUserController::class, 'criticalUpdate'])->name('admin.critical.update');
+    // Route::delete('/admin/critical-devices/{device}', [AdminUserController::class, 'criticalDestroy'])->name('admin.critical.destroy');
 });
 
 /*

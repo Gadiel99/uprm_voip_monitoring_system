@@ -1,5 +1,8 @@
 <?php
 
+// Rutas/definiciones para tareas de consola (scheduler y comandos Artisan personalizados).
+// - Programación ETL cada 5 minutos con protección "withoutOverlapping" y logs en éxito/falla.
+// - Comando "inspire" de ejemplo para imprimir una cita inspiradora.
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Log;

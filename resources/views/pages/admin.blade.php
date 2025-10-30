@@ -1,6 +1,9 @@
 @extends('components.layout.app')
 
 @section('content')
+{{-- Panel de Administración:
+   - Backup/Logs/Settings/Servers: mock-ups cliente (solo UI).
+   - Users: pestaña con datos reales desde el controlador (DB). --}}
 <style>
     /* === Institutional Green Theme === */
     .nav-pills .nav-link.active {
@@ -34,7 +37,7 @@
         $isSuper = auth()->check() && in_array(strtolower(str_replace('_','', auth()->user()->role)), ['superadmin','super_admin']);
     @endphp
 
-    {{-- NAV PILLS --}}
+    {{-- NAV PILLS: el enlace "Users" navega al controlador para cargar datos reales --}}
     <ul class="nav nav-pills bg-light p-2 rounded mb-4" id="adminTab" role="tablist">
         <li class="nav-item">
             <button class="nav-link {{ $isUsersServer ? '' : 'active' }}" data-bs-toggle="tab" data-bs-target="#backup">
@@ -51,7 +54,7 @@
         </li>
     </ul>
 
-    {{-- Always render mock-up tab content so clicking Logs works even in Users view --}}
+    {{-- Contenido de pestañas mock-up (siempre renderizado para poder ver Logs, etc.) --}}
     <div class="tab-content" id="adminTabContent">
         {{-- BACKUP --}}
         <div class="tab-pane fade {{ $isUsersServer ? '' : 'show active' }}" id="backup" role="tabpanel">

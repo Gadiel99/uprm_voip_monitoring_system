@@ -1,3 +1,7 @@
+# Ignora archivos y carpetas generados por el entorno/local:
+# - Logs, IDEs, caches, artefactos de build, vendor, etc.
+# - storage/*.key: llaves de cifrado generadas.
+# - .env: variables sensibles locales.
 *.log
 .DS_Store
 .env

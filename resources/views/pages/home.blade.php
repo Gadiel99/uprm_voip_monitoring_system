@@ -25,151 +25,151 @@
 
         <!-- Interactive markers in the map -->
         <div class="position-absolute" style="top: 60%; left: 77%;" data-bs-toggle="tooltip" title="Celis">
-            <div class="rounded-circle bg-success" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
+            <div class="rounded-circle bg-success marker" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
         </div>
 
         <div class="position-absolute" style="top: 52%; left: 82%;" data-bs-toggle="tooltip" title="Stefani">
-            <div class="rounded-circle bg-success" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
+            <div class="rounded-circle bg-success marker" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
         </div>
 
         <div class="position-absolute" style="top: 33.5%; left: 71%;" data-bs-toggle="tooltip" title="Biologia">
-            <div class="rounded-circle bg-success" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
+            <div class="rounded-circle bg-success marker" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
         </div>
 
         <div class="position-absolute" style="top: 63%; left: 76%;" data-bs-toggle="tooltip" title="DeDiego">
-            <div class="rounded-circle bg-success" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
+            <div class="rounded-circle bg-success marker" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
         </div>
 
         <div class="position-absolute" style="top: 59%; left: 86%;" data-bs-toggle="tooltip" title="Luchetti">
-            <div class="rounded-circle bg-success" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
+            <div class="rounded-circle bg-success marker" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
         </div>
 
         <div class="position-absolute" style="top: 56%; left: 84%;" data-bs-toggle="tooltip" title="ROTC">
-            <div class="rounded-circle bg-success" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
+            <div class="rounded-circle bg-success marker" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
         </div>
 
         <div class="position-absolute" style="top: 30%; left: 32%;" data-bs-toggle="tooltip" title="Adm.Empresas">
-            <div class="rounded-circle bg-success" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
+            <div class="rounded-circle bg-success marker" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
         </div>
 
         <div class="position-absolute" style="top: 63%; left: 66%;" data-bs-toggle="tooltip" title="Musa">
-            <div class="rounded-circle bg-success" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
+            <div class="rounded-circle bg-success marker" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
         </div>
 
         <div class="position-absolute" style="top: 53%; left: 75%;" data-bs-toggle="tooltip" title="Chardon">
-            <div class="rounded-circle bg-success" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
+            <div class="rounded-circle bg-success marker" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
         </div>
 
         <div class="position-absolute" style="top: 62%; left: 72%;" data-bs-toggle="tooltip" title="Monzon">
-            <div class="rounded-circle bg-success" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
+            <div class="rounded-circle bg-success marker" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
         </div>
 
         <div class="position-absolute" style="top: 47%; left: 69%;" data-bs-toggle="tooltip" title="Sanchez Hidalgo">
-            <div class="rounded-circle bg-success" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
+            <div class="rounded-circle bg-success marker" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
         </div>
 
         <div class="position-absolute" style="top: 45%; left: 75%;" data-bs-toggle="tooltip" title="Fisica">
-            <div class="rounded-circle bg-success" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
+            <div class="rounded-circle bg-success marker" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
         </div>
 
         <div class="position-absolute" style="top: 44%; left: 77%;" data-bs-toggle="tooltip" title="Geologia">
-            <div class="rounded-circle bg-success" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
+            <div class="rounded-circle bg-success marker" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
         </div>
 
         <div class="position-absolute" style="top: 44%; left: 79%;" data-bs-toggle="tooltip" title="Ciencias Marinas">
-            <div class="rounded-circle bg-success" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
+            <div class="rounded-circle bg-success marker" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
         </div>
 
         <div class="position-absolute" style="top: 44%; left: 62%;" data-bs-toggle="tooltip" title="Quimica">
-            <div class="rounded-circle bg-success" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
+            <div class="rounded-circle bg-success marker" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
         </div>
 
         <div class="position-absolute" style="top:44%; left: 62%;" data-bs-toggle="tooltip" title="Piñero">
-            <div class="rounded-circle bg-success" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
+            <div class="rounded-circle bg-success marker" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
         </div>
 
         <div class="position-absolute" style="top: 50%; left: 58%;" data-bs-toggle="tooltip" title="Enfermeria">
-            <div class="rounded-circle bg-success" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
+            <div class="rounded-circle bg-success marker" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
         </div>
 
         <div class="position-absolute" style="top: 48%; left: 53%;" data-bs-toggle="tooltip" title="Vagones">
-            <div class="rounded-circle bg-success" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
+            <div class="rounded-circle bg-success marker" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
         </div>
 
         <div class="position-absolute" style="top: 40%; left: 30%;" data-bs-toggle="tooltip" title="Natatorio">
-            <div class="rounded-circle bg-success" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
+            <div class="rounded-circle bg-success marker" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
         </div>
 
         <div class="position-absolute" style="top: 33%; left: 86%;" data-bs-toggle="tooltip" title="Centro Nuclear">
-            <div class="rounded-circle bg-success" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
+            <div class="rounded-circle bg-success marker" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
         </div>
 
         <div class="position-absolute" style="top: 56%; left: 45%;" data-bs-toggle="tooltip" title="Coliseo">
-            <div class="rounded-circle bg-success" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
+            <div class="rounded-circle bg-success marker" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
         </div>
 
         <div class="position-absolute" style="top: 58%; left: 53%;" data-bs-toggle="tooltip" title="Gimnacio">
-            <div class="rounded-circle bg-success" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
+            <div class="rounded-circle bg-success marker" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
         </div>
 
         <div class="position-absolute" style="top: 60%; left: 66%;" data-bs-toggle="tooltip" title="Servicios Medicos">
-            <div class="rounded-circle bg-success" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
+            <div class="rounded-circle bg-success marker" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
         </div>
 
         <div class="position-absolute" style="top: 64%; left: 80%;" data-bs-toggle="tooltip" title="Decanato de Estudiantes">
-            <div class="rounded-circle bg-success" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
+            <div class="rounded-circle bg-success marker" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
         </div>
 
         <div class="position-absolute" style="top: 49%; left: 65%;" data-bs-toggle="tooltip" title="Oficina de Facultad">
-            <div class="rounded-circle bg-success" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
+            <div class="rounded-circle bg-success marker" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
         </div>
 
         <div class="position-absolute" style="top: 55%; left: 7%;" data-bs-toggle="tooltip" title="Adm.Finca Alzamora">
-            <div class="rounded-circle bg-success" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
+            <div class="rounded-circle bg-success marker" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
         </div>
 
         <div class="position-absolute" style="top: 56%; left: 65%;" data-bs-toggle="tooltip" title="Biblioteca">
-            <div class="rounded-circle bg-success" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
+            <div class="rounded-circle bg-success marker" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
         </div>
 
         <div class="position-absolute" style="top: 57%; left: 72%;" data-bs-toggle="tooltip" title="Centro de Estudiantes">
-            <div class="rounded-circle bg-success" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
+            <div class="rounded-circle bg-success marker" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
         </div>
 
         <div class="position-absolute" style="top: 48%; left: 81%;" data-bs-toggle="tooltip" title="Terrats">
-            <div class="rounded-circle bg-success" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
+            <div class="rounded-circle bg-success marker" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
         </div>
 
         <div class="position-absolute" style="top: 28%; left: 59%;" data-bs-toggle="tooltip" title="Ing.Civil">
-            <div class="rounded-circle bg-success" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
+            <div class="rounded-circle bg-success marker" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
         </div>
 
         <div class="position-absolute" style="top: 49%; left: 78%;" data-bs-toggle="tooltip" title="Ing.Industrial">
-            <div class="rounded-circle bg-success" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
+            <div class="rounded-circle bg-success marker" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
         </div>
 
         <div class="position-absolute" style="top: 32%; left: 54%;" data-bs-toggle="tooltip" title="Ing.Quimica">
-            <div class="rounded-circle bg-success" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
+            <div class="rounded-circle bg-success marker" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
         </div>
 
         <div class="position-absolute" style="top: 43%; left: 50%;" data-bs-toggle="tooltip" title="Ing.Agricola">
-            <div class="rounded-circle bg-success" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
+            <div class="rounded-circle bg-success marker" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
         </div>
 
         <div class="position-absolute" style="top: 37.5%; left: 17%;" data-bs-toggle="tooltip" title="Edificio A (Hotel Colegial)">
-            <div class="rounded-circle bg-success" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
+            <div class="rounded-circle bg-success marker" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
         </div>
 
         <div class="position-absolute" style="top: 37.5%; left: 20.5%;" data-bs-toggle="tooltip" title="Edificio B (Adm.Peq.Negocios y Oficina Adm)">
-            <div class="rounded-circle bg-success" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
+            <div class="rounded-circle bg-success marker" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
         </div>
 
         <div class="position-absolute" style="top: 40.5%; left: 16.5%;" data-bs-toggle="tooltip" title="Edificio C (Oficina de Extension Agricola))">
-            <div class="rounded-circle bg-success" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
+            <div class="rounded-circle bg-success marker" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
         </div>
 
         <div class="position-absolute" style="top: 39%; left: 19%;" data-bs-toggle="tooltip" title="Edificio D">
-            <div class="rounded-circle bg-success" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
+            <div class="rounded-circle bg-success marker" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
         </div>
 
         
@@ -177,11 +177,28 @@
     </div>
 </div>
 
+<style>
+/* Comentarios de estilo:
+   - .map-wrapper define tamaño/ratio del mapa.
+   - .marker define apariencia y hover de los marcadores. */
+</style>
+
 <script>
-    // Enable tooltips for hover effect
+    // Inicializa tooltips Bootstrap para mostrar títulos de los marcadores.
     document.addEventListener('DOMContentLoaded', function () {
         const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
         [...tooltipTriggerList].map(el => new bootstrap.Tooltip(el));
     });
+
+    // Maneja clic en marcadores para ir a Alerts con el edificio como querystring.
+    document.querySelectorAll('.marker').forEach(marker => {
+        marker.addEventListener('click', function() {
+            const building = this.getAttribute('title');
+            window.location.href = `/alerts?building=${encodeURIComponent(building)}`;
+        });
+    });
 </script>
+
+{{-- Helper temporal (comentado) para calcular coordenadas de marcadores --}}
+{{-- ...existing code... --}}
 @endsection
