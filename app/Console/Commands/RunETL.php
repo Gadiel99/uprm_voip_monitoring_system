@@ -7,12 +7,19 @@ use Illuminate\Console\Command;
 
 class RunETL extends Command
 {
+    // Command signature and description
     protected $signature = 'etl:run {--since= : Only process data since this time (e.g., "5 minutes ago")}';
     protected $description = 'Run ETL: Postgres + Mongo → MariaDB';
 
     
+    /**
+     * Function to Handle the command of the etl pipeline.
+     * @param \App\Services\ETLService $etl
+     * @return int
+     */
     public function handle(ETLService $etl): int
     {
+        
         $since = $this->option('since');
 
         $this->info('🚀 Starting ETL process...');
@@ -21,7 +28,10 @@ class RunETL extends Command
             $this->info("📅 Processing data since: {$since}");
         }
         
+        // Error handling for the command
         try {
+
+            // Run the ETL process
             $stats = $etl->run($since);
 
             $this->info('✅ ETL process completed successfully.');
@@ -42,6 +52,8 @@ class RunETL extends Command
             return self::SUCCESS;
 
         } catch (\Exception $e) {
+
+            //
             $this->error('❌ ETL process failed: ' . $e->getMessage());
             $this->error($e->getTraceAsString());
             return self::FAILURE;
