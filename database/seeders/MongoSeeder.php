@@ -29,8 +29,8 @@ class MongoSeeder extends Seeder
                 'expired' => false,
                 'gruu' => null,
                 'identity' => '4444@uprm.edu',
-                'instanceId' => '4825674c55a1',
-                'instrument' => null,
+                'instanceId' => null,
+                'instrument' => '4825674c55a1',
                 'localAddress' => '136.145.71.54/RegDB::_bindingsNameSpace',
                 'path' => '',
                 'qvalue' => 0,
@@ -50,8 +50,8 @@ class MongoSeeder extends Seeder
                 'expired' => false,
                 'gruu' => null,
                 'identity' => '4444@uprm.edu',
-                'instanceId' => '4825674c55a1',
-                'instrument' => null,
+                'instanceId' => null,
+                'instrument' => '4825674c55a1',
                 'localAddress' => '136.145.71.54/RegDB::_bindingsNameSpace',
                 'path' => '',
                 'qvalue' => 0,
@@ -71,8 +71,8 @@ class MongoSeeder extends Seeder
                 'expired' => false,
                 'gruu' => null,
                 'identity' => '5555@uprm.edu',
-                'instanceId' => '4825674c55a1',
-                'instrument' => null,
+                'instanceId' => null,
+                'instrument' => '4825674c55a1',
                 'localAddress' => '136.145.71.54/RegDB::_bindingsNameSpace',
                 'path' => '',
                 'qvalue' => 0,
@@ -92,8 +92,8 @@ class MongoSeeder extends Seeder
                 'expired' => false,
                 'gruu' => null,
                 'identity' => '4445@uprm.edu',
-                'instanceId' => '4825674b686e',
-                'instrument' => null,
+                'instanceId' => null,
+                'instrument' => '4825674b686e',
                 'localAddress' => '136.145.71.54/RegDB::_bindingsNameSpace',
                 'path' => '',
                 'qvalue' => 0,
@@ -113,25 +113,24 @@ class MongoSeeder extends Seeder
 
         // Insert registrations
         $collection = DB::connection('mongodb')
-            ->getDatabase()
             ->selectCollection('registrar');
 
         foreach ($registrations as $registration) {
-            $collection->insertOne($registration);
+            $result = $collection->insertOne($registration);
+            
             $binding = $registration['binding'];
             $identity = $registration['identity'];
-            $this->command->info("   ✅ Created registration: {$binding} → {$identity}");
+            $instrument = $registration['instrument'];
+            
+            $this->command->info("   ✅ {$identity}");
+            $this->command->info("      Binding: {$binding}");
+            $this->command->info("      Instrument (MAC): {$instrument}");
         }
 
         $totalRegistrations = $collection->countDocuments();
         
         $this->command->newLine();
-        $this->command->info("✅ MongoDB registrar seeded successfully!");
+        $this->command->info("✅ MongoDB seeded successfully!");
         $this->command->info("   Total registrations: {$totalRegistrations}");
-        $this->command->newLine();
-        $this->command->info("📊 Expected ETL results:");
-        $this->command->info("   Devices: 3 (10.100.147.103, 10.100.100.11, 10.100.100.12)");
-        $this->command->info("   Extensions: 3 (4444, 4445, 5555)");
-        $this->command->info("   Networks: 2 (10.100.147.0/24, 10.100.100.0/24)");
     }
 }
