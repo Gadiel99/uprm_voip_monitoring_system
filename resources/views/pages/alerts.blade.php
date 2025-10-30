@@ -53,14 +53,14 @@
                         <td><span class="badge badge-critical">CRITICAL</span></td>
                         <td>2 minutes ago</td>
                     </tr>
-                    <tr class="clickable-row" onclick="showBuilding('General Library', 8, 40)">
+                    <tr class="clickable-row" onclick="showBuilding('Biblioteca', 8, 40)">
                         <td><i class="bi bi-exclamation-circle text-warning"></i></td>
                         <td>General Library</td>
                         <td>8 / 40</td>
                         <td><span class="badge badge-warning">WARNING</span></td>
                         <td>15 minutes ago</td>
                     </tr>
-                    <tr class="clickable-row" onclick="showBuilding('Student Center', 0, 30)">
+                    <tr class="clickable-row" onclick="showBuilding('Centro de Estudiantes', 0, 30)">
                         <td><i class="bi bi-check-circle text-success"></i></td>
                         <td>Student Center</td>
                         <td>0 / 30</td>
@@ -225,10 +225,10 @@ const buildingData = {
         { server: "STF-002", id: "DEV-1002", user: "jdoe",   phone: "787-555-0102", mac: "00:1B:44:11:3A:B8", ip: "192.168.1.11" },
         { server: "STF-003", id: "DEV-1003", user: "msmith", phone: "787-555-0103", mac: "00:1B:44:11:3A:B9", ip: "192.168.1.12" }
     ],
-    "General Library": [
+    "Biblioteca": [
         { server: "LIB-001", id: "DEV-2001", user: "jsantos", phone: "787-555-0201", mac: "00:1B:44:11:4A:11", ip: "192.168.2.10" }
     ],
-    "Student Center": [
+    "Centro de Estudiantes": [
         { server: "STD-001", id: "DEV-3001", user: "drios", phone: "787-555-0301", mac: "00:1B:44:11:5A:21", ip: "192.168.3.10" }
     ],
     "Celis": [{ server:"CEL-001", id:"DEV-4001", user:"acelis", phone:"787-555-0401", mac:"00:1B:44:11:6A:01", ip:"192.168.4.10" }],
