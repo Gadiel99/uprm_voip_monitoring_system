@@ -8,7 +8,7 @@ use App\Models\Networks;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
-use MongoDB\BSON\UTCDateTime;
+use MongoDB\BSON\UTCDateTime as MongoUTCDateTime;
 use Illuminate\Support\Carbon;
 
 class ETLService
@@ -20,9 +20,13 @@ class ETLService
      */
     public function run(?string $since = null): array
     {
+        // Get users from Postgres
         $users = $this->getUsersFromPostgres();
+
+        // Get registrations from MongoDB
         $mongoRegistrations = $this->getRegistrationsFromMongo($since);
         
+        // Log start of ETL
         Log::info('ETL started', [
             'postgres_users_count' => $users->count(),
             'mongo_registrations_count' => count($mongoRegistrations)
@@ -31,6 +35,7 @@ class ETLService
         // Mark all existing devices as offline first
         Devices::query()->update(['status' => 'offline']);
         
+        // Process and save data
         $result = $this->processAndSave($users, $mongoRegistrations);
         
         // Update network statistics
@@ -46,7 +51,8 @@ class ETLService
      * @return Collection<int, \stdClass>
      */
     private function getUsersFromPostgres(): Collection
-    {
+    {   
+        // Query Postgres users table
         return DB::connection('pgsql')
             ->table('users')
             ->select('first_name', 'last_name', 'user_name')
@@ -60,14 +66,18 @@ class ETLService
      */
     private function getRegistrationsFromMongo(?string $since = null): array
     {   
+        // Build filter based on since parameter
         $filter = [];
         if ($since) {
+            // Parse since time
             $timestamp = Carbon::parse($since);
-            $filter['expirationTime'] = ['$gte' => new UTCDateTime($timestamp->timestamp * 1000)];
+
+            // Add filter for expirationTime
+            $filter['expirationTime'] = ['$gte' => new MongoUTCDateTime($timestamp->timestamp * 1000)];
         }
         
+        // Query MongoDB collection
         $cursor = DB::connection('mongodb')
-            ->getDatabase()
             ->selectCollection('registrar')
             ->find($filter);
 
@@ -82,12 +92,19 @@ class ETLService
      */
     private function updateNetworkStats()
     {
+        // Get all networks
         $networks = Networks::all();
         
+        // Update stats for each network
         foreach ($networks as $network) {
+            
+            // Calculate total and offline devices
             $totalDevices = $network->devices()->count();
+
+            // Calculate offline devices
             $offlineDevices = $network->devices()->where('status', 'offline')->count();
             
+            // Update network record
             $network->update([
                 'total_devices' => $totalDevices,
                 'offline_devices' => $offlineDevices,
@@ -126,6 +143,54 @@ class ETLService
         $parts = explode('.', $ip);
         return "{$parts[0]}.{$parts[1]}.{$parts[2]}.0/24";
     }
+
+    /**
+    * Extract MAC address from MongoDB registration document
+    * 
+    * @param object $registration MongoDB document
+    * @return string|null MAC address or null if not found
+    */
+    private function extractMacAddress( $registration): ?string
+    {
+        // Get instrument field from registration
+        $instrument = $registration->instrument ?? null;
+        
+        if (!$instrument) {
+            Log::warning("No instrument field found in registration");
+            return 'unknown';
+        }
+
+        
+        // Normalize MAC address to standard format (XX:XX:XX:XX:XX:XX)
+        $mac = $this->normalizeMacAddress($instrument);
+        
+        return $mac ?: 'unknown';
+    }
+
+    /**
+     * Normalize MAC address to standard format
+     * 
+     * @param string $mac Raw MAC address
+     * @return string|null Normalized MAC address (XX:XX:XX:XX:XX:XX)
+     */
+    private function normalizeMacAddress(string $mac): ?string
+    {
+        // Remove common separators
+        $cleaned = str_replace([':', '-', '.', ' '], '', $mac);
+        
+        // Check if valid MAC (12 hex characters)
+        if (!preg_match('/^[0-9A-Fa-f]{12}$/', $cleaned)) {
+            Log::warning("Invalid MAC address format: {$mac}");
+            return null;
+        }
+        
+        // Convert to uppercase and add colons
+        $cleaned = strtoupper($cleaned);
+        return implode(':', str_split($cleaned, 2));
+    }
+
+   
+
     /**
      * Summary of processAndSave
      * @param \Illuminate\Support\Collection $users
@@ -139,12 +204,19 @@ class ETLService
         $extensionsCreated = 0;
         $extensionsUpdated = 0;
 
-        // Group registrations by IP ADDRESS (each IP = one device)
+        // Group registrations by IP address
         $deviceGroups = [];
+
+        // Group registrations by IP address
         foreach ($mongoRegistrations as $registration) {
+
+            // Get binding string from registration
             $binding = $registration->binding ?? null;
+
+            // Extract IP address from binding
             $ipAddress = $this->extractIPFromBinding($binding);
-            
+
+            // Skip if no valid IP address
             if ($ipAddress) {
                 if (!isset($deviceGroups[$ipAddress])) {
                     $deviceGroups[$ipAddress] = [];
@@ -153,9 +225,10 @@ class ETLService
             }
         }
 
-        // Process each device that appears in registrar means that it's online.
+        // Process each device group
         foreach ($deviceGroups as $ipAddress => $registrations) {
-            // Determine network (subnet) from IP address
+
+            // Get subnet for the device.
             $subnet = $this->getSubnetFromIP($ipAddress);
             
             // Find or create network
@@ -167,33 +240,42 @@ class ETLService
                 ]
             );
 
-            // Create or update device - Status = ONLINE because it's in registrar
+            // Get MAC address from first registration (instrument field)
+            $macAddress = $this->extractMacAddress($registrations[0]);
+
+            // Create or update device with MAC address
             $device = Devices::updateOrCreate(
                 ['ip_address' => $ipAddress],
                 [
+                    'mac_address' => $macAddress,
                     'network_id' => $network->network_id,
-                    'status' => 'online', // Device is online if it's in registrar
+                    'status' => 'online',
+                    'is_critical' => false,
                 ]
             );
 
+            // Log creation or update
             if ($device->wasRecentlyCreated) {
                 $devicesCreated++;
-                Log::info("✅ Created device: IP={$ipAddress}, Network={$subnet}, Status=ONLINE");
+                Log::info("✅ Created device: IP={$ipAddress}, MAC={$macAddress}, Network={$subnet}, Status=ONLINE");
             } else {
                 $devicesUpdated++;
-                Log::info("🔄 Updated device: IP={$ipAddress}, Network={$subnet}, Status=ONLINE");
+                Log::info("🔄 Updated device: IP={$ipAddress}, MAC={$macAddress}, Network={$subnet}, Status=ONLINE");
             }
 
             // Process extensions for this device
             $extensionIds = [];
             foreach ($registrations as $registration) {
                 $identity = $registration->identity ?? null;
-                
                 if (!$identity) continue;
 
+                // Extract extension number from identity (e.g., "4444@domain.com")
                 $extensionNumber = explode('@', $identity)[0];
+
+                // Find user in Postgres users collection
                 $user = $users->firstWhere('user_name', $extensionNumber);
                 
+                // If no user found, skip this extension.
                 if (!$user) {
                     Log::warning("No user found for extension {$extensionNumber}");
                     continue;
@@ -208,6 +290,7 @@ class ETLService
                     ]
                 );
 
+                // Log creation or update
                 if ($extension->wasRecentlyCreated) {
                     $extensionsCreated++;
                     Log::info("  ✅ Created extension: {$extensionNumber} ({$user->first_name} {$user->last_name})");
@@ -218,17 +301,20 @@ class ETLService
                 $extensionIds[] = $extension->extension_id;
             }
 
-            // Sync extensions to device (many-to-many relationship via device_extensions pivot)
+            // Log syncing extensions
             if (!empty($extensionIds)) {
                 $device->extensions()->sync($extensionIds);
                 Log::info("  🔗 Synced " . count($extensionIds) . " extension(s) to device {$ipAddress}");
             }
         }
 
-        // Count device statistics
-        $devicesOnline = Devices::where('status', 'online')->count();
-        $devicesOffline = Devices::where('status', 'offline')->count();
+        
+        // Final device status counts.
+        $devicesOnline = Devices::query()->where('status', 'online')->count();
 
+        // Count offline devices
+        $devicesOffline = Devices::query()->where('status', 'offline')->count();
+        // --- IGNORE ---
         Log::info('ETL completed', [
             'devices_created' => $devicesCreated,
             'devices_updated' => $devicesUpdated,
@@ -247,6 +333,7 @@ class ETLService
             'devices_offline' => $devicesOffline,
         ];
     }
+
 
     
 }
