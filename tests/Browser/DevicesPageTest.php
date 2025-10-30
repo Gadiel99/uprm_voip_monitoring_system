@@ -21,8 +21,9 @@ class DevicesPageTest extends DuskTestCase
                 ->press('Log In')
                 ->assertPathIsNot('/login')
                 ->visit('/devices')
+                ->waitForText('Buildings Overview')
                 ->assertSee('Buildings Overview')
-                ->assertPresent('table')
+                ->waitFor('table')
                 ->assertSee('Building Name')
                 ->assertSee('Total Devices')
                 ->assertSee('Online')
@@ -45,6 +46,8 @@ class DevicesPageTest extends DuskTestCase
                 ->press('Log In')
                 ->assertPathIsNot('/login')
                 ->visit('/devices')
+                ->waitForText('Buildings Overview')
+                ->waitFor('.badge')
                 ->assertPresent('.badge');
         });
     }
@@ -63,6 +66,8 @@ class DevicesPageTest extends DuskTestCase
                 ->press('Log In')
                 ->assertPathIsNot('/login')
                 ->visit('/devices')
+                ->waitForText('Buildings Overview')
+                ->waitFor('.btn-success')
                 ->assertPresent('.btn-success');
         });
     }

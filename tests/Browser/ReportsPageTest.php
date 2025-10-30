@@ -21,6 +21,7 @@ class ReportsPageTest extends DuskTestCase
                 ->press('Log In')
                 ->assertPathIsNot('/login')
                 ->visit('/reports')
+                ->waitForText('Device Reports')
                 ->assertSee('Device Reports')
                 ->assertSee('Search Filters');
         });
@@ -40,6 +41,8 @@ class ReportsPageTest extends DuskTestCase
                 ->press('Log In')
                 ->assertPathIsNot('/login')
                 ->visit('/reports')
+                ->waitForText('Device Reports')
+                ->waitFor('input[type="text"]')
                 ->assertPresent('input[type="text"]')
                 ->assertPresent('select')
                 ->assertPresent('button');
@@ -60,7 +63,8 @@ class ReportsPageTest extends DuskTestCase
                 ->press('Log In')
                 ->assertPathIsNot('/login')
                 ->visit('/reports')
-                ->assertPresent('table')
+                ->waitForText('Device Reports')
+                ->waitFor('table')
                 ->assertSee('User')
                 ->assertSee('MAC Address')
                 ->assertSee('IP Address')

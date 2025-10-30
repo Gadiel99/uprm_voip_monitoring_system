@@ -21,8 +21,9 @@ class AlertsPageTest extends DuskTestCase
                 ->press('Log In')
                 ->assertPathIsNot('/login')
                 ->visit('/alerts')
+                ->waitForText('System Alerts')
                 ->assertSee('System Alerts')
-                ->assertPresent('.nav-pills')
+                ->waitFor('.nav-pills')
                 ->assertSeeLink('All')
                 ->assertSeeLink('Critical')
                 ->assertSeeLink('High')
@@ -45,8 +46,9 @@ class AlertsPageTest extends DuskTestCase
                 ->press('Log In')
                 ->assertPathIsNot('/login')
                 ->visit('/alerts')
+                ->waitForText('System Alerts')
                 ->assertSee('Critical Buildings')
-                ->assertPresent('table')
+                ->waitFor('table')
                 ->assertSee('Building')
                 ->assertSee('Status')
                 ->assertSee('Issues')
@@ -68,6 +70,8 @@ class AlertsPageTest extends DuskTestCase
                 ->press('Log In')
                 ->assertPathIsNot('/login')
                 ->visit('/alerts')
+                ->waitForText('System Alerts')
+                ->waitFor('.badge')
                 ->assertPresent('.badge');
         });
     }

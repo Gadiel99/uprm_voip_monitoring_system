@@ -21,16 +21,22 @@ class VisualElementsTest extends DuskTestCase
                 ->press('Log In')
                 ->assertPathIsNot('/login')
                 ->visit('/')
+                ->waitFor('.navbar-brand img')
                 ->assertPresent('.navbar-brand img')
                 ->visit('/alerts')
+                ->waitFor('.navbar-brand img')
                 ->assertPresent('.navbar-brand img')
                 ->visit('/devices')
+                ->waitFor('.navbar-brand img')
                 ->assertPresent('.navbar-brand img')
                 ->visit('/reports')
+                ->waitFor('.navbar-brand img')
                 ->assertPresent('.navbar-brand img')
                 ->visit('/admin')
+                ->waitFor('.navbar-brand img')
                 ->assertPresent('.navbar-brand img')
                 ->visit('/help')
+                ->waitFor('.navbar-brand img')
                 ->assertPresent('.navbar-brand img');
         });
     }
@@ -49,6 +55,7 @@ class VisualElementsTest extends DuskTestCase
                 ->press('Log In')
                 ->assertPathIsNot('/login')
                 ->visit('/')
+                ->waitFor('.bi-bell')
                 ->assertPresent('.bi-bell')
                 ->assertPresent('.bi-person-circle')
                 ->assertPresent('.bi-speedometer2')
@@ -70,12 +77,15 @@ class VisualElementsTest extends DuskTestCase
                 ->press('Log In')
                 ->assertPathIsNot('/login')
                 ->visit('/')
+                ->waitFor('.sidebar')
                 // Check for UPRM green color classes
                 ->assertPresent('.text-success')
                 ->assertPresent('.btn-success')
                 ->visit('/alerts')
+                ->waitForText('System Alerts')
                 ->assertPresent('.badge-danger')
                 ->visit('/devices')
+                ->waitForText('Buildings Overview')
                 ->assertPresent('.badge-success');
         });
     }
@@ -94,14 +104,22 @@ class VisualElementsTest extends DuskTestCase
                 ->press('Log In')
                 ->assertPathIsNot('/login')
                 ->visit('/alerts')
+                ->waitForText('System Alerts')
+                ->waitFor('table')
                 ->assertPresent('table')
                 ->visit('/devices')
+                ->waitForText('Buildings Overview')
+                ->waitFor('table')
                 ->assertPresent('table')
                 ->visit('/reports')
+                ->waitForText('Device Reports')
+                ->waitFor('table')
                 ->assertPresent('table')
                 ->visit('/admin')
+                ->waitForText('Admin Panel')
                 ->click('button[data-bs-target="#settings"]')
                 ->waitForText('Critical Devices Configuration')
+                ->waitFor('table')
                 ->assertPresent('table');
         });
     }

@@ -21,6 +21,7 @@ class BootstrapComponentsTest extends DuskTestCase
                 ->press('Log In')
                 ->assertPathIsNot('/login')
                 ->visit('/admin')
+                ->waitForText('Admin Panel')
                 ->click('button[data-bs-target="#settings"]')
                 ->waitForText('Critical Devices Configuration')
                 ->click('button[data-bs-target="#addCriticalModal"]')
@@ -45,6 +46,7 @@ class BootstrapComponentsTest extends DuskTestCase
                 ->press('Log In')
                 ->assertPathIsNot('/login')
                 ->visit('/')
+                ->waitForText('Home')
                 ->assertSeeLink('Home')
                 ->click('a[href*="alerts"]')
                 ->waitForLocation('/alerts')
@@ -72,6 +74,7 @@ class BootstrapComponentsTest extends DuskTestCase
                 ->press('Log In')
                 ->assertPathIsNot('/login')
                 ->visit('/')
+                ->waitFor('.dropdown')
                 ->assertPresent('.dropdown')
                 ->click('.dropdown-toggle')
                 ->waitFor('.dropdown-menu')
@@ -93,6 +96,8 @@ class BootstrapComponentsTest extends DuskTestCase
                 ->press('Log In')
                 ->assertPathIsNot('/login')
                 ->visit('/alerts')
+                ->waitForText('System Alerts')
+                ->waitFor('.badge')
                 ->assertPresent('.badge');
         });
     }
@@ -111,8 +116,12 @@ class BootstrapComponentsTest extends DuskTestCase
                 ->press('Log In')
                 ->assertPathIsNot('/login')
                 ->visit('/devices')
+                ->waitForText('Buildings Overview')
+                ->waitFor('.btn-success')
                 ->assertPresent('.btn-success')
                 ->visit('/reports')
+                ->waitForText('Device Reports')
+                ->waitFor('.btn')
                 ->assertPresent('.btn');
         });
     }
@@ -131,6 +140,8 @@ class BootstrapComponentsTest extends DuskTestCase
                 ->press('Log In')
                 ->assertPathIsNot('/login')
                 ->visit('/')
+                ->waitForText('UPRM Campus Map')
+                ->waitFor('.card')
                 ->assertPresent('.card');
         });
     }

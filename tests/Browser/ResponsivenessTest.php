@@ -22,7 +22,9 @@ class ResponsivenessTest extends DuskTestCase
                 ->press('Log In')
                 ->assertPathIsNot('/login')
                 ->visit('/')
+                ->waitFor('.navbar')
                 ->assertPresent('.navbar')
+                ->waitFor('.sidebar')
                 ->assertPresent('.sidebar');
         });
     }
@@ -42,8 +44,11 @@ class ResponsivenessTest extends DuskTestCase
                 ->press('Log In')
                 ->assertPathIsNot('/login')
                 ->visit('/')
+                ->waitFor('.navbar')
                 ->assertPresent('.navbar')
+                ->waitFor('.sidebar')
                 ->assertPresent('.sidebar')
+                ->waitFor('.nav-tabs')
                 ->assertPresent('.nav-tabs');
         });
     }
@@ -63,9 +68,13 @@ class ResponsivenessTest extends DuskTestCase
                 ->press('Log In')
                 ->assertPathIsNot('/login')
                 ->visit('/')
+                ->waitFor('.navbar')
                 ->assertPresent('.navbar')
+                ->waitFor('.sidebar')
                 ->assertPresent('.sidebar')
+                ->waitFor('.nav-tabs')
                 ->assertPresent('.nav-tabs')
+                ->waitFor('.map-wrapper')
                 ->assertPresent('.map-wrapper');
         });
     }

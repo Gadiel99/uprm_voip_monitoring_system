@@ -21,12 +21,13 @@ class HomePageTest extends DuskTestCase
                 ->press('Log In')
                 ->assertPathIsNot('/login')
                 ->visit('/')
+                ->waitForText('UPRM Campus Map')
                 ->assertSee('UPRM Campus Map - System Status')
                 ->assertSee('Map Legend')
                 ->assertSee('Normal')
                 ->assertSee('Warning')
                 ->assertSee('Critical')
-                ->assertPresent('.map-wrapper')
+                ->waitFor('.map-wrapper')
                 ->assertPresent('.map-image')
                 ->assertPresent('.marker');
         });
@@ -46,8 +47,7 @@ class HomePageTest extends DuskTestCase
                 ->press('Log In')
                 ->assertPathIsNot('/login')
                 ->visit('/')
-                ->assertPresent('.marker')
-                // Verify marker has title attribute
+                ->waitFor('.marker')
                 ->assertAttribute('.marker', 'title', 'Celis');
         });
     }

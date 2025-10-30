@@ -21,6 +21,7 @@ class UserInteractionTest extends DuskTestCase
                 ->press('Log In')
                 ->assertPathIsNot('/login')
                 ->visit('/')
+                ->waitFor('.sidebar')
                 ->assertPresent('.sidebar')
                 ->click('.sidebar a[href*="help"]')
                 ->waitForLocation('/help')
@@ -45,9 +46,11 @@ class UserInteractionTest extends DuskTestCase
                 ->press('Log In')
                 ->assertPathIsNot('/login')
                 ->visit('/')
+                ->waitFor('.nav-tabs')
                 ->click('a[href*="alerts"]')
                 ->waitForLocation('/alerts')
                 ->assertSee('System Alerts')
+                ->waitFor('.nav-tabs .nav-link.active')
                 ->assertPresent('.nav-tabs .nav-link.active')
                 ->click('a[href*="devices"]')
                 ->waitForLocation('/devices')
@@ -75,7 +78,9 @@ class UserInteractionTest extends DuskTestCase
                 ->press('Log In')
                 ->assertPathIsNot('/login')
                 ->visit('/')
+                ->waitFor('.sidebar .nav-link.active')
                 ->assertPresent('.sidebar .nav-link.active')
+                ->waitFor('.nav-tabs .nav-link.active')
                 ->assertPresent('.nav-tabs .nav-link.active');
         });
     }
@@ -94,6 +99,8 @@ class UserInteractionTest extends DuskTestCase
                 ->press('Log In')
                 ->assertPathIsNot('/login')
                 ->visit('/reports')
+                ->waitForText('Device Reports')
+                ->waitFor('input[type="text"]')
                 ->assertPresent('input[type="text"]')
                 ->type('input[type="text"]', 'test')
                 ->assertInputValue('input[type="text"]', 'test');
@@ -114,6 +121,7 @@ class UserInteractionTest extends DuskTestCase
                 ->press('Log In')
                 ->assertPathIsNot('/login')
                 ->visit('/admin')
+                ->waitForText('Admin Panel')
                 ->click('button[data-bs-target="#settings"]')
                 ->waitForText('Critical Devices Configuration')
                 ->click('button[data-bs-target="#addCriticalModal"]')
