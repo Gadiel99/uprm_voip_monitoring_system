@@ -12,6 +12,8 @@
     {{-- Bootstrap Icons --}}
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
 
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+
     <style>
         body {
             background-color: #f8f9fa;
@@ -178,7 +180,7 @@
                         data-bs-toggle="dropdown"
                     >
                         <i class="bi bi-person-circle me-1"></i>
-                        Admin
+                        {{ Auth::user()->name ?? 'Guest' }}
                     </a>
 
                     <ul class="dropdown-menu dropdown-menu-end shadow-sm">
@@ -363,13 +365,7 @@
     </div>
 
     {{-- Account Settings Modal --}}
-    <div
-        class="modal fade"
-        id="accountSettingsModal"
-        tabindex="-1"
-        aria-labelledby="accountSettingsLabel"
-        aria-hidden="true"
-    >
+    <div class="modal fade" id="accountSettingsModal" tabindex="-1" aria-labelledby="accountSettingsLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content border-0 shadow-lg rounded-4">
 
@@ -379,6 +375,11 @@
                 </div>
 
                 <div class="modal-body">
+                    @if (session('status'))
+                        <div class="alert alert-success py-2 mb-3">
+                            {{ ucfirst(str_replace('-', ' ', session('status'))) }}
+                        </div>
+                    @endif
 
                     {{-- Modal Tabs --}}
                     <ul class="nav nav-pills mb-4 justify-content-center" id="accountTab" role="tablist">
@@ -416,50 +417,78 @@
                                     width="120"
                                     height="120"
                                 >
-                                <h6 class="fw-semibold mb-0">Admin User</h6>
-                                <small class="text-muted">admin@uprm.edu</small>
+                                <h6 class="fw-semibold mb-0">{{ Auth::user()->name }}</h6>
+                                <small class="text-muted">{{ Auth::user()->email }}</small>
                             </div>
 
-                            <button class="btn btn-dark mb-2">Upload New Picture</button>
-                            <p class="text-muted small">Recommended: Square image, at least 400x400px</p>
+                            <button class="btn btn-dark mb-2" disabled>Upload New Picture</button>
+                            <p class="text-muted small">Coming soon</p>
                         </div>
 
                         {{-- Username --}}
                         <div class="tab-pane fade" id="usernameTab" role="tabpanel">
-                            <label class="form-label fw-semibold">Current Username</label>
-                            <input type="text" class="form-control mb-3" value="Admin User" readonly>
+                            <form method="POST" action="{{ route('profile.update') }}">
+                                @csrf
+                                @method('patch')
+                                <input type="hidden" name="return_to" value="{{ url()->current() }}#accountSettingsModal">
+                                <input type="hidden" name="tab" value="username"><!-- NEW -->
 
-                            <label class="form-label fw-semibold">New Username</label>
-                            <input type="text" class="form-control mb-3" placeholder="Enter new username">
+                                <label class="form-label fw-semibold">Current Username</label>
+                                <input type="text" class="form-control mb-3" value="{{ Auth::user()->name }}" readonly>
 
-                            <button class="btn btn-dark w-100">Update Username</button>
+                                <label class="form-label fw-semibold">New Username</label>
+                                <input type="text" name="name" class="form-control mb-2" value="{{ old('name', Auth::user()->name) }}" required>
+                                <input type="hidden" name="email" value="{{ Auth::user()->email }}">
+                                @error('name') <div class="text-danger small mb-2">{{ $message }}</div> @enderror
+
+                                <button class="btn btn-dark w-100" type="submit">Update Username</button>
+                            </form>
                         </div>
 
                         {{-- Email --}}
                         <div class="tab-pane fade" id="emailTab" role="tabpanel">
-                            <label class="form-label fw-semibold">Current Email</label>
-                            <input type="email" class="form-control mb-3" value="admin@uprm.edu" readonly>
+                            <form method="POST" action="{{ route('profile.update') }}">
+                                @csrf
+                                @method('patch')
+                                <input type="hidden" name="return_to" value="{{ url()->current() }}#accountSettingsModal">
+                                <input type="hidden" name="tab" value="email"><!-- NEW -->
 
-                            <label class="form-label fw-semibold">New Email</label>
-                            <input type="email" class="form-control mb-3" placeholder="Enter new email">
+                                <label class="form-label fw-semibold">Current Email</label>
+                                <input type="email" class="form-control mb-3" value="{{ Auth::user()->email }}" readonly>
 
-                            <button class="btn btn-dark w-100">Update Email</button>
+                                <label class="form-label fw-semibold">New Email</label>
+                                <input type="email" name="email" class="form-control mb-2" value="{{ old('email', Auth::user()->email) }}" required>
+                                <input type="hidden" name="name" value="{{ Auth::user()->name }}">
+                                @error('email') <div class="text-danger small mb-2">{{ $message }}</div> @enderror
+
+                                <button class="btn btn-dark w-100" type="submit">Update Email</button>
+                            </form>
                         </div>
 
                         {{-- Password --}}
                         <div class="tab-pane fade" id="passwordTab" role="tabpanel">
-                            <label class="form-label fw-semibold">Current Password</label>
-                            <input type="password" class="form-control mb-3" placeholder="Enter current password">
+                            <form method="POST" action="{{ route('profile.password') }}">
+                                @csrf
+                                @method('patch')
+                                <input type="hidden" name="return_to" value="{{ url()->current() }}#accountSettingsModal">
+                                <input type="hidden" name="tab" value="password"><!-- NEW -->
 
-                            <label class="form-label fw-semibold">New Password</label>
-                            <input type="password" class="form-control mb-3" placeholder="Enter new password">
+                                <label class="form-label fw-semibold">Current Password</label>
+                                <input type="password" name="current_password" class="form-control mb-2" placeholder="Enter current password" required>
+                                @error('current_password') <div class="text-danger small mb-2">{{ $message }}</div> @enderror
 
-                            <label class="form-label fw-semibold">Confirm New Password</label>
-                            <input type="password" class="form-control mb-3" placeholder="Confirm new password">
+                                <label class="form-label fw-semibold">New Password</label>
+                                <input type="password" name="password" class="form-control mb-2" placeholder="Enter new password" required>
+                                @error('password') <div class="text-danger small mb-2">{{ $message }}</div> @enderror
 
-                            <small class="text-muted d-block mb-2">Password must be at least 6 characters long</small>
+                                <label class="form-label fw-semibold">Confirm New Password</label>
+                                <input type="password" name="password_confirmation" class="form-control mb-2" placeholder="Confirm new password" required>
+                                @error('password_confirmation') <div class="text-danger small mb-2">{{ $message }}</div> @enderror
 
-                            <button class="btn btn-dark w-100">Update Password</button>
+                                <small class="text-muted d-block mb-2">Password must be at least 8 characters</small>
+
+                                <button class="btn btn-dark w-100" type="submit">Update Password</button>
+                            </form>
                         </div>
 
                     </div>
@@ -499,6 +528,35 @@
                     </li>
                 `).join('');
             }
+
+            // Reabrir modal si hubo una actualización
+            @if (session('status'))
+                const modalEl = document.getElementById('accountSettingsModal');
+                if (modalEl) new bootstrap.Modal(modalEl).show();
+            @endif
+
+            // Reabrir modal y activar pestaña correcta en éxito o error
+            @php
+                $openModal = session('status') || $errors->any();
+                $accountTab = session('account_tab') ?? (
+                    $errors->has('email') ? 'email' :
+                    ($errors->has('current_password') || $errors->has('password') || $errors->has('password_confirmation') ? 'password' :
+                    ($errors->has('name') ? 'username' : null))
+                );
+            @endphp
+            @if ($openModal)
+                const modalEl = document.getElementById('accountSettingsModal');
+                const bsModal = new bootstrap.Modal(modalEl);
+                bsModal.show();
+
+                @if ($accountTab)
+                    const tabBtn = document.querySelector(`[data-bs-target="#{{ $accountTab }}Tab"]`);
+                    if (tabBtn) {
+                        const tab = new bootstrap.Tab(tabBtn);
+                        tab.show();
+                    }
+                @endif
+            @endif
         });
     </script>
 </body>

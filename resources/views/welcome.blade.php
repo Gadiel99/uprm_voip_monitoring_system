@@ -54,10 +54,10 @@
                 <i class="bi bi-moon"></i>
                 <div class="dropdown">
                     <a class="d-flex align-items-center text-decoration-none dropdown-toggle" href="#" data-bs-toggle="dropdown">
-                        <i class="bi bi-person-circle me-1"></i> Admin
+                        <i class="bi bi-person-circle me-1"></i> {{ auth()->check() ? (auth()->user()->name ?: auth()->user()->email) : 'Guest' }}
                     </a>
                     <ul class="dropdown-menu dropdown-menu-end">
-                        <li><a class="dropdown-item" href="#">Profile</a></li>
+                        <li><a class="dropdown-item" href="{{ route('account.settings') }}">Account Settings</a></li>
                         <li><a class="dropdown-item" href="#">Logout</a></li>
                     </ul>
                 </div>

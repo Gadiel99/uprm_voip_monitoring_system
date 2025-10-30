@@ -8,10 +8,13 @@
     <div class="collapse navbar-collapse justify-content-end" id="navbarContent">
       <ul class="navbar-nav">
         <li class="nav-item">
-          <a class="nav-link" href="#">Perfil</a>
+          <a class="nav-link" href="{{ route('profile.edit') }}">{{ Auth::user()->name ?? 'Perfil' }}</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="#">Cerrar sesión</a>
+          <form method="POST" action="{{ route('logout') }}" class="d-inline">
+            @csrf
+            <button class="nav-link btn btn-link p-0 m-0 align-baseline">Cerrar sesión</button>
+          </form>
         </li>
       </ul>
     </div>

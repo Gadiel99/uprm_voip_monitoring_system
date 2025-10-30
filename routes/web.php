@@ -3,6 +3,8 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\DevicesController;
 use App\Http\Controllers\AdminUserController;
+use App\Http\Controllers\AccountController;
+use App\Http\Controllers\ProfileController; // <-- add
 
 /*
 |--------------------------------------------------------------------------
@@ -30,6 +32,18 @@ Route::middleware('auth')->group(function () {
         session()->forget('user_preview');
         return back();
     })->name('exit.user.preview');
+
+    // Profile routes (unificar edición en PATCH /profile)
+    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::patch('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password');
+    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    // Legacy compatibility to avoid 404s and old bookmarks/forms
+    Route::get('/profile/username', fn () => redirect()->route('profile.edit'));
+    Route::get('/profile/email', fn () => redirect()->route('profile.edit'));
+    Route::patch('/profile/username', [ProfileController::class, 'updateUsername']);
+    Route::patch('/profile/email', [ProfileController::class, 'updateEmail']);
 });
 
 /*
