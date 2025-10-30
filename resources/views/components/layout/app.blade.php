@@ -176,8 +176,9 @@
                         href="#"
                         data-bs-toggle="dropdown"
                     >
-                        <i class="bi bi-person-circle me-1"></i>
-                        Admin
+                       <i class="bi bi-person-circle me-1"></i>
+                        <span id="userNameDisplay">Admin</span>
+
                     </a>
 
                     <ul class="dropdown-menu dropdown-menu-end shadow-sm">
@@ -461,6 +462,70 @@
             </div>
         </div>
     </div>
+
+    <script>
+document.addEventListener('DOMContentLoaded', () => {
+    console.log("🧩 Account Settings Frontend Demo Active");
+
+    // === Load stored profile info ===
+    const saved = JSON.parse(localStorage.getItem('demoAccountInfo')) || {
+        username: 'Admin User',
+        email: 'admin@uprm.edu',
+    };
+
+    // Fill modal fields
+    document.querySelectorAll('#usernameTab input[readonly]').forEach(el => el.value = saved.username);
+    document.querySelectorAll('#emailTab input[readonly]').forEach(el => el.value = saved.email);
+    document.querySelector('#profileTab h6').innerText = saved.username;
+    document.querySelector('#profileTab small').innerText = saved.email;
+
+    // === Update Username ===
+    document.querySelector('#usernameTab button').addEventListener('click', () => {
+        const newUsername = document.querySelector('#usernameTab input[placeholder]').value.trim();
+        if (!newUsername) return alert('⚠️ Please enter a new username.');
+
+        saved.username = newUsername;
+        localStorage.setItem('demoAccountInfo', JSON.stringify(saved));
+
+        // Update display
+        document.querySelector('#profileTab h6').innerText = newUsername;
+        document.querySelectorAll('#usernameTab input[readonly]').forEach(el => el.value = newUsername);
+        if (document.querySelector('#userNameDisplay')) {
+            document.querySelector('#userNameDisplay').innerText = newUsername;
+        }
+
+        alert('✅ Username updated (frontend demo only)');
+    });
+
+    // === Update Email ===
+    document.querySelector('#emailTab button').addEventListener('click', () => {
+        const newEmail = document.querySelector('#emailTab input[placeholder]').value.trim();
+        if (!newEmail.includes('@')) return alert('⚠️ Enter a valid email address.');
+
+        saved.email = newEmail;
+        localStorage.setItem('demoAccountInfo', JSON.stringify(saved));
+
+        document.querySelector('#profileTab small').innerText = newEmail;
+        document.querySelectorAll('#emailTab input[readonly]').forEach(el => el.value = newEmail);
+
+        alert('✅ Email updated (frontend demo only)');
+    });
+
+    // === Update Password ===
+    document.querySelector('#passwordTab button').addEventListener('click', () => {
+        const current = document.querySelector('#passwordTab input[placeholder="Enter current password"]').value;
+        const newPass = document.querySelector('#passwordTab input[placeholder="Enter new password"]').value;
+        const confirm = document.querySelector('#passwordTab input[placeholder="Confirm new password"]').value;
+
+        if (!newPass || newPass.length < 6) return alert('⚠️ Password must be at least 6 characters.');
+        if (newPass !== confirm) return alert('❌ Passwords do not match.');
+
+        alert('🔒 Password updated (frontend demo only)');
+        document.querySelectorAll('#passwordTab input').forEach(i => i.value = '');
+    });
+});
+</script>
+
 
     {{-- Simulated notifications --}}
     <script>
