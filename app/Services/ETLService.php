@@ -1,4 +1,13 @@
-<?php
+﻿<?php
+
+/**
+ * @file ETLService.php
+ * @brief Service class for ETL (Extract, Transform, Load) processing
+ * @details Handles extraction from imported files, transforms data, and loads into MariaDB
+ * @author UPRM VoIP Monitoring System Team
+ * @date November 2, 2025
+ * @version 3.1
+ */
 
 namespace App\Services;
 
@@ -8,12 +17,21 @@ use App\Models\Networks;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
-use MongoDB\BSON\UTCDateTime as MongoUTCDateTime;
-use Illuminate\Support\Carbon;
+use Exception;
 
+/**
+ * @class ETLService
+ * @brief Service for ETL processing of VoIP device and extension data
+ * @details Processes imported files (CSV and JSON) and loads into MariaDB
+ * @author UPRM VoIP Monitoring System Team
+ * @date November 2, 2025
+ */
 class ETLService
 {   
-    // Metrics to track during ETL process
+    /**
+     * @brief Metrics to track during ETL process
+     * @var array
+     */
     private $metrics = [
         'devices_created' => 0,
         'devices_updated' => 0,
@@ -24,13 +42,24 @@ class ETLService
     ];
     
     /**
-     * Run the ETL process
+     * @brief Run the ETL process
+     * @details Extracts data from imported files, transforms, and loads into MariaDB
+     * 
+     * @param string $importPath Path to extracted import directory
      * @return array The metrics of the ETL process
+     * 
+     * @throws Exception If data extraction or processing fails
+     * 
+     * @author UPRM VoIP Monitoring System Team
+     * @date November 2, 2025
      */
-    public function run(?Carbon $since = null): array
+    public function run(string $importPath): array
     {
         try {
-            Log::info('Starting ETL process', ['since' => $since]);
+            Log::info('Starting ETL process', [
+                'import_path' => $importPath,
+                'mode' => 'import'
+            ]);
             
             // Reset metrics
             $this->metrics = [
@@ -42,17 +71,54 @@ class ETLService
                 'devices_offline' => 0,
             ];
             
-            // Extract data from MongoDB and PostgreSQL
-            $registrations = $this->getRegistrationsFromMongo($since);
-            $users = $this->getUsersFromPostgres();
+            // Extract data from files
+            Log::info('Extracting data from imported files');
+            $registrations = $this->getRegistrationsFromFile($importPath);
+            $users = $this->getUsersFromFile($importPath);
             
             Log::info('Data extracted', [
                 'registrations_count' => $registrations->count(),
                 'users_count' => $users->count()
             ]);
             
-            // Transform and Load
-            $this->processAndSave($users, $registrations->toArray());
+            // Validate extracted data
+            if ($users->isEmpty()) {
+                throw new Exception('No user data found');
+            }
+            
+            // Step 1: Create ALL extensions from users CSV
+            Log::info('Creating extensions from users');
+            foreach ($users as $user) {
+                $extensionExists = Extensions::where('extension_number', $user->user_name)->exists();
+                
+                Extensions::updateOrCreate(
+                    ['extension_number' => $user->user_name],
+                    [
+                        'user_first_name' => $user->first_name,
+                        'user_last_name' => $user->last_name,
+                        'devices_registered' => 0, // Will be updated when processing devices
+                    ]
+                );
+                
+                if ($extensionExists) {
+                    $this->metrics['extensions_updated']++;
+                } else {
+                    $this->metrics['extensions_created']++;
+                }
+            }
+            
+            Log::info('Extensions created', [
+                'created' => $this->metrics['extensions_created'],
+                'updated' => $this->metrics['extensions_updated']
+            ]);
+            
+            // Step 2: Process devices from registrations (if any)
+            if (!$registrations->isEmpty()) {
+                Log::info('Processing devices from registrations');
+                $this->processAndSave($users, $registrations->toArray());
+            } else {
+                Log::warning('No registration data found - only extensions were created');
+            }
             
             // Update network counts
             $this->updateNetworkCounts();
@@ -70,49 +136,197 @@ class ETLService
         }
     }
 
-    /* Extract Phase */
+    /* Extract Phase - File-based */
 
     /**
-     * Summary of getRegistrationsFromMongo
-     * @param mixed $since
-     * @return Collection<TKey, TValue>
+     * @brief Extract registrations from imported JSON file
+     * @details Reads registrar.json from extracted import directory
+     * 
+     * @param string $importPath Path to extracted import directory
+     * @return Collection Collection of registration records
+     * 
+     * @throws Exception If file not found or invalid JSON
+     * 
+     * @author UPRM VoIP Monitoring System Team
+     * @date November 2, 2025
      */
-    private function getRegistrationsFromMongo(?Carbon $since = null): Collection
-    {   
-        $query = [];
+    private function getRegistrationsFromFile(string $importPath): Collection
+    {
+        $jsonFile = $this->findFileInDirectory($importPath, 'registrar.json');
         
-        if ($since) {
-            $query['timestamp'] = [
-                '$gte' => new MongoUTCDateTime($since->timestamp * 1000)
-            ];
+        if (!$jsonFile) {
+            throw new Exception("registrar.json not found in import directory: {$importPath}");
         }
         
-        $registrations = DB::connection('mongodb')
-            ->selectCollection('registrar')
-            ->find($query)
-            ->toArray();
+        Log::info('Reading registrations from file', ['file' => $jsonFile]);
         
-        return collect($registrations);
+        $jsonContent = file_get_contents($jsonFile);
+        
+        if ($jsonContent === false) {
+            throw new Exception("Failed to read registrar.json: {$jsonFile}");
+        }
+        
+        $data = json_decode($jsonContent, true);
+        
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            throw new Exception("Invalid JSON in registrar.json: " . json_last_error_msg());
+        }
+        
+        if (!is_array($data)) {
+            throw new Exception("Expected JSON array in registrar.json");
+        }
+        
+        Log::info('Registrations loaded from file', ['count' => count($data)]);
+        
+        // Convert array items to objects for compatibility with existing code
+        return collect($data)->map(function($item) {
+            return (object)$item;
+        });
     }
 
     /**
-     * Function to get the data from users table from PostgreSQL
-     * @return Collection<TKey, TValue>
-    */
-    private function getUsersFromPostgres(): Collection
-    {   
-        return DB::connection('pgsql')
-            ->table('users')
-            ->select('first_name', 'last_name', 'user_name')
-            ->whereNotNull('first_name')
-            ->get();
+     * @brief Extract users from imported CSV file
+     * @details Reads users.csv from extracted import directory
+     * 
+     * @param string $importPath Path to extracted import directory
+     * @return Collection Collection of user records
+     * 
+     * @throws Exception If file not found or invalid CSV
+     * 
+     * @author UPRM VoIP Monitoring System Team
+     * @date November 2, 2025
+     */
+    private function getUsersFromFile(string $importPath): Collection
+    {
+        $csvFile = $this->findFileInDirectory($importPath, 'users.csv');
+        
+        if (!$csvFile) {
+            throw new Exception("users.csv not found in import directory: {$importPath}");
+        }
+        
+        Log::info('Reading users from file', ['file' => $csvFile]);
+        
+        $users = [];
+        $handle = fopen($csvFile, 'r');
+        
+        if ($handle === false) {
+            throw new Exception("Failed to open users.csv: {$csvFile}");
+        }
+        
+        try {
+            // Read header row
+            $headers = fgetcsv($handle);
+            
+            if ($headers === false) {
+                throw new Exception("Failed to read CSV headers from users.csv");
+            }
+            
+            // Normalize headers (trim and lowercase)
+            $headers = array_map(function($h) {
+                return strtolower(trim($h));
+            }, $headers);
+            
+            // Find column indices
+            $firstNameIdx = array_search('first_name', $headers);
+            $lastNameIdx = array_search('last_name', $headers);
+            $userNameIdx = array_search('user_name', $headers);
+            
+            if ($firstNameIdx === false || $lastNameIdx === false || $userNameIdx === false) {
+                throw new Exception("Required columns not found in users.csv. Expected: first_name, last_name, user_name");
+            }
+            
+            // Read data rows
+            $rowNum = 1;
+            while (($row = fgetcsv($handle)) !== false) {
+                $rowNum++;
+                
+                // Skip rows with missing required data
+                if (!isset($row[$firstNameIdx]) || !isset($row[$lastNameIdx]) || !isset($row[$userNameIdx])) {
+                    Log::warning("Skipping incomplete row in users.csv", ['row' => $rowNum]);
+                    continue;
+                }
+                
+                $firstName = trim($row[$firstNameIdx]);
+                $lastName = trim($row[$lastNameIdx]);
+                $userName = trim($row[$userNameIdx]);
+                
+                // Skip superadmin users or rows with no user_name
+                if (strtolower($userName) === 'superadmin' || empty($userName)) {
+                    Log::info("Skipping admin/superadmin user", [
+                        'row' => $rowNum,
+                        'user_name' => $userName
+                    ]);
+                    continue;
+                }
+                
+                // Allow users even with empty first_name or last_name
+                // The important part is having a valid user_name (extension number)
+                $users[] = (object)[
+                    'first_name' => $firstName ?: 'Unknown',
+                    'last_name' => $lastName ?: 'User',
+                    'user_name' => $userName,
+                ];
+            }
+            
+            Log::info('Users loaded from file', ['count' => count($users)]);
+            
+            return collect($users);
+            
+        } finally {
+            fclose($handle);
+        }
+    }
+
+    /**
+     * @brief Find file in directory recursively
+     * @details Searches for a file by name in directory tree
+     * 
+     * @param string $directory Directory to search
+     * @param string $filename Filename to find
+     * @return string|null Full path to file or null if not found
+     * 
+     * @author UPRM VoIP Monitoring System Team
+     * @date November 2, 2025
+     */
+    private function findFileInDirectory(string $directory, string $filename): ?string
+    {
+        if (!is_dir($directory)) {
+            return null;
+        }
+        
+        try {
+            $iterator = new \RecursiveIteratorIterator(
+                new \RecursiveDirectoryIterator($directory, \RecursiveDirectoryIterator::SKIP_DOTS)
+            );
+            
+            foreach ($iterator as $file) {
+                if ($file->isFile() && $file->getFilename() === $filename) {
+                    return $file->getPathname();
+                }
+            }
+        } catch (\Exception $e) {
+            Log::warning('Error searching for file', [
+                'directory' => $directory,
+                'filename' => $filename,
+                'error' => $e->getMessage()
+            ]);
+        }
+        
+        return null;
     }
 
 
     /* Transform and Load Phase */
 
     /**
-     * Extract IP address from binding string
+     * @brief Extract IP address from binding string
+     * @details Parses SIP binding URI to extract IPv4 address
+     * 
+     * @param string $binding SIP binding URI (e.g., sip:user@192.168.1.100:5060)
+     * @return string|null Extracted IP address or null if not found
+     * 
+     * @author UPRM VoIP Monitoring System Team
+     * @date November 2, 2025
      */
     private function extractIpFromBinding(string $binding): ?string
     {
@@ -123,7 +337,14 @@ class ETLService
     }
 
     /**
-     * Format MAC address with colons
+     * @brief Format MAC address with colons
+     * @details Normalizes MAC address to uppercase with colon separators
+     * 
+     * @param string $mac Raw MAC address (with or without separators)
+     * @return string Formatted MAC address (e.g., AA:BB:CC:DD:EE:FF)
+     * 
+     * @author UPRM VoIP Monitoring System Team
+     * @date November 2, 2025
      */
     private function formatMacAddress(string $mac): string
     {
@@ -137,7 +358,14 @@ class ETLService
     }
 
     /**
-     * Find or create network based on IP address
+     * @brief Find or create network based on IP address
+     * @details Determines /24 subnet from IP and creates network if needed
+     * 
+     * @param string $ipAddress Device IP address
+     * @return Networks|null Network model or null if IP invalid
+     * 
+     * @author UPRM VoIP Monitoring System Team
+     * @date November 2, 2025
      */
     private function findOrCreateNetwork(string $ipAddress): ?Networks
     {
@@ -160,7 +388,11 @@ class ETLService
     }
 
     /**
-     * Update network device counts
+     * @brief Update network device counts
+     * @details Recalculates total and offline device counts for all networks
+     * 
+     * @author UPRM VoIP Monitoring System Team
+     * @date November 2, 2025
      */
     private function updateNetworkCounts(): void
     {
@@ -178,7 +410,13 @@ class ETLService
     }
     
     /**
-     * Get metrics
+     * @brief Get ETL metrics
+     * @details Returns current metrics from ETL process
+     * 
+     * @return array Metrics array with counts
+     * 
+     * @author UPRM VoIP Monitoring System Team
+     * @date November 2, 2025
      */
     public function getMetrics(): array
     {
@@ -187,10 +425,14 @@ class ETLService
 
 
     /**
-     * Process registrations and save to PostgreSQL
-     * @param \Illuminate\Support\Collection $users
-     * @param array $registrations
-     * @return void
+     * @brief Process device registrations and link to extensions
+     * @details Processes only devices from registrations (online devices)
+     * 
+     * @param Collection $users Collection of user records (for reference)
+     * @param array $registrations Array of registration records
+     * 
+     * @author UPRM VoIP Monitoring System Team
+     * @date November 2, 2025
      */
     private function processAndSave(Collection $users, array $registrations): void
     {
@@ -222,15 +464,7 @@ class ETLService
                     continue;
                 }
                 
-                // Find matching user
-                $user = $users->firstWhere('user_name', $extensionNumber);
-                
-                if (!$user) {
-                    Log::warning('No user found for extension', ['extension' => $extensionNumber]);
-                    continue;
-                }
-                
-                // Determine device status
+                // Determine device status based on expiration
                 $status = $expired ? 'offline' : 'online';
                 
                 // Update metrics
@@ -282,23 +516,15 @@ class ETLService
                     'action' => $deviceExists ? 'updated' : 'created'
                 ]);
                 
-                // Check if extension exists
-                $extensionExists = Extensions::where('extension_number', $extensionNumber)->exists();
+                // Find the extension (should already exist from Step 1)
+                $extension = Extensions::where('extension_number', $extensionNumber)->first();
                 
-                // Create or update extension
-                $extension = Extensions::updateOrCreate(
-                    ['extension_number' => $extensionNumber],
-                    [
-                        'user_first_name' => $user->first_name,
-                        'user_last_name' => $user->last_name,
-                    ]
-                );
-                
-                // Update metrics
-                if ($extensionExists) {
-                    $this->metrics['extensions_updated']++;
-                } else {
-                    $this->metrics['extensions_created']++;
+                if (!$extension) {
+                    Log::warning('Extension not found for device', [
+                        'extension' => $extensionNumber,
+                        'device_id' => $device->device_id
+                    ]);
+                    continue;
                 }
                 
                 // Track this extension's device registrations
@@ -355,4 +581,3 @@ class ETLService
         }
     }
 }
-  
