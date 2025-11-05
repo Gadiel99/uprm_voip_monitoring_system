@@ -28,20 +28,29 @@ use Illuminate\Console\Command;
 
 class RunETL extends Command
 {
-  
-    protected $signature = 'etl:run {--import= : Path to extracted import directory (required)}';
+    /**
+     * @brief Command signature defining the command name and options
+     * @details Defines the artisan command signature "etl:run" with required import path
+     * @var string $signature The command signature string
+     */
+    protected $signature = 'etl:run 
+                            {--import= : Path to extracted import directory (required)}';
+    
+    /**
+     * @brief Brief description of the command functionality
+     * @details Human-readable description shown in artisan command list
+     * @var string $description Command description string
+     */
     protected $description = 'Run ETL: Import Files → Transform → Load to MariaDB';
 
     /**
      * @brief Main command handler method
      * @details Executes the ETL pipeline process by coordinating with ETLService.
-     *          Supports two modes:
-     *          1. Import Mode: Processes data from extracted import files
-     *          2. Live Mode: Processes data directly from PostgreSQL and MongoDB
+     *          Extracts data from imported files, transforms, and loads into MariaDB
      *          
      *          The method performs the following operations:
-     *          1. Determines execution mode (import or live)
-     *          2. Validates command-line options
+     *          1. Validates import path is provided
+     *          2. Validates import directory exists
      *          3. Executes the ETL pipeline through ETLService
      *          4. Displays execution statistics in formatted table
      *          5. Handles exceptions and provides error reporting
@@ -53,46 +62,43 @@ class RunETL extends Command
      * 
      * @see App\Services\ETLService::run()
      * @author UPRM VoIP Monitoring System Team
-     * @date November 2, 2025
+     * @date November 4, 2025
      */
     public function handle(ETLService $etl): int
     {
-        // Retrieve command options
-        $since = $this->option('since');
+        // Get import path
         $importPath = $this->option('import');
-
-        // Determine execution mode
-        $mode = $importPath ? 'IMPORT' : 'LIVE';
         
         // Display process initiation message
         $this->info('🚀 Starting ETL process...');
         $this->newLine();
         
-        // Display mode-specific information
-        if ($importPath) {
-            $this->info("📂 Mode: Import from extracted files");
-            $this->info("📁 Import Path: {$importPath}");
-            
-            // Validate import path exists
-            if (!is_dir($importPath)) {
-                $this->error("❌ Import directory not found: {$importPath}");
-                $this->newLine();
-                $this->comment('💡 Tip: Run data:import first to extract the archive.');
-                return self::FAILURE;
-            }
-            
-            // Warn if --since is provided with --import (it will be ignored)
-            if ($since) {
-                $this->warn("⚠️  Note: --since option is ignored in import mode");
-            }
-        } else {
-            $this->info("🔗 Mode: Live database connections");
-            
-            if ($since) {
-                $this->info("📅 Processing data since: {$since}");
-            } else {
-                $this->info("📅 Processing all available data");
-            }
+        // Validate import path is provided
+        if (!$importPath) {
+            $this->error("❌ The --import option is required");
+            $this->newLine();
+            $this->comment('💡 Usage:');
+            $this->line('   php artisan etl:run --import=/path/to/extracted/import');
+            $this->newLine();
+            $this->comment('💡 First, extract the archive using:');
+            $this->line('   php artisan data:import /path/to/archive.tar.gz');
+            return self::FAILURE;
+        }
+        
+        // Display import information
+        $this->info("📂 Mode: Import from extracted files");
+        $this->info("📁 Import Path: {$importPath}");
+        
+        // Validate import path exists
+        if (!is_dir($importPath)) {
+            $this->error("❌ Import directory not found: {$importPath}");
+            $this->newLine();
+            $this->comment('💡 Tip: Run data:import first to extract the archive.');
+            $this->line('   php artisan data:import /path/to/archive.tar.gz');
+            $this->newLine();
+            $this->comment('� To see available imports:');
+            $this->line('   php artisan data:import --list');
+            return self::FAILURE;
         }
         
         $this->newLine();
@@ -106,21 +112,13 @@ class RunETL extends Command
             /*
              * Execute the main ETL pipeline process
              * The ETLService::run() method handles:
-             * - Data extraction from files or databases
+             * - Data extraction from imported files
              * - Data transformation and validation
              * - Data loading into MariaDB
              * - Statistics collection and reporting
              */
-            if ($importPath) {
-                // Import mode: process from files
-                $this->line("📊 Extracting data from import files...");
-                $stats = $etl->run('null', $importPath);
-            } else {
-                // Live mode: process from databases
-                $this->line("📊 Extracting data from live databases...");
-                $sinceCarbon = $since ? \Carbon\Carbon::parse($since) : null;
-                $stats = $etl->run($sinceCarbon, 'null');
-            }
+            $this->line("📊 Extracting data from import files...");
+            $stats = $etl->run($importPath);
 
             $this->newLine();
             $this->info('✅ ETL process completed successfully!');
