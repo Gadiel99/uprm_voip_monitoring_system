@@ -91,6 +91,55 @@
 @extends('components.layout.app')
 
 @section('content')
+<script>
+// ===== SYNC BUILDING STATUSES TO LOCALSTORAGE =====
+// This data is read by the home page to color markers
+document.addEventListener('DOMContentLoaded', function() {
+    const buildingStatuses = {
+        "Stefani": "critical",
+        "Biblioteca": "warning",
+        "Centro de Estudiantes": "normal",
+        "Celis": "normal",
+        "Biologia": "normal",
+        "DeDiego": "normal",
+        "Luchetti": "normal",
+        "ROTC": "normal",
+        "Adm.Empresas": "normal",
+        "Musa": "normal",
+        "Chardon": "normal",
+        "Monzon": "normal",
+        "Sanchez Hidalgo": "normal",
+        "Fisica": "normal",
+        "Geologia": "normal",
+        "Ciencias Marinas": "normal",
+        "Quimica": "normal",
+        "Piñero": "normal",
+        "Enfermeria": "normal",
+        "Vagones": "normal",
+        "Natatorio": "normal",
+        "Centro Nuclear": "normal",
+        "Coliseo": "normal",
+        "Gimnacio": "normal",
+        "Servicios Medicos": "normal",
+        "Decanato de Estudiantes": "normal",
+        "Oficina de Facultad": "normal",
+        "Adm.Finca Alzamora": "normal",
+        "Terrats": "normal",
+        "Ing.Civil": "normal",
+        "Ing.Industrial": "normal",
+        "Ing.Quimica": "normal",
+        "Ing.Agricola": "normal",
+        "Edificio A (Hotel Colegial)": "normal",
+        "Edificio B (Adm.Peq.Negocios y Oficina Adm)": "normal",
+        "Edificio C (Oficina de Extension Agricola)": "normal",
+        "Edificio D": "normal"
+    };
+    
+    // Save to localStorage so home page can read it
+    localStorage.setItem('buildingStatuses', JSON.stringify(buildingStatuses));
+});
+</script>
+
 <style>
     /* === UPRM Theme === */
     .nav-pills .nav-link.active {
@@ -118,9 +167,11 @@
     <div id="alertOverview">
         <div class="card border-0 shadow-sm p-4 mb-4">
             <div class="d-flex justify-content-between align-items-center mb-3">
-                <h6 class="fw-semibold">Critical Buildings</h6>
+                <h6 class="fw-semibold">Buildings Overview</h6>
                 <div>
-                    <span class="badge bg-danger text-white me-2">1 Critical</span>
+                    <span class="badge bg-danger text-white me-2" id="criticalCount">0 Critical</span>
+                    <span class="badge bg-warning text-dark me-2" id="warningCount">0 Warning</span>
+                    <span class="badge bg-success text-white" id="normalCount">0 Normal</span>
                 </div>
             </div>
 
@@ -134,38 +185,8 @@
                         <th>Time</th>
                     </tr>
                 </thead>
-                <tbody>
-                    {{-- ======= Highlighted ======= --}}
-                    <tr class="clickable-row" onclick="showBuilding('Stefani', 121, 155)">
-                        <td><i class="bi bi-exclamation-triangle text-danger"></i></td>
-                        <td>Stefani</td>
-                        <td>121 / 155</td>
-                        <td><span class="badge badge-critical">CRITICAL</span></td>
-                        <td>2 minutes ago</td>
-                    </tr>
-                    <tr class="clickable-row" onclick="showBuilding('Biblioteca', 8, 40)">
-                        <td><i class="bi bi-exclamation-circle text-warning"></i></td>
-                        <td>General Library</td>
-                        <td>8 / 40</td>
-                        <td><span class="badge badge-warning">WARNING</span></td>
-                        <td>15 minutes ago</td>
-                    </tr>
-                    <tr class="clickable-row" onclick="showBuilding('Centro de Estudiantes', 0, 30)">
-                        <td><i class="bi bi-check-circle text-success"></i></td>
-                        <td>Student Center</td>
-                        <td>0 / 30</td>
-                        <td><span class="badge badge-normal">NORMAL</span></td>
-                        <td>2 hours ago</td>
-                    </tr>
-
-                    {{-- ======= Buildings (NORMAL placeholders) ======= --}}
-                    <tr class="clickable-row" onclick="showBuilding('Celis', 0, 24)">
-                        <td><i class="bi bi-check-circle text-success"></i></td><td>Celis</td><td>0 / 24</td><td><span class="badge badge-normal">NORMAL</span></td><td>just now</td>
-                    </tr>
-                    <tr class="clickable-row" onclick="showBuilding('Biologia', 0, 18)">
-                        <td><i class="bi bi-check-circle text-success"></i></td><td>Biologia</td><td>0 / 18</td><td><span class="badge badge-normal">NORMAL</span></td><td>just now</td>
-                    </tr>
-                    {{-- More buildings below ... same pattern --}}
+                <tbody id="alertTableBody">
+                    {{-- Dynamic content will be inserted here --}}
                 </tbody>
             </table>
         </div>
@@ -207,6 +228,93 @@
 </div>
 
 <script>
+/* ==================== ALERT DATA ==================== */
+const alertsData = [
+    { building: 'Stefani', offline: 121, total: 155, severity: 'CRITICAL', severityLevel: 3, time: '2 minutes ago', icon: 'bi-exclamation-triangle text-danger' },
+    { building: 'Biblioteca', offline: 8, total: 40, severity: 'WARNING', severityLevel: 2, time: '15 minutes ago', icon: 'bi-exclamation-circle text-warning' },
+    { building: 'Centro de Estudiantes', offline: 0, total: 30, severity: 'NORMAL', severityLevel: 1, time: '2 hours ago', icon: 'bi-check-circle text-success' },
+    { building: 'Celis', offline: 0, total: 24, severity: 'NORMAL', severityLevel: 1, time: 'just now', icon: 'bi-check-circle text-success' },
+    { building: 'Biologia', offline: 0, total: 18, severity: 'NORMAL', severityLevel: 1, time: 'just now', icon: 'bi-check-circle text-success' },
+    { building: 'DeDiego', offline: 0, total: 22, severity: 'NORMAL', severityLevel: 1, time: 'just now', icon: 'bi-check-circle text-success' },
+    { building: 'Luchetti', offline: 0, total: 15, severity: 'NORMAL', severityLevel: 1, time: 'just now', icon: 'bi-check-circle text-success' },
+    { building: 'ROTC', offline: 0, total: 12, severity: 'NORMAL', severityLevel: 1, time: 'just now', icon: 'bi-check-circle text-success' },
+    { building: 'Adm.Empresas', offline: 0, total: 28, severity: 'NORMAL', severityLevel: 1, time: 'just now', icon: 'bi-check-circle text-success' },
+    { building: 'Musa', offline: 0, total: 16, severity: 'NORMAL', severityLevel: 1, time: 'just now', icon: 'bi-check-circle text-success' },
+    { building: 'Chardon', offline: 0, total: 25, severity: 'NORMAL', severityLevel: 1, time: 'just now', icon: 'bi-check-circle text-success' },
+    { building: 'Monzon', offline: 0, total: 20, severity: 'NORMAL', severityLevel: 1, time: 'just now', icon: 'bi-check-circle text-success' },
+    { building: 'Sanchez Hidalgo', offline: 0, total: 19, severity: 'NORMAL', severityLevel: 1, time: 'just now', icon: 'bi-check-circle text-success' },
+    { building: 'Fisica', offline: 0, total: 32, severity: 'NORMAL', severityLevel: 1, time: 'just now', icon: 'bi-check-circle text-success' },
+    { building: 'Geologia', offline: 0, total: 14, severity: 'NORMAL', severityLevel: 1, time: 'just now', icon: 'bi-check-circle text-success' },
+    { building: 'Ciencias Marinas', offline: 0, total: 11, severity: 'NORMAL', severityLevel: 1, time: 'just now', icon: 'bi-check-circle text-success' },
+    { building: 'Quimica', offline: 0, total: 35, severity: 'NORMAL', severityLevel: 1, time: 'just now', icon: 'bi-check-circle text-success' },
+    { building: 'Piñero', offline: 0, total: 21, severity: 'NORMAL', severityLevel: 1, time: 'just now', icon: 'bi-check-circle text-success' },
+    { building: 'Enfermeria', offline: 0, total: 17, severity: 'NORMAL', severityLevel: 1, time: 'just now', icon: 'bi-check-circle text-success' },
+    { building: 'Vagones', offline: 0, total: 8, severity: 'NORMAL', severityLevel: 1, time: 'just now', icon: 'bi-check-circle text-success' },
+    { building: 'Natatorio', offline: 0, total: 6, severity: 'NORMAL', severityLevel: 1, time: 'just now', icon: 'bi-check-circle text-success' },
+    { building: 'Centro Nuclear', offline: 0, total: 9, severity: 'NORMAL', severityLevel: 1, time: 'just now', icon: 'bi-check-circle text-success' },
+    { building: 'Coliseo', offline: 0, total: 13, severity: 'NORMAL', severityLevel: 1, time: 'just now', icon: 'bi-check-circle text-success' },
+    { building: 'Gimnacio', offline: 0, total: 10, severity: 'NORMAL', severityLevel: 1, time: 'just now', icon: 'bi-check-circle text-success' },
+    { building: 'Servicios Medicos', offline: 0, total: 7, severity: 'NORMAL', severityLevel: 1, time: 'just now', icon: 'bi-check-circle text-success' },
+    { building: 'Decanato de Estudiantes', offline: 0, total: 12, severity: 'NORMAL', severityLevel: 1, time: 'just now', icon: 'bi-check-circle text-success' },
+    { building: 'Oficina de Facultad', offline: 0, total: 15, severity: 'NORMAL', severityLevel: 1, time: 'just now', icon: 'bi-check-circle text-success' },
+    { building: 'Adm.Finca Alzamora', offline: 0, total: 5, severity: 'NORMAL', severityLevel: 1, time: 'just now', icon: 'bi-check-circle text-success' },
+    { building: 'Terrats', offline: 0, total: 18, severity: 'NORMAL', severityLevel: 1, time: 'just now', icon: 'bi-check-circle text-success' },
+    { building: 'Ing.Civil', offline: 0, total: 23, severity: 'NORMAL', severityLevel: 1, time: 'just now', icon: 'bi-check-circle text-success' },
+    { building: 'Ing.Industrial', offline: 0, total: 27, severity: 'NORMAL', severityLevel: 1, time: 'just now', icon: 'bi-check-circle text-success' },
+    { building: 'Ing.Quimica', offline: 0, total: 31, severity: 'NORMAL', severityLevel: 1, time: 'just now', icon: 'bi-check-circle text-success' },
+    { building: 'Ing.Agricola', offline: 0, total: 14, severity: 'NORMAL', severityLevel: 1, time: 'just now', icon: 'bi-check-circle text-success' },
+    { building: 'Edificio A (Hotel Colegial)', offline: 0, total: 8, severity: 'NORMAL', severityLevel: 1, time: 'just now', icon: 'bi-check-circle text-success' },
+    { building: 'Edificio B (Adm.Peq.Negocios y Oficina Adm)', offline: 0, total: 9, severity: 'NORMAL', severityLevel: 1, time: 'just now', icon: 'bi-check-circle text-success' },
+    { building: 'Edificio C (Oficina de Extension Agricola)', offline: 0, total: 6, severity: 'NORMAL', severityLevel: 1, time: 'just now', icon: 'bi-check-circle text-success' },
+    { building: 'Edificio D', offline: 0, total: 7, severity: 'NORMAL', severityLevel: 1, time: 'just now', icon: 'bi-check-circle text-success' }
+];
+
+/* ==================== RENDER ALERTS ==================== */
+function renderAlerts() {
+    const sortOrder = localStorage.getItem('alertSortOrder') || 'bySeverity';
+    const tbody = document.getElementById('alertTableBody');
+    
+    // Clone and sort the data
+    let sortedAlerts = [...alertsData];
+    
+    if (sortOrder === 'bySeverity') {
+        // Sort by severity level (Critical > Warning > Normal)
+        sortedAlerts.sort((a, b) => b.severityLevel - a.severityLevel);
+    } else {
+        // Sort alphabetically by building name
+        sortedAlerts.sort((a, b) => a.building.localeCompare(b.building));
+    }
+    
+    // Clear existing content
+    tbody.innerHTML = '';
+    
+    // Render sorted alerts
+    sortedAlerts.forEach(alert => {
+        const badgeClass = alert.severity === 'CRITICAL' ? 'badge-critical' : 
+                          alert.severity === 'WARNING' ? 'badge-warning' : 'badge-normal';
+        
+        const row = `
+            <tr class="clickable-row" onclick="showBuilding('${alert.building}', ${alert.offline}, ${alert.total})">
+                <td><i class="bi ${alert.icon}"></i></td>
+                <td>${alert.building}</td>
+                <td>${alert.offline} / ${alert.total}</td>
+                <td><span class="badge ${badgeClass}">${alert.severity}</span></td>
+                <td>${alert.time}</td>
+            </tr>
+        `;
+        tbody.innerHTML += row;
+    });
+    
+    // Update badge counts for all severity levels
+    const criticalCount = alertsData.filter(a => a.severity === 'CRITICAL').length;
+    const warningCount = alertsData.filter(a => a.severity === 'WARNING').length;
+    const normalCount = alertsData.filter(a => a.severity === 'NORMAL').length;
+    
+    document.getElementById('criticalCount').textContent = `${criticalCount} Critical`;
+    document.getElementById('warningCount').textContent = `${warningCount} Warning`;
+    document.getElementById('normalCount').textContent = `${normalCount} Normal`;
+}
+
 /* ====== Device data per building (placeholders) ====== */
 const buildingData = {
     "Stefani": [
@@ -215,12 +323,18 @@ const buildingData = {
         { server: "STF-003", id: "DEV-1003", user: "msmith", phone: "787-555-0103", mac: "00:1B:44:11:3A:B9", ip: "192.168.1.12" }
     ],
     "Biblioteca": [
-        { server: "LIB-001", id: "DEV-2001", user: "jsantos", phone: "787-555-0201", mac: "00:1B:44:11:4A:11", ip: "192.168.2.10" }
+        { server: "BIB-001", id: "DEV-2001", user: "jsantos", phone: "787-555-0201", mac: "00:1B:44:11:4A:11", ip: "192.168.2.10" }
     ],
     "Centro de Estudiantes": [
         { server: "STD-001", id: "DEV-3001", user: "drios", phone: "787-555-0301", mac: "00:1B:44:11:5A:21", ip: "192.168.3.10" }
     ],
-    // More buildings ...
+    "Celis": [
+        { server: "CEL-001", id: "DEV-4001", user: "alopez", phone: "787-555-0401", mac: "00:1B:44:11:6A:31", ip: "192.168.4.10" }
+    ],
+    "Biologia": [
+        { server: "BIO-001", id: "DEV-5001", user: "rperez", phone: "787-555-0501", mac: "00:1B:44:11:7A:41", ip: "192.168.5.10" }
+    ],
+    // Add more buildings as needed
 };
 
 /* ====== UI handlers ====== */
@@ -269,11 +383,21 @@ function goBack() {
 
 /*  URL hook so markers can open a building: /alerts?building=Stefani */
 document.addEventListener('DOMContentLoaded', () => {
+    // Render alerts based on saved sort preference
+    renderAlerts();
+    
     const params = new URLSearchParams(window.location.search);
     const building = params.get('building');
     if (building) {
         // Default counters when opened from URL; adjust if you have real data
         showBuilding(building, 0, (buildingData[building] || []).length || 10);
+    }
+});
+
+// Listen for changes to alert sort order (if changed in another tab)
+window.addEventListener('storage', (e) => {
+    if (e.key === 'alertSortOrder') {
+        renderAlerts();
     }
 });
 </script>
