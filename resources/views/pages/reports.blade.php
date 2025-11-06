@@ -157,7 +157,7 @@
             <div class="col-md-3">
                 <div class="border rounded-3 p-3 text-center" style="background-color: #f0f6ff;">
                     <h6 class="fw-semibold">Total Devices</h6>
-                    <h2 class="fw-bold text-primary mb-1">18</h2>
+                    <h2 class="fw-bold text-primary mb-1" id="totalDevices">0</h2>
                     <p class="text-primary small mb-0">Registered in system</p>
                 </div>
             </div>
@@ -165,7 +165,7 @@
             <div class="col-md-3">
                 <div class="border rounded-3 p-3 text-center" style="background-color: #ecfdf5;">
                     <h6 class="fw-semibold">Active Now</h6>
-                    <h2 class="fw-bold text-success mb-1">15</h2>
+                    <h2 class="fw-bold text-success mb-1" id="activeDevices">0</h2>
                     <p class="text-success small mb-0">Currently online</p>
                 </div>
             </div>
@@ -173,7 +173,7 @@
             <div class="col-md-3">
                 <div class="border rounded-3 p-3 text-center" style="background-color: #fffbea;">
                     <h6 class="fw-semibold">Inactive</h6>
-                    <h2 class="fw-bold text-warning mb-1">3</h2>
+                    <h2 class="fw-bold text-warning mb-1" id="inactiveDevices">0</h2>
                     <p class="text-warning small mb-0">Offline devices</p>
                 </div>
             </div>
@@ -181,7 +181,7 @@
             <div class="col-md-3">
                 <div class="border rounded-3 p-3 text-center" style="background-color: #ecfdf5;">
                     <h6 class="fw-semibold">Buildings</h6>
-                    <h2 class="fw-bold text-success mb-1">12</h2>
+                    <h2 class="fw-bold text-success mb-1" id="totalBuildings">0</h2>
                     <p class="text-success small mb-0">Monitored locations</p>
                 </div>
             </div>
@@ -192,18 +192,67 @@
 {{-- ================= JAVASCRIPT SEARCH LOGIC ================= --}}
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-    // Sample device data
+    // Sample device data - expanded with all buildings from map
     const data = [
+        // Stefani Building
         { user: 'admin', mac: '00:1B:44:11:3A:B7', ip: '192.168.1.10', status: 'Online', building: 'Stefani' },
-        { user: 'jdoe', mac: '00:1B:44:11:3A:B8', ip: '192.168.1.11', status: 'Offline', building: 'Chardon' },
-        { user: 'msmith', mac: '00:1B:44:11:3A:B9', ip: '192.168.1.12', status: 'Critical', building: 'Engineering Complex' },
-        { user: 'jsantos', mac: '00:1B:44:11:4A:11', ip: '192.168.2.10', status: 'Online', building: 'General Library' },
-        { user: 'acastro', mac: '00:1B:44:11:4A:12', ip: '192.168.2.11', status: 'Offline', building: 'Physics' },
-        { user: 'drios', mac: '00:1B:44:11:5A:21', ip: '192.168.3.10', status: 'Online', building: 'Student Center' }
+        { user: 'jdoe', mac: '00:1B:44:11:3A:B8', ip: '192.168.1.11', status: 'Online', building: 'Stefani' },
+        { user: 'msmith', mac: '00:1B:44:11:3A:B9', ip: '192.168.1.12', status: 'Offline', building: 'Stefani' },
+        
+        // Biblioteca
+        { user: 'jsantos', mac: '00:1B:44:11:4A:11', ip: '192.168.2.10', status: 'Online', building: 'Biblioteca' },
+        { user: 'acastro', mac: '00:1B:44:11:4A:12', ip: '192.168.2.11', status: 'Online', building: 'Biblioteca' },
+        
+        // Centro de Estudiantes
+        { user: 'drios', mac: '00:1B:44:11:5A:21', ip: '192.168.3.10', status: 'Online', building: 'Centro de Estudiantes' },
+        { user: 'clopez', mac: '00:1B:44:11:5A:22', ip: '192.168.3.11', status: 'Offline', building: 'Centro de Estudiantes' },
+        
+        // Chardon Building
+        { user: 'rperez', mac: '00:1B:44:11:6A:31', ip: '192.168.4.10', status: 'Online', building: 'Chardon' },
+        { user: 'lgarcia', mac: '00:1B:44:11:6A:32', ip: '192.168.4.11', status: 'Offline', building: 'Chardon' },
+        
+        // Fisica
+        { user: 'jfernandez', mac: '00:1B:44:11:8A:51', ip: '192.168.6.10', status: 'Online', building: 'Fisica' },
+        { user: 'sgonzalez', mac: '00:1B:44:11:8A:52', ip: '192.168.6.11', status: 'Offline', building: 'Fisica' },
+        
+        // Quimica
+        { user: 'druiz', mac: '00:1B:44:11:9A:61', ip: '192.168.7.10', status: 'Online', building: 'Quimica' },
+        
+        // Biologia
+        { user: 'mdiaz', mac: '00:1B:44:11:AA:71', ip: '192.168.8.10', status: 'Online', building: 'Biologia' },
+        { user: 'ctorres', mac: '00:1B:44:11:AA:72', ip: '192.168.8.11', status: 'Online', building: 'Biologia' },
+        
+        // Ing.Civil
+        { user: 'erodriguez', mac: '00:1B:44:11:7A:41', ip: '192.168.5.10', status: 'Online', building: 'Ing.Civil' },
+        
+        // Ing.Industrial
+        { user: 'mmartinez', mac: '00:1B:44:11:7A:42', ip: '192.168.5.11', status: 'Online', building: 'Ing.Industrial' },
+        
+        // Celis
+        { user: 'alopez', mac: '00:1B:44:11:6A:33', ip: '192.168.4.12', status: 'Online', building: 'Celis' },
+        
+        // Musa
+        { user: 'rmendez', mac: '00:1B:44:11:BA:81', ip: '192.168.9.10', status: 'Online', building: 'Musa' }
     ];
 
     const tbody = document.querySelector('#resultsTable tbody');
     const noResults = document.getElementById('noResults');
+
+    // Calculate and update System Overview statistics
+    function updateSystemOverview() {
+        const totalDevices = data.length;
+        const activeDevices = data.filter(d => d.status === 'Online').length;
+        const inactiveDevices = data.filter(d => d.status === 'Offline' || d.status === 'Critical').length;
+        const uniqueBuildings = [...new Set(data.map(d => d.building))].length;
+        
+        document.getElementById('totalDevices').textContent = totalDevices;
+        document.getElementById('activeDevices').textContent = activeDevices;
+        document.getElementById('inactiveDevices').textContent = inactiveDevices;
+        document.getElementById('totalBuildings').textContent = uniqueBuildings;
+    }
+    
+    // Update overview on page load
+    updateSystemOverview();
 
     // Function to render table rows dynamically
     function renderTable(rows) {
