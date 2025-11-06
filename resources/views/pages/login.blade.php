@@ -11,8 +11,6 @@
  * Purpose:
  *   This page provides the user interface for system authentication. It includes:
  *   - Email and password input fields
- *   - Remember me checkbox
- *   - Forgot password link
  *   - UPRM branding and logo
  * 
  * Form Details:
@@ -123,15 +121,6 @@
                 </div>
             </div>
 
-            {{-- Remember me checkbox + forgot password link --}}
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <div class="form-check">
-                    <input class="form-check-input" type="checkbox" id="rememberMe">
-                    <label class="form-check-label small" for="rememberMe">Remember me</label>
-                </div>
-                <a href="#" class="small text-success text-decoration-none">Forgot password?</a>
-            </div>
-
             {{-- Login button --}}
             <button type="submit" class="btn btn-success w-100 fw-semibold">Log In</button>
         </form>
@@ -143,5 +132,29 @@
         <p class="small text-muted mb-0">© {{ date('Y') }} UPRM Monitoring System</p>
     </div>
 </div>
+
+<script>
+// Log login attempt
+document.querySelector('form').addEventListener('submit', function(e) {
+    const email = document.querySelector('input[name="email"]').value;
+    
+    // Add log entry
+    const logs = JSON.parse(localStorage.getItem('systemLogs') || '[]');
+    const timestamp = new Date().toISOString().replace('T', ' ').substring(0, 19);
+    
+    logs.unshift({
+        timestamp: timestamp,
+        type: 'INFO',
+        message: `User login attempt with email: ${email}`,
+        user: email,
+        id: Date.now()
+    });
+    
+    // Keep only last 500 logs
+    if (logs.length > 500) logs.pop();
+    
+    localStorage.setItem('systemLogs', JSON.stringify(logs));
+});
+</script>
 </body>
 </html>
