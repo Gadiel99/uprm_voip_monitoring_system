@@ -38,7 +38,7 @@ Route::post('/logout', function () {
 */
 Route::post('/enter-user-preview', function () {
     Session::put('user_preview', true);
-    return back();
+    return redirect('/')->with('activeTab', 'home');
 })->name('enter.user.preview');
 
 Route::post('/exit-user-preview', function () {
