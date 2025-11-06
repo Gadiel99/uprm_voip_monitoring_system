@@ -109,7 +109,6 @@
         <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#backup"><i class="bi bi-hdd-stack me-2"></i>Backup</button></li>
         <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#logs"><i class="bi bi-file-earmark-text me-2"></i>Logs</button></li>
         <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#settings"><i class="bi bi-gear me-2"></i>Settings</button></li>
-        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#servers"><i class="bi bi-server me-2"></i>Servers</button></li>
         <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#users"><i class="bi bi-people me-2"></i>Users</button></li>
     </ul>
 
@@ -138,14 +137,23 @@
             <div class="card border-0 shadow-sm p-4 mb-4">
                 <h5 class="fw-semibold mb-3">System Logs</h5>
                 <div class="d-flex mb-3">
-                    <input type="text" class="form-control bg-light" placeholder="Search logs by message, source, or user...">
-                    <button class="btn btn-dark ms-2"><i class="bi bi-search me-1"></i>Search</button>
+                    <input type="text" class="form-control bg-light" id="logSearchInput" placeholder="Search logs by message, action, or user...">
+                    <button class="btn btn-dark ms-2" onclick="filterLogs()"><i class="bi bi-search me-1"></i>Search</button>
+                    <button class="btn btn-outline-secondary ms-2" onclick="clearLogs()"><i class="bi bi-trash me-1"></i>Clear All</button>
                 </div>
-                <small class="text-muted d-block mb-3">Logs are read-only and cannot be modified.</small>
-                <div class="bg-light rounded p-3">
-                    <code>[2025-10-21 19:42:11] INFO: System backup completed successfully.</code><br>
-                    <code>[2025-10-21 19:20:14] ERROR: Database connection timeout.</code><br>
-                    <code>[2025-10-21 19:15:08] INFO: Server reboot scheduled for maintenance.</code>
+                
+                <div class="mb-3">
+                    <button class="btn btn-sm btn-outline-primary me-2" onclick="filterByType('all')">All</button>
+                    <button class="btn btn-sm btn-outline-info me-2" onclick="filterByType('INFO')">Info</button>
+                    <button class="btn btn-sm btn-outline-success me-2" onclick="filterByType('SUCCESS')">Success</button>
+                    <button class="btn btn-sm btn-outline-warning me-2" onclick="filterByType('WARNING')">Warning</button>
+                    <button class="btn btn-sm btn-outline-danger" onclick="filterByType('ERROR')">Error</button>
+                </div>
+                
+                <small class="text-muted d-block mb-3">Showing <span id="logCount">0</span> logs. Logs are automatically recorded for all system actions.</small>
+                
+                <div class="bg-light rounded p-3" style="max-height: 500px; overflow-y: auto;" id="logsContainer">
+                    <div class="text-center text-muted py-4">No logs available. Actions will be logged here.</div>
                 </div>
             </div>
         </div>
@@ -162,7 +170,7 @@
                     </button>
                 </div>
 
-                <table class="table table-bordered align-middle" id="criticalTable">
+                <table class="table table-bordered table-hover align-middle" id="criticalTable">
                     <thead class="table-light">
                         <tr>
                             <th>IP Address</th>
@@ -173,7 +181,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr>
+                        <tr class="critical-device-row" style="cursor: pointer;">
                             <td>192.168.1.10</td>
                             <td>00:1B:44:11:AA:00</td>
                             <td>Emergency Services</td>
@@ -183,7 +191,7 @@
                                 <button class="btn btn-sm btn-danger delete-btn"><i class="bi bi-trash"></i></button>
                             </td>
                         </tr>
-                        <tr>
+                        <tr class="critical-device-row" style="cursor: pointer;">
                             <td>192.168.1.11</td>
                             <td>00:1B:44:11:AA:01</td>
                             <td>Security Office</td>
@@ -243,54 +251,6 @@
                     <label class="form-check-label fw-semibold" for="pushNotifications">Push Notifications</label>
                     <p class="text-muted small ms-4 mb-0">Browser push notifications</p>
                 </div>
-            </div>
-        </div>
-
-        {{-- SERVERS --}}
-        <div class="tab-pane fade" id="servers" role="tabpanel">
-            <div class="card border-0 shadow-sm p-4 mb-4">
-                <h5 class="fw-semibold mb-3">Servers</h5>
-                <p class="text-muted small">Manage system servers and ports.</p>
-
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addServerModal">
-                        <i class="bi bi-plus-lg me-2"></i>Add Server
-                    </button>
-                </div>
-
-                <table class="table table-bordered align-middle" id="serverTable">
-                    <thead class="table-light">
-                        <tr>
-                            <th>Name</th>
-                            <th>IP Address</th>
-                            <th>Port</th>
-                            <th>Status</th>
-                            <th style="width:120px;">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>Primary Server</td>
-                            <td>192.168.1.10</td>
-                            <td>22</td>
-                            <td><span class="badge badge-online">Online</span></td>
-                            <td>
-                                <button class="btn btn-sm btn-outline-secondary edit-btn"><i class="bi bi-pencil"></i></button>
-                                <button class="btn btn-sm btn-danger delete-btn"><i class="bi bi-trash"></i></button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>Database Server</td>
-                            <td>192.168.1.12</td>
-                            <td>3306</td>
-                            <td><span class="badge badge-offline">Offline</span></td>
-                            <td>
-                                <button class="btn btn-sm btn-outline-secondary edit-btn"><i class="bi bi-pencil"></i></button>
-                                <button class="btn btn-sm btn-danger delete-btn"><i class="bi bi-trash"></i></button>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
             </div>
         </div>
 
@@ -497,7 +457,16 @@ function enableTableActions(tableId) {
 
         // DELETE
         if (e.target.closest('.delete-btn')) {
-            if (confirm('🗑️ Delete this entry?')) row.remove();
+            if (confirm('🗑️ Delete this entry?')) {
+                // Get info before deleting
+                const cells = [...row.children];
+                const firstCell = cells[0]?.textContent.trim() || 'Unknown';
+                
+                row.remove();
+                
+                // Log deletion
+                addLog('WARNING', `Entry deleted from ${tableId}: ${firstCell}`);
+            }
             return;
         }
 
@@ -505,16 +474,31 @@ function enableTableActions(tableId) {
         if (e.target.closest('.edit-btn')) {
             const actionCell = row.lastElementChild;
             const cells = [...row.children].slice(0, -1);
+            
+            // Store original values for logging
+            const originalValues = cells.map(c => c.textContent.trim());
+            
             cells.forEach((cell, index) => {
                 const value = cell.textContent.trim();
 
                 // Status column. Make it a select
-                if (cell.innerText.includes('Online') || cell.innerText.includes('Offline')) {
+                if (cell.innerText.includes('Online') || cell.innerText.includes('Offline') || 
+                    cell.innerText.includes('Active') || cell.innerText.includes('Inactive')) {
                     const select = document.createElement('select');
                     select.className = 'form-select form-select-sm';
-                    select.innerHTML = `
-                        <option value="Online" ${value.includes('Online') ? 'selected' : ''}>Online</option>
-                        <option value="Offline" ${value.includes('Offline') ? 'selected' : ''}>Offline</option>`;
+                    
+                    // Determine if this is Online/Offline or Active/Inactive
+                    const isActiveInactive = cell.innerText.includes('Active') || cell.innerText.includes('Inactive');
+                    
+                    if (isActiveInactive) {
+                        select.innerHTML = `
+                            <option value="Active" ${value.includes('Active') ? 'selected' : ''}>Active</option>
+                            <option value="Inactive" ${value.includes('Inactive') ? 'selected' : ''}>Inactive</option>`;
+                    } else {
+                        select.innerHTML = `
+                            <option value="Online" ${value.includes('Online') ? 'selected' : ''}>Online</option>
+                            <option value="Offline" ${value.includes('Offline') ? 'selected' : ''}>Offline</option>`;
+                    }
                     cell.textContent = '';
                     cell.appendChild(select);
                 } else {
@@ -535,18 +519,37 @@ function enableTableActions(tableId) {
         if (e.target.closest('.save-btn')) {
             const actionCell = row.lastElementChild;
             const cells = [...row.children].slice(0, -1);
+            
+            // Collect new values for logging
+            const newValues = [];
+            
             cells.forEach(cell => {
                 const input = cell.querySelector('input');
                 const select = cell.querySelector('select');
 
                 if (select) {
                     const status = select.value;
-                    const badgeClass = status === 'Online' ? 'badge-online' : 'badge-offline';
+                    let badgeClass;
+                    
+                    // Determine badge class based on status value
+                    if (status === 'Online' || status === 'Active') {
+                        badgeClass = 'badge-online';
+                    } else if (status === 'Offline' || status === 'Inactive') {
+                        badgeClass = 'badge-offline';
+                    }
+                    
                     cell.innerHTML = `<span class="badge ${badgeClass}">${status}</span>`;
+                    newValues.push(status);
                 } else if (input) {
                     cell.textContent = input.value;
+                    newValues.push(input.value);
+                } else {
+                    newValues.push(cell.textContent.trim());
                 }
             });
+            
+            // Log the edit
+            addLog('INFO', `Entry updated in ${tableId}: ${newValues[0]} - Changes saved`);
 
             actionCell.querySelector('.save-btn').outerHTML =
                 '<button class="btn btn-sm btn-outline-secondary edit-btn"><i class="bi bi-pencil"></i></button>';
@@ -566,7 +569,7 @@ function onAddCritical(ev) {
     const tbody = document.querySelector('#criticalTable tbody');
     const badge = status === 'Online' ? 'badge-online' : 'badge-offline';
     tbody.insertAdjacentHTML('beforeend', `
-        <tr>
+        <tr class="critical-device-row" style="cursor: pointer;">
             <td>${ip}</td>
             <td>${mac}</td>
             <td>${owner}</td>
@@ -577,6 +580,10 @@ function onAddCritical(ev) {
             </td>
         </tr>
     `);
+    
+    // Log the action
+    addLog('SUCCESS', `Critical device added: ${owner} (${ip}) - Status: ${status}`);
+    
     bootstrap.Modal.getInstance(document.getElementById('addCriticalModal')).hide();
     ev.target.reset();
 }
@@ -627,8 +634,237 @@ function onAddUser(ev) {
             </td>
         </tr>
     `);
+    
+    // Log the action
+    addLog('SUCCESS', `User added: ${name} (${email}) - Role: ${role}, Status: ${status}`);
+    
     bootstrap.Modal.getInstance(document.getElementById('addUserModal')).hide();
     ev.target.reset();
 }
+
+/* SYNC CRITICAL DEVICES TO LOCALSTORAGE FOR NOTIFICATIONS */
+function syncCriticalDevicesToLocalStorage() {
+    const criticalTable = document.querySelector('#criticalTable tbody');
+    if (!criticalTable) return;
+    
+    const devices = [];
+    const rows = criticalTable.querySelectorAll('tr');
+    
+    rows.forEach(row => {
+        const cells = row.querySelectorAll('td');
+        if (cells.length >= 4) {
+            const ip = cells[0].textContent.trim();
+            const mac = cells[1].textContent.trim();
+            const owner = cells[2].textContent.trim();
+            const statusBadge = cells[3].querySelector('.badge');
+            const status = statusBadge ? statusBadge.textContent.trim() : 'Unknown';
+            
+            devices.push({
+                ip: ip,
+                mac: mac,
+                owner: owner,
+                status: status
+            });
+        }
+    });
+    
+    localStorage.setItem('criticalDevices', JSON.stringify(devices));
+}
+
+// Sync critical devices on page load
+document.addEventListener('DOMContentLoaded', () => {
+    syncCriticalDevicesToLocalStorage();
+    
+    // Re-sync whenever the critical table is modified
+    const criticalTable = document.querySelector('#criticalTable');
+    if (criticalTable) {
+        // Create a MutationObserver to watch for changes
+        const observer = new MutationObserver(() => {
+            syncCriticalDevicesToLocalStorage();
+        });
+        
+        observer.observe(criticalTable, {
+            childList: true,
+            subtree: true,
+            characterData: true
+        });
+    }
+    
+    // Handle clicks on critical device rows to navigate to Devices tab
+    document.addEventListener('click', (e) => {
+        const row = e.target.closest('.critical-device-row');
+        if (!row) return;
+        
+        // Don't navigate if clicking on anything in the Actions column
+        if (e.target.closest('td:last-child')) return;
+        
+        // Don't navigate if clicking on edit or delete buttons
+        if (e.target.closest('.edit-btn') || e.target.closest('.delete-btn')) return;
+        
+        // Get device info from the row
+        const cells = row.querySelectorAll('td');
+        const deviceIP = cells[0].textContent.trim();
+        const deviceMAC = cells[1].textContent.trim();
+        
+        console.log('Navigating to device with IP:', deviceIP);
+        
+        // Navigate to Devices page with URL parameter
+        window.location.href = `/devices?ip=${encodeURIComponent(deviceIP)}&building=Critical+Devices`;
+    });
+});
+
+/* ==================== LOGGING SYSTEM ==================== */
+
+// Get logs from localStorage or initialize
+function getLogs() {
+    return JSON.parse(localStorage.getItem('systemLogs') || '[]');
+}
+
+// Save logs to localStorage
+function saveLogs(logs) {
+    localStorage.setItem('systemLogs', JSON.stringify(logs));
+    updateLogsDisplay();
+}
+
+// Add a new log entry
+window.addLog = function(type, message, user = 'Admin') {
+    const logs = getLogs();
+    const timestamp = new Date().toISOString().replace('T', ' ').substring(0, 19);
+    
+    const newLog = {
+        timestamp: timestamp,
+        type: type, // INFO, SUCCESS, WARNING, ERROR
+        message: message,
+        user: user,
+        id: Date.now()
+    };
+    
+    logs.unshift(newLog); // Add to beginning
+    
+    // Keep only last 500 logs
+    if (logs.length > 500) {
+        logs.pop();
+    }
+    
+    saveLogs(logs);
+}
+
+// Display logs in the container
+function updateLogsDisplay(filteredLogs = null) {
+    const container = document.getElementById('logsContainer');
+    const logs = filteredLogs || getLogs();
+    
+    document.getElementById('logCount').textContent = logs.length;
+    
+    if (logs.length === 0) {
+        container.innerHTML = '<div class="text-center text-muted py-4">No logs available. Actions will be logged here.</div>';
+        return;
+    }
+    
+    const logColors = {
+        'INFO': 'text-primary',
+        'SUCCESS': 'text-success',
+        'WARNING': 'text-warning',
+        'ERROR': 'text-danger'
+    };
+    
+    container.innerHTML = logs.map(log => `
+        <div class="log-entry mb-2 pb-2 border-bottom">
+            <code class="${logColors[log.type] || 'text-secondary'}">
+                [${log.timestamp}] <strong>${log.type}</strong>: ${log.message}
+                ${log.user !== 'System' ? `<span class="text-muted">(${log.user})</span>` : ''}
+            </code>
+        </div>
+    `).join('');
+}
+
+// Filter logs by search term
+function filterLogs() {
+    const searchTerm = document.getElementById('logSearchInput').value.toLowerCase();
+    const logs = getLogs();
+    
+    if (!searchTerm) {
+        updateLogsDisplay();
+        return;
+    }
+    
+    const filtered = logs.filter(log => 
+        log.message.toLowerCase().includes(searchTerm) ||
+        log.type.toLowerCase().includes(searchTerm) ||
+        log.user.toLowerCase().includes(searchTerm)
+    );
+    
+    updateLogsDisplay(filtered);
+}
+
+// Filter by log type
+function filterByType(type) {
+    const logs = getLogs();
+    
+    if (type === 'all') {
+        updateLogsDisplay();
+        return;
+    }
+    
+    const filtered = logs.filter(log => log.type === type);
+    updateLogsDisplay(filtered);
+}
+
+// Clear all logs
+function clearLogs() {
+    if (confirm('Are you sure you want to clear all logs?')) {
+        localStorage.removeItem('systemLogs');
+        addLog('WARNING', 'All system logs were cleared by admin', 'Admin');
+        updateLogsDisplay();
+    }
+}
+
+// Load logs when Logs tab is shown
+document.addEventListener('DOMContentLoaded', () => {
+    updateLogsDisplay();
+    
+    // Add initial system startup log if no logs exist
+    const logs = getLogs();
+    if (logs.length === 0) {
+        addLog('INFO', 'System initialized - Logging started', 'System');
+    }
+    
+    // Load saved alert display settings
+    loadAlertDisplaySettings();
+});
+
+/* ==================== ALERT DISPLAY SETTINGS ==================== */
+
+// Load saved alert display settings from localStorage
+function loadAlertDisplaySettings() {
+    const sortOrder = localStorage.getItem('alertSortOrder') || 'bySeverity';
+    
+    // Set the radio button based on saved preference
+    if (sortOrder === 'bySeverity') {
+        document.getElementById('bySeverity').checked = true;
+    } else {
+        document.getElementById('alphabetical').checked = true;
+    }
+}
+
+// Save alert display settings to localStorage
+function saveAlertDisplaySettings() {
+    const sortOrder = document.querySelector('input[name="sortOrder"]:checked').id;
+    localStorage.setItem('alertSortOrder', sortOrder);
+    
+    addLog('INFO', `Alert display settings changed to: ${sortOrder === 'bySeverity' ? 'By Severity' : 'Alphabetically'}`, 'Admin');
+    
+    // Show confirmation message
+    alert('Alert display settings saved successfully!');
+}
+
+// Add event listeners to radio buttons
+document.addEventListener('DOMContentLoaded', () => {
+    const radioButtons = document.querySelectorAll('input[name="sortOrder"]');
+    radioButtons.forEach(radio => {
+        radio.addEventListener('change', saveAlertDisplaySettings);
+    });
+});
+
 </script>
 @endsection
