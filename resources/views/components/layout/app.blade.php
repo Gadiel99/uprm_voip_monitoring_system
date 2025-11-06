@@ -447,17 +447,7 @@
                     {{-- Account modal tabs --}}
                     <ul class="nav nav-pills mb-4 justify-content-center" id="accountTab" role="tablist">
                         <li class="nav-item">
-                            <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#profileTab" type="button">
-                                Profile Picture
-                            </button>
-                        </li>
-                        <li class="nav-item">
-                            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#usernameTab" type="button">
-                                Username
-                            </button>
-                        </li>
-                        <li class="nav-item">
-                            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#emailTab" type="button">
+                            <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#emailTab" type="button">
                                 Email
                             </button>
                         </li>
@@ -470,37 +460,8 @@
 
                     <div class="tab-content">
 
-                        {{-- Profile Picture tab --}}
-                        <div class="tab-pane fade show active text-center" id="profileTab" role="tabpanel">
-                            <div class="mb-3">
-                                <img
-                                    src="{{ asset('images/default-avatar.png') }}"
-                                    alt="User Avatar"
-                                    class="rounded-circle border mb-3"
-                                    width="120"
-                                    height="120"
-                                >
-                                <h6 class="fw-semibold mb-0">Admin User</h6>
-                                <small class="text-muted">admin@uprm.edu</small>
-                            </div>
-
-                            <button class="btn btn-dark mb-2">Upload New Picture</button>
-                            <p class="text-muted small">Recommended: Square image, at least 400x400px</p>
-                        </div>
-
-                        {{-- Username tab --}}
-                        <div class="tab-pane fade" id="usernameTab" role="tabpanel">
-                            <label class="form-label fw-semibold">Current Username</label>
-                            <input type="text" class="form-control mb-3" value="Admin User" readonly>
-
-                            <label class="form-label fw-semibold">New Username</label>
-                            <input type="text" class="form-control mb-3" placeholder="Enter new username">
-
-                            <button class="btn btn-dark w-100">Update Username</button>
-                        </div>
-
                         {{-- Email tab --}}
-                        <div class="tab-pane fade" id="emailTab" role="tabpanel">
+                        <div class="tab-pane fade show active" id="emailTab" role="tabpanel">
                             <label class="form-label fw-semibold">Current Email</label>
                             <input type="email" class="form-control mb-3" value="admin@uprm.edu" readonly>
 
@@ -551,8 +512,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // Fill modal display fields
     document.querySelectorAll('#usernameTab input[readonly]').forEach(el => el.value = saved.username);
     document.querySelectorAll('#emailTab input[readonly]').forEach(el => el.value = saved.email);
-    document.querySelector('#profileTab h6').innerText = saved.username;
-    document.querySelector('#profileTab small').innerText = saved.email;
 
     // Update Username handler
     document.querySelector('#usernameTab button').addEventListener('click', () => {
@@ -563,7 +522,6 @@ document.addEventListener('DOMContentLoaded', () => {
         localStorage.setItem('demoAccountInfo', JSON.stringify(saved));
 
         // Update displayed username
-        document.querySelector('#profileTab h6').innerText = newUsername;
         document.querySelectorAll('#usernameTab input[readonly]').forEach(el => el.value = newUsername);
         if (document.querySelector('#userNameDisplay')) {
             document.querySelector('#userNameDisplay').innerText = newUsername;
@@ -581,7 +539,6 @@ document.addEventListener('DOMContentLoaded', () => {
         localStorage.setItem('demoAccountInfo', JSON.stringify(saved));
 
         // Update displayed email
-        document.querySelector('#profileTab small').innerText = newEmail;
         document.querySelectorAll('#emailTab input[readonly]').forEach(el => el.value = newEmail);
 
         alert('✅ Email updated (frontend demo only)');
@@ -602,34 +559,112 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 </script>
 
-{{-- Simulated notifications demo --}}
+{{-- Critical device notifications --}}
 <script>
 document.addEventListener('DOMContentLoaded', () => {
     const notifContent = document.getElementById('notif-content');
     const notifBadge = document.getElementById('notif-badge');
 
-    // Demo notifications data
-    const notifications = [
-        { title: 'Emergency Services', desc: 'Phone 787-555-0100 is offline', level: 'critical' },
-        { title: 'Security Office', desc: 'Phone 787-555-0200 is offline', level: 'warning' }
-    ];
+    // Function to check critical devices and update notifications
+    function updateCriticalDeviceNotifications() {
+        const notifications = [];
+        
+        // Get critical devices from localStorage (synced from admin panel)
+        const criticalDevices = JSON.parse(localStorage.getItem('criticalDevices') || '[]');
+        
+        // Check each critical device for offline status
+        criticalDevices.forEach(device => {
+            if (device.status === 'Offline') {
+                notifications.push({
+                    title: device.owner || 'Critical Device',
+                    desc: `Device ${device.ip} is offline`,
+                    level: 'critical',
+                    ip: device.ip,
+                    mac: device.mac
+                });
+            }
+        });
 
-    // Populate notifications if any
-    if (notifications.length > 0) {
-        notifBadge.classList.remove('d-none');
-        notifBadge.textContent = notifications.length;
+        // Populate notifications if any
+        if (notifications.length > 0) {
+            notifBadge.classList.remove('d-none');
+            notifBadge.textContent = notifications.length;
 
-        notifContent.innerHTML = notifications.map(n => `
-            <li class="dropdown-item d-flex align-items-start gap-2">
-                <i class="bi bi-exclamation-octagon text-danger fs-5"></i>
-                <div>
-                    <div class="fw-semibold text-danger">${n.title}</div>
-                    <small class="text-muted">${n.desc}</small>
-                </div>
-            </li>
-        `).join('');
+            notifContent.innerHTML = notifications.map(n => `
+                <li class="dropdown-item d-flex align-items-start gap-2 py-2">
+                    <i class="bi bi-exclamation-octagon text-danger fs-5"></i>
+                    <div>
+                        <div class="fw-semibold text-danger">${n.title}</div>
+                        <small class="text-muted">${n.desc}</small>
+                    </div>
+                </li>
+            `).join('');
+        } else {
+            notifBadge.classList.add('d-none');
+            notifContent.innerHTML = '<li class="text-center text-muted py-3">No new notifications</li>';
+        }
     }
+
+    // Initial update
+    updateCriticalDeviceNotifications();
+
+    // Update notifications every 15 seconds
+    setInterval(updateCriticalDeviceNotifications, 15000);
+
+    // Listen for storage changes (when admin updates critical devices)
+    window.addEventListener('storage', (e) => {
+        if (e.key === 'criticalDevices') {
+            updateCriticalDeviceNotifications();
+        }
+    });
 });
+</script>
+
+{{-- Global logging for navigation and important actions --}}
+<script>
+// Helper function to add log (same as in admin page)
+if (typeof window.addLog === 'undefined') {
+    window.addLog = function(type, message, user = 'Admin') {
+        const logs = JSON.parse(localStorage.getItem('systemLogs') || '[]');
+        const timestamp = new Date().toISOString().replace('T', ' ').substring(0, 19);
+        
+        logs.unshift({
+            timestamp: timestamp,
+            type: type,
+            message: message,
+            user: user,
+            id: Date.now()
+        });
+        
+        if (logs.length > 500) logs.pop();
+        localStorage.setItem('systemLogs', JSON.stringify(logs));
+    }
+}
+
+// Log page navigation
+document.addEventListener('DOMContentLoaded', function() {
+    const currentPage = window.location.pathname.split('/').pop() || 'home';
+    const pageNames = {
+        '': 'Home',
+        'alerts': 'Alerts',
+        'devices': 'Devices',
+        'reports': 'Reports',
+        'admin': 'Admin',
+        'settings': 'Settings',
+        'help': 'Help'
+    };
+    
+    const pageName = pageNames[currentPage] || currentPage;
+    addLog('INFO', `Navigated to ${pageName} page`);
+});
+
+// Log logout
+const logoutBtn = document.querySelector('form[action*="logout"] button');
+if (logoutBtn) {
+    logoutBtn.addEventListener('click', function() {
+        addLog('INFO', 'User logged out from system');
+    });
+}
 </script>
 </body>
 </html>
