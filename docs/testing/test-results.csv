@@ -1,0 +1,49 @@
+"Test ID",File,"Test Name",Status,"Date Tested","Time Tested"
+TC-001,"Database\MigrationTest","buildings table exists",Pass,2025-10-30,08:15:30
+TC-002,"Database\MigrationTest","buildings table has correct columns",Pass,2025-10-30,08:15:30
+TC-003,"Database\MigrationTest","devices table exists",Pass,2025-10-30,08:15:30
+TC-004,"Database\MigrationTest","devices table has correct columns",Pass,2025-10-30,08:15:30
+TC-005,"Database\MigrationTest","extensions table exists",Pass,2025-10-30,08:15:30
+TC-006,"Database\MigrationTest","extensions table has correct columns",Pass,2025-10-30,08:15:30
+TC-007,"Database\MigrationTest","networks table exists",Pass,2025-10-30,08:15:30
+TC-008,"Database\MigrationTest","networks table has correct columns",Pass,2025-10-30,08:15:30
+TC-009,"Database\MigrationTest","building_networks pivot table exists",Pass,2025-10-30,08:15:30
+TC-010,"Database\MigrationTest","building_networks pivot table has correct columns",Pass,2025-10-30,08:15:30
+TC-011,"Database\MigrationTest","device_extensions pivot table exists",Pass,2025-10-30,08:15:30
+TC-012,"Database\MigrationTest","device_extensions pivot table has correct columns",Pass,2025-10-30,08:15:30
+TC-013,"Database\SeederTest","buildings networks seeder creates building successfully",Pass,2025-10-30,08:15:30
+TC-014,"Database\SeederTest","buildings networks seeder creates networks successfully",Pass,2025-10-30,08:15:30
+TC-015,"Database\SeederTest","buildings networks seeder attaches networks to building",Pass,2025-10-30,08:15:30
+TC-016,"Database\SeederTest","seeded building has correct name",Pass,2025-10-30,08:15:30
+TC-017,"Database\SeederTest","seeded networks have correct subnets",Pass,2025-10-30,08:15:30
+TC-018,"Database\SeederTest","seeded networks have zero initial devices",Pass,2025-10-30,08:15:30
+TC-019,"Models\BuildingTest","building can be created with valid data",Pass,2025-10-30,08:15:30
+TC-020,"Models\BuildingTest","building has many networks relationship",Pass,2025-10-30,08:15:30
+TC-021,"Models\BuildingTest","building can retrieve its networks",Pass,2025-10-30,08:15:30
+TC-022,"Models\BuildingTest","building name is required",Pass,2025-10-30,08:15:30
+TC-023,"Models\BuildingTest","multiple buildings can exist",Pass,2025-10-30,08:15:30
+TC-024,"Models\BuildingTest","building can be updated",Pass,2025-10-30,08:15:30
+TC-025,"Models\BuildingTest","building can be deleted",Pass,2025-10-30,08:15:30
+TC-026,"Models\DeviceTest","device can be created with valid data",Pass,2025-10-30,08:15:30
+TC-027,"Models\DeviceTest","device belongs to a network",Pass,2025-10-30,08:15:30
+TC-028,"Models\DeviceTest","device has many extensions relationship",Pass,2025-10-30,08:15:30
+TC-029,"Models\DeviceTest","device status can be online or offline",Pass,2025-10-30,08:15:30
+TC-030,"Models\DeviceTest","device can be updated",Pass,2025-10-30,08:15:30
+TC-031,"Models\DeviceTest","device ip address is unique",Pass,2025-10-30,08:15:30
+TC-032,"Models\DeviceTest","device can be deleted",Pass,2025-10-30,08:15:30
+TC-033,"Models\ExtensionTest","extension can be created with valid data",Pass,2025-10-30,08:15:30
+TC-034,"Models\ExtensionTest","extension has many devices relationship",Pass,2025-10-30,08:15:30
+TC-035,"Models\ExtensionTest","extension number is unique",Pass,2025-10-30,08:15:30
+TC-036,"Models\ExtensionTest","extension can be updated",Pass,2025-10-30,08:15:30
+TC-037,"Models\ExtensionTest","multiple extensions can exist",Pass,2025-10-30,08:15:30
+TC-038,"Models\ExtensionTest","extension can be deleted",Pass,2025-10-30,08:15:30
+TC-039,"Models\ExtensionTest","extension full name can be retrieved",Pass,2025-10-30,08:15:30
+TC-040,"Models\NetworkTest","network can be created with valid data",Pass,2025-10-30,08:15:30
+TC-041,"Models\NetworkTest","network has many devices relationship",Pass,2025-10-30,08:15:30
+TC-042,"Models\NetworkTest","network can update device counts",Pass,2025-10-30,08:15:30
+TC-043,"Models\NetworkTest","network subnet should be unique",Pass,2025-10-30,08:15:30
+TC-044,"Models\NetworkTest","network can be updated",Pass,2025-10-30,08:15:30
+TC-045,"Models\NetworkTest","network counts only offline devices correctly",Pass,2025-10-30,08:15:30
+TC-046,"Models\NetworkTest","network can be deleted",Pass,2025-10-30,08:15:30
+TC-047,"Models\NetworkTest","multiple networks can exist",Pass,2025-10-30,08:15:30
+TC-048,ExampleTest,"the application returns a successful response",Pass,2025-10-30,08:15:30
