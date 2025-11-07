@@ -14,7 +14,6 @@ return new class extends Migration
         Schema::create('devices', function (Blueprint $table) {
             $table->id('device_id');
             $table->string('ip_address')->unique();
-            $table->string('mac_address')->unique()->nullable();
             $table->string('status')->default('offline'); // Changed from offline_devices to status
             $table->boolean('is_critical')->default(false);
             $table->unsignedBigInteger('network_id');

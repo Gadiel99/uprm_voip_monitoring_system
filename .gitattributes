@@ -1,3 +1,4 @@
+# Configura fin de línea y reglas de diff para ciertos tipos de archivo.
 * text=auto eol=lf
 
 *.blade.php diff=html

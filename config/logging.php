@@ -1,5 +1,9 @@
 <?php
 
+// Configuración de logging (Monolog) para la app.
+// - "default": canal por defecto (stack).
+// - "channels": define salidas (single, daily, slack, stderr, etc.)
+// - Variables de entorno controlan nivel y retención.
 use Monolog\Handler\NullHandler;
 use Monolog\Handler\StreamHandler;
 use Monolog\Handler\SyslogUdpHandler;
