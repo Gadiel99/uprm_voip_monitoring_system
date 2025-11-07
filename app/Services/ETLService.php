@@ -51,7 +51,7 @@ class ETLService
      * @throws Exception If data extraction or processing fails
      * 
      * @author UPRM VoIP Monitoring System Team
-     * @date November 2, 2025
+     * @date November 6, 2025
      */
     public function run(string $importPath): array
     {
@@ -73,10 +73,12 @@ class ETLService
             
             // Extract data from files
             Log::info('Extracting data from imported files');
+            $phone = $this->getphoneFromFile($importPath);
             $registrations = $this->getRegistrationsFromFile($importPath);
             $users = $this->getUsersFromFile($importPath);
             
             Log::info('Data extracted', [
+                'phone_count' => $phone->count(),
                 'registrations_count' => $registrations->count(),
                 'users_count' => $users->count()
             ]);
@@ -84,6 +86,10 @@ class ETLService
             // Validate extracted data
             if ($users->isEmpty()) {
                 throw new Exception('No user data found');
+            }
+            
+            if ($phone->isEmpty()) {
+                throw new Exception('No phone data found');
             }
             
             // Step 1: Create ALL extensions from users CSV
@@ -112,13 +118,9 @@ class ETLService
                 'updated' => $this->metrics['extensions_updated']
             ]);
             
-            // Step 2: Process devices from registrations (if any)
-            if (!$registrations->isEmpty()) {
-                Log::info('Processing devices from registrations');
-                $this->processAndSave($users, $registrations->toArray());
-            } else {
-                Log::warning('No registration data found - only extensions were created');
-            }
+            // Step 2: Process devices from phone table and match with registrations
+            Log::info('Processing devices from phone table');
+            $this->processDevicesAndRegistrations($phone, $registrations);
             
             // Update network counts
             $this->updateNetworkCounts();
@@ -182,6 +184,94 @@ class ETLService
         return collect($data)->map(function($item) {
             return (object)$item;
         });
+    }
+
+    /**
+     * @brief Extract devices/phone from imported CSV file
+     * @details Reads phone.csv from extracted import directory (PostgreSQL phone table)
+     * 
+     * @param string $importPath Path to extracted import directory
+     * @return Collection Collection of phone/device records
+     * 
+     * @throws Exception If file not found or invalid CSV
+     * 
+     * @author UPRM VoIP Monitoring System Team
+     * @date November 6, 2025
+     */
+    private function getphoneFromFile(string $importPath): Collection
+    {
+        $csvFile = $this->findFileInDirectory($importPath, 'phone.csv');
+        
+        if (!$csvFile) {
+            throw new Exception("phone.csv not found in import directory: {$importPath}");
+        }
+        
+        Log::info('Reading phone from file', ['file' => $csvFile]);
+        
+        $phone = [];
+        $handle = fopen($csvFile, 'r');
+        
+        if ($handle === false) {
+            throw new Exception("Failed to open phone.csv: {$csvFile}");
+        }
+        
+        try {
+            // Read header row
+            $headers = fgetcsv($handle);
+            
+            if ($headers === false) {
+                throw new Exception("Failed to read CSV headers from phone.csv");
+            }
+            
+            // Normalize headers (trim and lowercase)
+            $headers = array_map(function($h) {
+                return strtolower(trim($h));
+            }, $headers);
+            
+            // Find column indices
+            $phoneIdIdx = array_search('phone_id', $headers);
+            $serialNumberIdx = array_search('serial_number', $headers);
+            $descriptionIdx = array_search('description', $headers);
+            $modelIdIdx = array_search('model_id', $headers);
+            $beanIdIdx = array_search('bean_id', $headers);
+            
+            if ($serialNumberIdx === false) {
+                throw new Exception("Required column 'serial_number' not found in phone.csv");
+            }
+            
+            // Read data rows
+            $rowNum = 1;
+            while (($row = fgetcsv($handle)) !== false) {
+                $rowNum++;
+                
+                // Skip rows with missing serial number
+                if (!isset($row[$serialNumberIdx]) || empty(trim($row[$serialNumberIdx]))) {
+                    Log::warning("Skipping row with no serial_number in phone.csv", ['row' => $rowNum]);
+                    continue;
+                }
+                
+                $serialNumber = trim($row[$serialNumberIdx]);
+                $description = isset($row[$descriptionIdx]) ? trim($row[$descriptionIdx]) : null;
+                $phoneId = isset($row[$phoneIdIdx]) ? trim($row[$phoneIdIdx]) : null;
+                $modelId = isset($row[$modelIdIdx]) ? trim($row[$modelIdIdx]) : null;
+                $beanId = isset($row[$beanIdIdx]) ? trim($row[$beanIdIdx]) : null;
+                
+                $phone[] = (object)[
+                    'phone_id' => $phoneId,
+                    'serial_number' => $serialNumber,
+                    'description' => $description,
+                    'model_id' => $modelId,
+                    'bean_id' => $beanId,
+                ];
+            }
+            
+            Log::info('phone loaded from file', ['count' => count($phone)]);
+            
+            return collect($phone);
+            
+        } finally {
+            fclose($handle);
+        }
     }
 
     /**
@@ -425,80 +515,92 @@ class ETLService
 
 
     /**
-     * @brief Process device registrations and link to extensions
-     * @details Processes only devices from registrations (online devices)
+     * @brief Process devices from phone table and match with registrations
+     * @details Creates all devices from phone table, then updates status based on registrations
      * 
-     * @param Collection $users Collection of user records (for reference)
-     * @param array $registrations Array of registration records
+     * @param Collection $phone Collection of phone records from PostgreSQL
+     * @param Collection $registrations Collection of registration records from MongoDB
      * 
      * @author UPRM VoIP Monitoring System Team
-     * @date November 2, 2025
+     * @date November 6, 2025
      */
-    private function processAndSave(Collection $users, array $registrations): void
+    private function processDevicesAndRegistrations(Collection $phone, Collection $registrations): void
     {
+        // Build a lookup map of registrations by serial number (instrument/MAC)
+        $registrationMap = [];
+        foreach ($registrations as $registration) {
+            $instrument = $registration->instrument ?? null;
+            if ($instrument) {
+                // Normalize MAC address for comparison (remove colons, lowercase)
+                $normalizedMac = strtolower(preg_replace('/[^a-f0-9]/', '', $instrument));
+                
+                $registrationMap[$normalizedMac] = [
+                    'identity' => $registration->identity ?? null,
+                    'binding' => $registration->binding ?? null,
+                    'expired' => $registration->expired ?? true,
+                ];
+            }
+        }
+        
+        Log::info('Built registration lookup map', ['count' => count($registrationMap)]);
+        
         $processedExtensions = []; // Track extensions and their device counts
         
-        foreach ($registrations as $registration) {
+        // Process each phone from the phone table
+        foreach ($phone as $phone) {
             try {
-                // Extract data from registration
-                $identity = $registration->identity ?? null;
-                $binding = $registration->binding ?? null;
-                $instrument = $registration->instrument ?? null;
-                $expired = $registration->expired ?? true;
+                $serialNumber = $phone->serial_number;
                 
-                if (!$identity || !$binding || !$instrument) {
-                    Log::warning('Incomplete registration data', [
-                        'identity' => $identity,
-                        'binding' => $binding,
-                        'instrument' => $instrument
-                    ]);
-                    continue;
-                }
+                // Normalize MAC address
+                $normalizedMac = strtolower(preg_replace('/[^a-f0-9]/', '', $serialNumber));
+                $formattedMac = $this->formatMacAddress($serialNumber);
                 
-                // Extract extension number and IP address
-                $extensionNumber = explode('@', $identity)[0];
-                $ipAddress = $this->extractIpFromBinding($binding);
+                // Check if this device is currently registered
+                $registration = $registrationMap[$normalizedMac] ?? null;
                 
-                if (!$ipAddress) {
-                    Log::warning('Could not extract IP address', ['binding' => $binding]);
-                    continue;
-                }
-                
-                // Determine device status based on expiration
-                $status = $expired ? 'offline' : 'online';
-                
-                // Update metrics
-                if ($status === 'online') {
+                // Determine status and IP address
+                if ($registration && !$registration['expired']) {
+                    // Device is online and registered
+                    $status = 'online';
+                    $ipAddress = $this->extractIpFromBinding($registration['binding']);
+                    $identity = $registration['identity'];
+                    $extensionNumber = explode('@', $identity)[0];
                     $this->metrics['devices_online']++;
                 } else {
+                    // Device is defined but not registered (offline)
+                    $status = 'offline';
+                    $ipAddress = null; // No IP address available for offline devices
+                    $extensionNumber = null; // Can't determine extension if not registered
                     $this->metrics['devices_offline']++;
                 }
                 
-                // Format MAC address (add colons)
-                $formattedMac = $this->formatMacAddress($instrument);
-                
-                // Find or determine network
-                $network = $this->findOrCreateNetwork($ipAddress);
-                
-                if (!$network) {
-                    Log::warning('Could not determine network', ['ip' => $ipAddress]);
-                    continue;
+                // Determine network (only if we have an IP)
+                $network = null;
+                if ($ipAddress) {
+                    $network = $this->findOrCreateNetwork($ipAddress);
                 }
                 
                 // Check if device exists
                 $deviceExists = Devices::where('mac_address', $formattedMac)->exists();
                 
                 // Create or update device
+                $deviceData = [
+                    'mac_address' => $formattedMac,
+                    'status' => $status,
+                    'is_critical' => false,
+                ];
+                
+                // Only set IP and network if available
+                if ($ipAddress) {
+                    $deviceData['ip_address'] = $ipAddress;
+                }
+                if ($network) {
+                    $deviceData['network_id'] = $network->network_id;
+                }
+                
                 $device = Devices::updateOrCreate(
-                    [
-                        'mac_address' => $formattedMac,
-                    ],
-                    [
-                        'ip_address' => $ipAddress,
-                        'network_id' => $network->network_id,
-                        'status' => $status,
-                        'is_critical' => false,
-                    ]
+                    ['mac_address' => $formattedMac],
+                    $deviceData
                 );
                 
                 // Update metrics
@@ -510,56 +612,58 @@ class ETLService
                 
                 Log::info('Device processed', [
                     'device_id' => $device->device_id,
-                    'ip' => $ipAddress,
                     'mac' => $formattedMac,
+                    'ip' => $ipAddress ?? 'N/A',
                     'status' => $status,
+                    'extension' => $extensionNumber ?? 'N/A',
                     'action' => $deviceExists ? 'updated' : 'created'
                 ]);
                 
-                // Find the extension (should already exist from Step 1)
-                $extension = Extensions::where('extension_number', $extensionNumber)->first();
-                
-                if (!$extension) {
-                    Log::warning('Extension not found for device', [
-                        'extension' => $extensionNumber,
-                        'device_id' => $device->device_id
-                    ]);
-                    continue;
+                // Link device to extension only if we know the extension
+                if ($extensionNumber) {
+                    $extension = Extensions::where('extension_number', $extensionNumber)->first();
+                    
+                    if ($extension) {
+                        // Track this extension's device registrations
+                        if (!isset($processedExtensions[$extensionNumber])) {
+                            $processedExtensions[$extensionNumber] = [
+                                'extension' => $extension,
+                                'devices' => []
+                            ];
+                        }
+                        
+                        // Add device to this extension's list (avoid duplicates)
+                        if (!in_array($device->device_id, $processedExtensions[$extensionNumber]['devices'])) {
+                            $processedExtensions[$extensionNumber]['devices'][] = $device->device_id;
+                        }
+                        
+                        // Create device-extension relationship
+                        DB::table('device_extensions')->updateOrInsert(
+                            [
+                                'device_id' => $device->device_id,
+                                'extension_id' => $extension->extension_id,
+                            ],
+                            [
+                                'created_at' => now(),
+                                'updated_at' => now(),
+                            ]
+                        );
+                        
+                        Log::info('Extension linked to device', [
+                            'extension' => $extensionNumber,
+                            'device_id' => $device->device_id
+                        ]);
+                    } else {
+                        Log::warning('Extension not found for device', [
+                            'extension' => $extensionNumber,
+                            'device_id' => $device->device_id
+                        ]);
+                    }
                 }
-                
-                // Track this extension's device registrations
-                if (!isset($processedExtensions[$extensionNumber])) {
-                    $processedExtensions[$extensionNumber] = [
-                        'extension' => $extension,
-                        'devices' => []
-                    ];
-                }
-                
-                // Add device to this extension's list (avoid duplicates)
-                if (!in_array($device->device_id, $processedExtensions[$extensionNumber]['devices'])) {
-                    $processedExtensions[$extensionNumber]['devices'][] = $device->device_id;
-                }
-                
-                // Create device-extension relationship
-                DB::table('device_extensions')->updateOrInsert(
-                    [
-                        'device_id' => $device->device_id,
-                        'extension_id' => $extension->extension_id,
-                    ],
-                    [
-                        'created_at' => now(),
-                        'updated_at' => now(),
-                    ]
-                );
-                
-                Log::info('Extension linked to device', [
-                    'extension' => $extensionNumber,
-                    'device_id' => $device->device_id
-                ]);
                 
             } catch (\Exception $e) {
-                Log::error('Error processing registration', [
-                    'registration' => $registration,
+                Log::error('Error processing phone', [
+                    'phone' => $phone,
                     'error' => $e->getMessage()
                 ]);
                 continue;
