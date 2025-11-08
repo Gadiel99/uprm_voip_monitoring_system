@@ -96,9 +96,35 @@
 <div class="container-fluid">
     <h4 class="fw-semibold mb-4">Device Management</h4>
 
-    {{-- TABLE: BUILDINGS OVERVIEW --}}
-    {{-- Shows a summary of all buildings and their device counts --}}
+    {{-- TABLE: CRITICAL DEVICES --}}
+    {{-- Shows critical devices as a separate table --}}
     <div id="buildingOverview">
+        <div class="card border-0 shadow-sm p-4 mb-4">
+            <h5 class="fw-semibold mb-3">Critical Devices</h5>
+            <p class="text-muted mb-3">High-priority devices requiring special monitoring.</p>
+
+            <table class="table table-bordered table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Building</th>
+                        <th>Total Devices</th>
+                        <th>Online</th>
+                        <th>Offline</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr onclick="showBuildingDevices('Critical Devices')">
+                        <td><i class="bi bi-exclamation-triangle me-2 text-danger"></i> Critical Devices</td>
+                        <td id="critical-total">0</td>
+                        <td id="critical-online">0</td>
+                        <td id="critical-offline">0</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        {{-- TABLE: BUILDINGS OVERVIEW --}}
+        {{-- Shows a summary of all buildings and their device counts --}}
         <div class="card border-0 shadow-sm p-4 mb-4">
             <h5 class="fw-semibold mb-3">Buildings Overview</h5>
             <p class="text-muted mb-3">Select a building to view all connected devices and their graphs.</p>
@@ -113,14 +139,6 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {{-- Critical Devices Building --}}
-                    <tr onclick="showBuildingDevices('Critical Devices')">
-                        <td><i class="bi bi-exclamation-triangle me-2 text-danger"></i> Critical Devices</td>
-                        <td id="critical-total">0</td>
-                        <td id="critical-online">0</td>
-                        <td id="critical-offline">0</td>
-                    </tr>
-                    
                     {{-- All buildings from the map --}}
                     <tr onclick="showBuildingDevices('Stefani')">
                         <td><i class="bi bi-building me-2 text-success"></i> Stefani</td>
