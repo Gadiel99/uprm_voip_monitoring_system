@@ -59,12 +59,14 @@
         <span class="text-danger ms-2">● Critical</span>
     </div>
     
+    {{-- Admin buttons for marker management --}}
     <button id="addMarkerBtn" class="btn btn-primary">
         <i class="bi bi-plus-circle me-1"></i> Add Marker
     </button>
     <button id="deleteMarkerBtn" class="btn btn-danger">
         <i class="bi bi-trash me-1"></i> Delete Marker
     </button>
+    
     <button id="resetZoomBtn" class="btn btn-secondary">
         <i class="bi bi-arrow-counterclockwise me-1"></i> Reset View
     </button>
@@ -455,13 +457,18 @@ document.addEventListener('DOMContentLoaded', function () {
     // Click on map to add marker
     mapWrapper.addEventListener('click', (e) => {
         if (!addMarkerMode) return;
+        
+        // Ignore if this was a drag operation
+        if (hasMoved) {
+            hasMoved = false;
+            return;
+        }
 
         const rect = mapWrapper.getBoundingClientRect();
-        const containerRect = mapContainer.getBoundingClientRect();
         
-        // Calculate position relative to map wrapper
-        const x = (e.clientX - rect.left + mapContainer.scrollLeft) / scale;
-        const y = (e.clientY - rect.top + mapContainer.scrollTop) / scale;
+        // Calculate position relative to the map image at current scale
+        const x = (e.clientX - rect.left) / scale;
+        const y = (e.clientY - rect.top) / scale;
         
         const topPercent = (y / 1199) * 100;
         const leftPercent = (x / 2202) * 100;
@@ -493,20 +500,34 @@ document.addEventListener('DOMContentLoaded', function () {
         if (deleteMarkerMode) {
             deleteMarkerBtn.classList.add('active');
             addMarkerBtn.classList.remove('active');
+            mapContainer.style.cursor = 'pointer';
             alert('🗑️ Click on any marker to delete it');
         } else {
             deleteMarkerBtn.classList.remove('active');
+            mapContainer.style.cursor = 'grab';
         }
         
         renderMarkers();
     });
 
     function deleteMarker(index) {
+        // Save the marker name BEFORE any modifications
         const markerName = markers[index].name;
+        
         if (confirm(`Delete marker "${markerName}"?`)) {
+            // Remove marker from array
             markers.splice(index, 1);
+            
+            // Exit delete mode BEFORE rendering
+            deleteMarkerMode = false;
+            deleteMarkerBtn.classList.remove('active');
+            mapContainer.style.cursor = 'grab';
+            
+            // Save and render
             saveMarkers();
             renderMarkers();
+            
+            // Show success message with saved name
             alert(`✅ Marker "${markerName}" deleted`);
         }
     }
@@ -539,29 +560,46 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     // ===== PAN FUNCTIONALITY =====
+    let clickStartX, clickStartY;
+    let hasMoved = false;
+    
     mapContainer.addEventListener('mousedown', (e) => {
         if (addMarkerMode || e.target.classList.contains('marker')) return;
         
         isPanning = true;
+        hasMoved = false;
         mapContainer.style.cursor = 'grabbing';
         startX = e.pageX - mapContainer.offsetLeft;
         startY = e.pageY - mapContainer.offsetTop;
+        clickStartX = e.pageX;
+        clickStartY = e.pageY;
         scrollLeft = mapContainer.scrollLeft;
         scrollTop = mapContainer.scrollTop;
     });
 
     mapContainer.addEventListener('mouseleave', () => {
         isPanning = false;
+        hasMoved = false; // Reset on mouse leave
         if (!addMarkerMode) mapContainer.style.cursor = 'grab';
     });
 
     mapContainer.addEventListener('mouseup', () => {
         isPanning = false;
+        // Don't reset hasMoved here - let the click handler check it first
         if (!addMarkerMode) mapContainer.style.cursor = 'grab';
     });
 
     mapContainer.addEventListener('mousemove', (e) => {
         if (!isPanning) return;
+        
+        // Detect if mouse has moved significantly (more than 10px = it's a drag, not a click)
+        // Increased threshold from 5px to 10px to be less sensitive
+        const deltaX = Math.abs(e.pageX - clickStartX);
+        const deltaY = Math.abs(e.pageY - clickStartY);
+        if (deltaX > 10 || deltaY > 10) {
+            hasMoved = true;
+        }
+        
         e.preventDefault();
         
         const x = e.pageX - mapContainer.offsetLeft;
