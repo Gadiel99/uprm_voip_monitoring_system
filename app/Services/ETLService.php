@@ -154,10 +154,10 @@ class ETLService
      */
     private function getPhonesFromFile(string $importPath): Collection
     {
-        $csvFile = $this->findFileInDirectory($importPath, 'phones.csv');
+        $csvFile = $this->findFileInDirectory($importPath, 'phone.csv');
         
         if (!$csvFile) {
-            throw new Exception("phones.csv not found in import directory: {$importPath}");
+            throw new Exception("phone.csv not found in import directory: {$importPath}");
         }
         
         Log::info('Reading phones from file', ['file' => $csvFile]);
@@ -166,7 +166,7 @@ class ETLService
         $handle = fopen($csvFile, 'r');
         
         if ($handle === false) {
-            throw new Exception("Failed to open phones.csv: {$csvFile}");
+            throw new Exception("Failed to open phone.csv: {$csvFile}");
         }
         
         try {
@@ -174,7 +174,7 @@ class ETLService
             $headers = fgetcsv($handle);
             
             if ($headers === false) {
-                throw new Exception("Failed to read CSV headers from phones.csv");
+                throw new Exception("Failed to read CSV headers from phone.csv");
             }
             
             // Normalize headers (trim and lowercase)
@@ -190,7 +190,7 @@ class ETLService
             $beanIdIdx = array_search('bean_id', $headers);
             
             if ($serialNumberIdx === false) {
-                throw new Exception("Required column 'serial_number' not found in phones.csv");
+                throw new Exception("Required column 'serial_number' not found in phone.csv");
             }
             
             // Read data rows
@@ -200,7 +200,7 @@ class ETLService
                 
                 // Skip rows with missing serial number
                 if (!isset($row[$serialNumberIdx]) || empty(trim($row[$serialNumberIdx]))) {
-                    Log::warning("Skipping row with no serial_number in phones.csv", ['row' => $rowNum]);
+                    Log::warning("Skipping row with no serial_number in phone.csv", ['row' => $rowNum]);
                     continue;
                 }
                 
