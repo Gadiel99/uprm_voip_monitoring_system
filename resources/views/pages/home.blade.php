@@ -1,204 +1,677 @@
+{{--
+/*
+ * File: home.blade.php
+ * Project: UPRM VoIP Monitoring System
+ * Description: Interactive campus map interface displaying building status markers
+ * 
+ * Author: [Hector R.Sepulveda]
+ * Date Created: October 2025
+ * Last Modified: October 30, 2025
+ * 
+ * Purpose:
+ *   This page displays an interactive map of the UPRM campus with clickable building
+ *   markers. Each marker represents a monitored building and displays its current
+ *   device status through color coding.
+ * 
+ * Features:
+ *   - Interactive UPRM campus map (2202x1199 px)
+ *   - 37 building markers with positioning
+ *   - Color-coded status indicators (green/yellow/red)
+ *   - Click-to-navigate functionality to building details
+ *   - Responsive design with fixed aspect ratio
+ *   - Bootstrap tooltip integration
+ * 
+ * Marker Color Codes:
+ *   - Green (#198754): Normal operation (<10% devices offline)
+ *   - Yellow/Warning: Warning status (10-25% devices offline)
+ *   - Red/Critical: Critical status (>25% devices offline)
+ * 
+ * Interaction:
+ *   - Clicking a marker redirects to: /alerts?building={buildingName}
+ *   - Hover displays building name via Bootstrap tooltip
+ * 
+ * Technical Notes:
+ *   - Marker positions use percentage-based coordinates (top%, left%)
+ *   - Map maintains 2202:1199 aspect ratio for accuracy
+ *   - JavaScript event listeners enable marker interactivity
+ * 
+ * Dependencies:
+ *   - Bootstrap 5.3.3 (tooltips)
+ *   - Campus map image: public/images/MapaRUM.jpeg
+ * 
+ * IEEE Standards Compliance:
+ *   - Follows IEEE 1016 software design description
+ *   - Adheres to IEEE 730 software quality assurance
+ */
+--}}
 @extends('components.layout.app')
 
 @section('content')
 <h4 class="fw-semibold mb-4">UPRM Campus Map - System Status</h4>
 
+{{-- Control buttons for map management --}}
+<div class="mb-3 d-flex align-items-center gap-3">
+    {{-- Legend - inline with buttons --}}
+    <div class="map-legend-inline">
+        <strong class="text-dark">Map Legend:</strong>
+        <span class="text-success ms-2">● Normal</span>
+        <span class="text-warning ms-2">● Warning</span>
+        <span class="text-danger ms-2">● Critical</span>
+    </div>
+    
+    {{-- Admin buttons for marker management --}}
+    <button id="addMarkerBtn" class="btn btn-primary">
+        <i class="bi bi-plus-circle me-1"></i> Add Marker
+    </button>
+    <button id="deleteMarkerBtn" class="btn btn-danger">
+        <i class="bi bi-trash me-1"></i> Delete Marker
+    </button>
+    
+    <button id="resetZoomBtn" class="btn btn-secondary">
+        <i class="bi bi-arrow-counterclockwise me-1"></i> Reset View
+    </button>
+</div>
+
+{{-- Main card container for the map --}}
 <div class="card border-0 shadow-sm p-4 mb-4">
-    <div class="position-relative bg-white rounded-3 overflow-hidden" 
-         style="border: 1px solid #dee2e6; height: 75vh;"> <!-- Reduced height -->
 
-        <!-- Campus Map -->
-        <img src="{{ asset('images/MapaRUM.jpeg') }}" 
-             alt="UPRM Campus Map" 
-             class="position-absolute top-0 start-0 w-100 h-100" 
-             style="object-fit: contain;">
-
-        <!-- Legend -->
-        <div class="position-absolute top-0 start-0 bg-white bg-opacity-90 border rounded shadow-sm m-3 p-2 small text-start" 
-             style="line-height: 1.3; border-left: 3px solid #00844b;">
-            <strong class="text-dark">Map Legend</strong><br>
-            <span class="text-success">● Normal</span><br>
-            <span class="text-warning">● Warning</span><br>
-            <span class="text-danger">● Critical</span><br>
-            <small class="text-muted">Click markers for details</small>
-        </div>
-
-        <!-- Interactive markers in the map -->
-        <div class="position-absolute" style="top: 60%; left: 77%;" data-bs-toggle="tooltip" title="Celis">
-            <div class="rounded-circle bg-success marker" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
-        </div>
-
-        <div class="position-absolute" style="top: 52%; left: 82%;" data-bs-toggle="tooltip" title="Stefani">
-            <div class="rounded-circle bg-success marker" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
-        </div>
-
-        <div class="position-absolute" style="top: 33.5%; left: 71%;" data-bs-toggle="tooltip" title="Biologia">
-            <div class="rounded-circle bg-success marker" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
-        </div>
-
-        <div class="position-absolute" style="top: 63%; left: 76%;" data-bs-toggle="tooltip" title="DeDiego">
-            <div class="rounded-circle bg-success marker" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
-        </div>
-
-        <div class="position-absolute" style="top: 59%; left: 86%;" data-bs-toggle="tooltip" title="Luchetti">
-            <div class="rounded-circle bg-success marker" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
-        </div>
-
-        <div class="position-absolute" style="top: 56%; left: 84%;" data-bs-toggle="tooltip" title="ROTC">
-            <div class="rounded-circle bg-success marker" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
-        </div>
-
-        <div class="position-absolute" style="top: 30%; left: 32%;" data-bs-toggle="tooltip" title="Adm.Empresas">
-            <div class="rounded-circle bg-success marker" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
-        </div>
-
-        <div class="position-absolute" style="top: 63%; left: 66%;" data-bs-toggle="tooltip" title="Musa">
-            <div class="rounded-circle bg-success marker" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
-        </div>
-
-        <div class="position-absolute" style="top: 53%; left: 75%;" data-bs-toggle="tooltip" title="Chardon">
-            <div class="rounded-circle bg-success marker" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
-        </div>
-
-        <div class="position-absolute" style="top: 62%; left: 72%;" data-bs-toggle="tooltip" title="Monzon">
-            <div class="rounded-circle bg-success marker" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
-        </div>
-
-        <div class="position-absolute" style="top: 47%; left: 69%;" data-bs-toggle="tooltip" title="Sanchez Hidalgo">
-            <div class="rounded-circle bg-success marker" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
-        </div>
-
-        <div class="position-absolute" style="top: 45%; left: 75%;" data-bs-toggle="tooltip" title="Fisica">
-            <div class="rounded-circle bg-success marker" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
-        </div>
-
-        <div class="position-absolute" style="top: 44%; left: 77%;" data-bs-toggle="tooltip" title="Geologia">
-            <div class="rounded-circle bg-success marker" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
-        </div>
-
-        <div class="position-absolute" style="top: 44%; left: 79%;" data-bs-toggle="tooltip" title="Ciencias Marinas">
-            <div class="rounded-circle bg-success marker" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
-        </div>
-
-        <div class="position-absolute" style="top: 44%; left: 62%;" data-bs-toggle="tooltip" title="Quimica">
-            <div class="rounded-circle bg-success marker" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
-        </div>
-
-        <div class="position-absolute" style="top:44%; left: 62%;" data-bs-toggle="tooltip" title="Piñero">
-            <div class="rounded-circle bg-success marker" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
-        </div>
-
-        <div class="position-absolute" style="top: 50%; left: 58%;" data-bs-toggle="tooltip" title="Enfermeria">
-            <div class="rounded-circle bg-success marker" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
-        </div>
-
-        <div class="position-absolute" style="top: 48%; left: 53%;" data-bs-toggle="tooltip" title="Vagones">
-            <div class="rounded-circle bg-success marker" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
-        </div>
-
-        <div class="position-absolute" style="top: 40%; left: 30%;" data-bs-toggle="tooltip" title="Natatorio">
-            <div class="rounded-circle bg-success marker" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
-        </div>
-
-        <div class="position-absolute" style="top: 33%; left: 86%;" data-bs-toggle="tooltip" title="Centro Nuclear">
-            <div class="rounded-circle bg-success marker" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
-        </div>
-
-        <div class="position-absolute" style="top: 56%; left: 45%;" data-bs-toggle="tooltip" title="Coliseo">
-            <div class="rounded-circle bg-success marker" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
-        </div>
-
-        <div class="position-absolute" style="top: 58%; left: 53%;" data-bs-toggle="tooltip" title="Gimnacio">
-            <div class="rounded-circle bg-success marker" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
-        </div>
-
-        <div class="position-absolute" style="top: 60%; left: 66%;" data-bs-toggle="tooltip" title="Servicios Medicos">
-            <div class="rounded-circle bg-success marker" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
-        </div>
-
-        <div class="position-absolute" style="top: 64%; left: 80%;" data-bs-toggle="tooltip" title="Decanato de Estudiantes">
-            <div class="rounded-circle bg-success marker" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
-        </div>
-
-        <div class="position-absolute" style="top: 49%; left: 65%;" data-bs-toggle="tooltip" title="Oficina de Facultad">
-            <div class="rounded-circle bg-success marker" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
-        </div>
-
-        <div class="position-absolute" style="top: 55%; left: 7%;" data-bs-toggle="tooltip" title="Adm.Finca Alzamora">
-            <div class="rounded-circle bg-success marker" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
-        </div>
-
-        <div class="position-absolute" style="top: 56%; left: 65%;" data-bs-toggle="tooltip" title="Biblioteca">
-            <div class="rounded-circle bg-success marker" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
-        </div>
-
-        <div class="position-absolute" style="top: 57%; left: 72%;" data-bs-toggle="tooltip" title="Centro de Estudiantes">
-            <div class="rounded-circle bg-success marker" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
-        </div>
-
-        <div class="position-absolute" style="top: 48%; left: 81%;" data-bs-toggle="tooltip" title="Terrats">
-            <div class="rounded-circle bg-success marker" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
-        </div>
-
-        <div class="position-absolute" style="top: 28%; left: 59%;" data-bs-toggle="tooltip" title="Ing.Civil">
-            <div class="rounded-circle bg-success marker" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
-        </div>
-
-        <div class="position-absolute" style="top: 49%; left: 78%;" data-bs-toggle="tooltip" title="Ing.Industrial">
-            <div class="rounded-circle bg-success marker" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
-        </div>
-
-        <div class="position-absolute" style="top: 32%; left: 54%;" data-bs-toggle="tooltip" title="Ing.Quimica">
-            <div class="rounded-circle bg-success marker" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
-        </div>
-
-        <div class="position-absolute" style="top: 43%; left: 50%;" data-bs-toggle="tooltip" title="Ing.Agricola">
-            <div class="rounded-circle bg-success marker" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
-        </div>
-
-        <div class="position-absolute" style="top: 37.5%; left: 17%;" data-bs-toggle="tooltip" title="Edificio A (Hotel Colegial)">
-            <div class="rounded-circle bg-success marker" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
-        </div>
-
-        <div class="position-absolute" style="top: 37.5%; left: 20.5%;" data-bs-toggle="tooltip" title="Edificio B (Adm.Peq.Negocios y Oficina Adm)">
-            <div class="rounded-circle bg-success marker" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
-        </div>
-
-        <div class="position-absolute" style="top: 40.5%; left: 16.5%;" data-bs-toggle="tooltip" title="Edificio C (Oficina de Extension Agricola))">
-            <div class="rounded-circle bg-success marker" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
-        </div>
-
-        <div class="position-absolute" style="top: 39%; left: 19%;" data-bs-toggle="tooltip" title="Edificio D">
-            <div class="rounded-circle bg-success marker" style="width: 18px; height: 18px; border: 2px solid white; cursor: pointer;"></div>
-        </div>
-
+    {{-- === RESPONSIVE MAP WRAPPER WITH ZOOM/PAN === --}}
+    <div class="map-container" id="mapContainer">
         
+        {{-- Map wrapper that scales --}}
+        <div class="map-wrapper" id="mapWrapper">
 
+            {{-- Campus Map Image --}}
+            <img src="{{ asset('images/MapaRUM.jpeg') }}" alt="UPRM Campus Map" class="map-image" id="mapImage">
+
+            {{-- === INTERACTIVE MARKERS === --}}
+            <div class="markers-layer" id="markersLayer">
+                {{-- Markers will be added dynamically via JavaScript --}}
+            </div>
+        </div>
+
+        {{-- Zoom controls --}}
+        <div class="zoom-controls">
+            <button id="zoomInBtn" class="btn btn-sm btn-light mb-1" title="Zoom In">
+                <i class="bi bi-plus-lg"></i>
+            </button>
+            <button id="zoomOutBtn" class="btn btn-sm btn-light" title="Zoom Out">
+                <i class="bi bi-dash-lg"></i>
+            </button>
+        </div>
     </div>
 </div>
 
+{{-- === MAP CSS STYLING === --}}
 <style>
-/* Comentarios de estilo:
-   - .map-wrapper define tamaño/ratio del mapa.
-   - .marker define apariencia y hover de los marcadores. */
+/* Container for the map with overflow for panning */
+.map-container {
+    position: relative;
+    width: 100%;
+    max-width: 1200px; /* Reduced from 1600px to make map less wide */
+    height: 500px;
+    margin: 0 auto;
+    overflow: auto;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    background-color: #f8f9fa;
+    cursor: grab;
+}
+
+.map-container:active {
+    cursor: grabbing;
+}
+
+/* Wrapper to maintain aspect ratio */
+.map-wrapper {
+    position: relative;
+    min-width: 100%;
+    min-height: 100%;
+    width: 2202px;
+    height: 1199px;
+    transform-origin: top left;
+    transition: transform 0.1s ease-out;
+}
+
+/* Map image */
+.map-image {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    user-select: none;
+    pointer-events: none;
+}
+
+/* Markers layer */
+.markers-layer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+
+/* Individual markers */
+.marker {
+    position: absolute;
+    width: 24px; /* Increased from 18px */
+    height: 24px; /* Increased from 18px */
+    background-color: #198754;
+    border: 3px solid white; /* Increased from 2px */
+    border-radius: 50%;
+    cursor: pointer;
+    transform: translate(-50%, -50%);
+    transition: transform 0.15s ease, box-shadow 0.2s ease;
+    pointer-events: all;
+    z-index: 100;
+}
+
+.marker:hover {
+    transform: translate(-50%, -50%) scale(1.4);
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+    z-index: 200;
+}
+
+/* Delete mode styling */
+.marker.delete-mode {
+    background-color: #dc3545 !important;
+    animation: pulse 0.8s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { transform: translate(-50%, -50%) scale(1); }
+    50% { transform: translate(-50%, -50%) scale(1.2); }
+}
+
+/* Legend - inline with buttons */
+.map-legend-inline {
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid #dee2e6;
+    border-left: 3px solid #00844b;
+    border-radius: 6px;
+    padding: 8px 16px;
+    font-size: 0.9rem;
+    white-space: nowrap;
+}
+
+/* Zoom controls - FIXED position */
+.zoom-controls {
+    position: fixed;
+    top: 180px;
+    right: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    z-index: 9999;
+}
+
+.zoom-controls button {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+/* Responsive adjustments */
+@media (max-width: 992px) {
+    .d-flex.gap-3 {
+        flex-wrap: wrap;
+    }
+    
+    .map-legend-inline {
+        font-size: 0.8rem;
+        padding: 6px 12px;
+    }
+    
+    .map-container {
+        height: 450px;
+    }
+}
+
+@media (max-width: 768px) {
+    .map-container {
+        height: 400px;
+    }
+    
+    .map-legend-inline {
+        width: 100%;
+        text-align: center;
+        margin-bottom: 0.5rem;
+    }
+    
+    .zoom-controls {
+        top: 160px;
+        right: 10px;
+    }
+}
+
+@media (max-width: 480px) {
+    .map-container {
+        height: 300px;
+    }
+    
+    .marker {
+        width: 28px; /* Increased from 24px for mobile */
+        height: 28px;
+        border: 3px solid white;
+    }
+    
+    .map-legend-inline {
+        font-size: 0.75rem;
+        padding: 6px 10px;
+    }
+}
 </style>
 
+{{-- === INTERACTIVE MAP SCRIPT === --}}
 <script>
-    // Inicializa tooltips Bootstrap para mostrar títulos de los marcadores.
-    document.addEventListener('DOMContentLoaded', function () {
-        const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
-        [...tooltipTriggerList].map(el => new bootstrap.Tooltip(el));
+document.addEventListener('DOMContentLoaded', function () {
+    
+    // ===== BUILDING STATUS DATA (synced with alerts page) =====
+    const buildingStatuses = {
+        "Stefani": "critical",
+        "Biblioteca": "warning",
+        "General Library": "warning",
+        "Centro de Estudiantes": "normal",
+        "Student Center": "normal",
+        "Celis": "normal",
+        "Biologia": "normal",
+        "DeDiego": "normal",
+        "Luchetti": "normal",
+        "ROTC": "normal",
+        "Adm.Empresas": "normal",
+        "Musa": "normal",
+        "Chardon": "normal",
+        "Monzon": "normal",
+        "Sanchez Hidalgo": "normal",
+        "Fisica": "normal",
+        "Geologia": "normal",
+        "Ciencias Marinas": "normal",
+        "Quimica": "normal",
+        "Piñero": "normal",
+        "Enfermeria": "normal",
+        "Vagones": "normal",
+        "Natatorio": "normal",
+        "Centro Nuclear": "normal",
+        "Coliseo": "normal",
+        "Gimnacio": "normal",
+        "Servicios Medicos": "normal",
+        "Decanato de Estudiantes": "normal",
+        "Oficina de Facultad": "normal",
+        "Adm.Finca Alzamora": "normal",
+        "Centro de Estudiantes": "normal",
+        "Terrats": "normal",
+        "Ing.Civil": "normal",
+        "Ing.Industrial": "normal",
+        "Ing.Quimica": "normal",
+        "Ing.Agricola": "normal",
+        "Edificio A (Hotel Colegial)": "normal",
+        "Edificio B (Adm.Peq.Negocios y Oficina Adm)": "normal",
+        "Edificio C (Oficina de Extension Agricola)": "normal",
+        "Edificio D": "normal"
+    };
+
+    // Load statuses from localStorage if available
+    const savedStatuses = localStorage.getItem('buildingStatuses');
+    if (savedStatuses) {
+        Object.assign(buildingStatuses, JSON.parse(savedStatuses));
+    }
+
+    // Function to get marker color based on status
+    function getMarkerColor(buildingName) {
+        const status = buildingStatuses[buildingName] || "normal";
+        switch(status) {
+            case "critical": return "#dc3545"; // Red
+            case "warning": return "#ffc107";  // Yellow
+            case "normal": return "#198754";   // Green
+            default: return "#198754";
+        }
+    }
+    
+    // ===== DEFAULT MARKERS DATA =====
+    const defaultMarkers = [
+        { top: 71.3, left: 78.3, name: "Celis" },
+        { top: 56.5, left: 82.5, name: "Stefani" },
+        { top: 18.5, left: 72, name: "Biologia" },
+        { top: 78, left: 76.7, name: "DeDiego" },
+        { top: 70, left: 86.4, name: "Luchetti" },
+        { top: 63.5, left: 85.4, name: "ROTC" },
+        { top: 13, left: 33, name: "Adm.Empresas" },
+        { top: 78.5, left: 67, name: "Musa" },
+        { top: 58.3, left: 75.9, name: "Chardon" },
+        { top: 75.8, left: 72.5, name: "Monzon" },
+        { top: 46.5, left: 70.1, name: "Sanchez Hidalgo" },
+        { top: 41, left: 76, name: "Fisica" },
+        { top: 40, left: 78, name: "Geologia" },
+        { top: 39, left: 80, name: "Ciencias Marinas" },
+        { top: 40, left: 63, name: "Quimica" },
+        { top: 85, left: 60.5, name: "Piñero" },
+        { top: 51.5, left: 59, name: "Enfermeria" },
+        { top: 48, left: 53, name: "Vagones" },
+        { top: 32.6, left: 30.5, name: "Natatorio" },
+        { top: 18.2, left: 86.5, name: "Centro Nuclear" },
+        { top: 64, left: 46, name: "Coliseo" },
+        { top: 66.7, left: 54.1, name: "Gimnacio" },
+        { top: 71, left: 67, name: "Servicios Medicos" },
+        { top: 79, left: 80.5, name: "Decanato de Estudiantes" },
+        { top: 49.7, left: 66, name: "Oficina de Facultad" },
+        { top: 62, left: 8, name: "Adm.Finca Alzamora" },
+        { top: 62.5, left: 65.8, name: "Biblioteca" },
+        { top: 64.8, left: 72.6, name: "Centro de Estudiantes" },
+        { top: 48, left: 81, name: "Terrats" },
+        { top: 7.1, left: 59.8, name: "Ing.Civil" },
+        { top: 49, left: 78, name: "Ing.Industrial" },
+        { top: 17.7, left: 55.7, name: "Ing.Quimica" },
+        { top: 38.1, left: 50.9, name: "Ing.Agricola" },
+        { top: 26.9, left: 18.2, name: "Edificio A (Hotel Colegial)" },
+        { top: 33, left: 17.6, name: "Edificio B (Adm.Peq.Negocios y Oficina Adm)" },
+        { top: 26.8, left: 21.8, name: "Edificio C (Oficina de Extension Agricola)" },
+        { top: 29.3, left: 20, name: "Edificio D" }
+    ];
+
+    // Load markers from localStorage if available, otherwise use defaults
+    let markers;
+    const savedMarkers = localStorage.getItem('campusMarkers');
+    if (savedMarkers) {
+        markers = JSON.parse(savedMarkers);
+    } else {
+        markers = [...defaultMarkers]; // Copy default markers
+        saveMarkers(); // Save to localStorage
+    }
+
+    // ===== DOM ELEMENTS =====
+    const mapContainer = document.getElementById('mapContainer');
+    const mapWrapper = document.getElementById('mapWrapper');
+    const markersLayer = document.getElementById('markersLayer');
+    const addMarkerBtn = document.getElementById('addMarkerBtn');
+    const deleteMarkerBtn = document.getElementById('deleteMarkerBtn');
+    const resetZoomBtn = document.getElementById('resetZoomBtn');
+    const zoomInBtn = document.getElementById('zoomInBtn');
+    const zoomOutBtn = document.getElementById('zoomOutBtn');
+
+    // ===== STATE VARIABLES =====
+    let scale = 0.6; // Start with less zoom (was 1)
+    let addMarkerMode = false;
+    let deleteMarkerMode = false;
+    let isPanning = false;
+    let startX, startY, scrollLeft, scrollTop;
+
+    // ===== RENDER MARKERS =====
+    function renderMarkers() {
+        markersLayer.innerHTML = '';
+        
+        markers.forEach((markerData, index) => {
+            const marker = document.createElement('div');
+            marker.className = 'marker';
+            marker.style.top = `${markerData.top}%`;
+            marker.style.left = `${markerData.left}%`;
+            marker.title = markerData.name;
+            marker.dataset.index = index;
+            
+            // Set marker color based on building status
+            marker.style.backgroundColor = getMarkerColor(markerData.name);
+
+            if (deleteMarkerMode) {
+                marker.classList.add('delete-mode');
+            }
+
+            // Click handler
+            marker.addEventListener('click', (e) => {
+                e.stopPropagation();
+                
+                if (deleteMarkerMode) {
+                    deleteMarker(index);
+                } else {
+                    window.location.href = `/alerts?building=${encodeURIComponent(markerData.name)}`;
+                }
+            });
+
+            markersLayer.appendChild(marker);
+
+            // Initialize tooltip
+            new bootstrap.Tooltip(marker);
+        });
+    }
+
+    // ===== ADD MARKER FUNCTIONALITY =====
+    addMarkerBtn.addEventListener('click', () => {
+        addMarkerMode = !addMarkerMode;
+        deleteMarkerMode = false;
+        
+        if (addMarkerMode) {
+            addMarkerBtn.classList.add('active');
+            deleteMarkerBtn.classList.remove('active');
+            mapContainer.style.cursor = 'crosshair';
+            alert('✅ Click on the map to place a new marker');
+        } else {
+            addMarkerBtn.classList.remove('active');
+            mapContainer.style.cursor = 'grab';
+        }
+        
+        renderMarkers();
     });
 
-    // Maneja clic en marcadores para ir a Alerts con el edificio como querystring.
-    document.querySelectorAll('.marker').forEach(marker => {
-        marker.addEventListener('click', function() {
-            const building = this.getAttribute('title');
-            window.location.href = `/alerts?building=${encodeURIComponent(building)}`;
-        });
+    // Click on map to add marker
+    mapWrapper.addEventListener('click', (e) => {
+        if (!addMarkerMode) return;
+        
+        // Ignore if this was a drag operation
+        if (hasMoved) {
+            hasMoved = false;
+            return;
+        }
+
+        const rect = mapWrapper.getBoundingClientRect();
+        
+        // Calculate position relative to the map image at current scale
+        const x = (e.clientX - rect.left) / scale;
+        const y = (e.clientY - rect.top) / scale;
+        
+        const topPercent = (y / 1199) * 100;
+        const leftPercent = (x / 2202) * 100;
+
+        const name = prompt('Enter marker name:');
+        if (name && name.trim()) {
+            markers.push({
+                top: parseFloat(topPercent.toFixed(1)),
+                left: parseFloat(leftPercent.toFixed(1)),
+                name: name.trim()
+            });
+
+            saveMarkers();
+            renderMarkers();
+            alert(`✅ Marker "${name}" added successfully!`);
+        }
+
+        // Exit add mode
+        addMarkerMode = false;
+        addMarkerBtn.classList.remove('active');
+        mapContainer.style.cursor = 'grab';
     });
+
+    // ===== DELETE MARKER FUNCTIONALITY =====
+    deleteMarkerBtn.addEventListener('click', () => {
+        deleteMarkerMode = !deleteMarkerMode;
+        addMarkerMode = false;
+        
+        if (deleteMarkerMode) {
+            deleteMarkerBtn.classList.add('active');
+            addMarkerBtn.classList.remove('active');
+            mapContainer.style.cursor = 'pointer';
+            alert('🗑️ Click on any marker to delete it');
+        } else {
+            deleteMarkerBtn.classList.remove('active');
+            mapContainer.style.cursor = 'grab';
+        }
+        
+        renderMarkers();
+    });
+
+    function deleteMarker(index) {
+        // Save the marker name BEFORE any modifications
+        const markerName = markers[index].name;
+        
+        if (confirm(`Delete marker "${markerName}"?`)) {
+            // Remove marker from array
+            markers.splice(index, 1);
+            
+            // Exit delete mode BEFORE rendering
+            deleteMarkerMode = false;
+            deleteMarkerBtn.classList.remove('active');
+            mapContainer.style.cursor = 'grab';
+            
+            // Save and render
+            saveMarkers();
+            renderMarkers();
+            
+            // Show success message with saved name
+            alert(`✅ Marker "${markerName}" deleted`);
+        }
+    }
+
+    // ===== SAVE/LOAD MARKERS =====
+    function saveMarkers() {
+        localStorage.setItem('campusMarkers', JSON.stringify(markers));
+    }
+
+    // ===== ZOOM FUNCTIONALITY =====
+    function updateZoom(newScale) {
+        scale = Math.min(Math.max(newScale, 0.5), 3);
+        mapWrapper.style.transform = `scale(${scale})`;
+    }
+
+    zoomInBtn.addEventListener('click', () => updateZoom(scale + 0.2));
+    zoomOutBtn.addEventListener('click', () => updateZoom(scale - 0.2));
+
+    // Mouse wheel zoom
+    mapContainer.addEventListener('wheel', (e) => {
+        e.preventDefault();
+        const delta = e.deltaY > 0 ? -0.1 : 0.1;
+        updateZoom(scale + delta);
+    });
+
+    resetZoomBtn.addEventListener('click', () => {
+        updateZoom(0.6); // Reduced from 1 to 0.6 for less zoom
+        mapContainer.scrollLeft = 0;
+        mapContainer.scrollTop = 0;
+    });
+
+    // ===== PAN FUNCTIONALITY =====
+    let clickStartX, clickStartY;
+    let hasMoved = false;
+    
+    mapContainer.addEventListener('mousedown', (e) => {
+        if (addMarkerMode || e.target.classList.contains('marker')) return;
+        
+        isPanning = true;
+        hasMoved = false;
+        mapContainer.style.cursor = 'grabbing';
+        startX = e.pageX - mapContainer.offsetLeft;
+        startY = e.pageY - mapContainer.offsetTop;
+        clickStartX = e.pageX;
+        clickStartY = e.pageY;
+        scrollLeft = mapContainer.scrollLeft;
+        scrollTop = mapContainer.scrollTop;
+    });
+
+    mapContainer.addEventListener('mouseleave', () => {
+        isPanning = false;
+        hasMoved = false; // Reset on mouse leave
+        if (!addMarkerMode) mapContainer.style.cursor = 'grab';
+    });
+
+    mapContainer.addEventListener('mouseup', () => {
+        isPanning = false;
+        // Don't reset hasMoved here - let the click handler check it first
+        if (!addMarkerMode) mapContainer.style.cursor = 'grab';
+    });
+
+    mapContainer.addEventListener('mousemove', (e) => {
+        if (!isPanning) return;
+        
+        // Detect if mouse has moved significantly (more than 10px = it's a drag, not a click)
+        // Increased threshold from 5px to 10px to be less sensitive
+        const deltaX = Math.abs(e.pageX - clickStartX);
+        const deltaY = Math.abs(e.pageY - clickStartY);
+        if (deltaX > 10 || deltaY > 10) {
+            hasMoved = true;
+        }
+        
+        e.preventDefault();
+        
+        const x = e.pageX - mapContainer.offsetLeft;
+        const y = e.pageY - mapContainer.offsetTop;
+        const walkX = (x - startX) * 1.5;
+        const walkY = (y - startY) * 1.5;
+        
+        mapContainer.scrollLeft = scrollLeft - walkX;
+        mapContainer.scrollTop = scrollTop - walkY;
+    });
+
+    // ===== TOUCH SUPPORT FOR MOBILE =====
+    let touchStartX, touchStartY;
+
+    mapContainer.addEventListener('touchstart', (e) => {
+        if (addMarkerMode) return;
+        touchStartX = e.touches[0].pageX - mapContainer.scrollLeft;
+        touchStartY = e.touches[0].pageY - mapContainer.scrollTop;
+    });
+
+    mapContainer.addEventListener('touchmove', (e) => {
+        if (addMarkerMode) return;
+        e.preventDefault();
+        
+        const x = e.touches[0].pageX;
+        const y = e.touches[0].pageY;
+        
+        mapContainer.scrollLeft = touchStartX - x;
+        mapContainer.scrollTop = touchStartY - y;
+    });
+
+    // ===== INITIAL RENDER =====
+    updateZoom(0.6); // Apply initial zoom level
+    renderMarkers();
+    console.log(`✅ Loaded ${markers.length} markers`);
+});
 </script>
 
-{{-- Helper temporal (comentado) para calcular coordenadas de marcadores --}}
-{{-- ...existing code... --}}
+{{-- === TEMPORARY COORDINATE HELPER (COMMENTED OUT) === --}}
+{{-- 
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const mapWrapper = document.querySelector('.map-wrapper');
+
+    // Floating coordinate display for marker positioning
+    const coordBox = document.createElement('div');
+    coordBox.style.position = 'fixed';
+    coordBox.style.bottom = '10px';
+    coordBox.style.right = '10px';
+    coordBox.style.background = 'rgba(0, 0, 0, 0.8)';
+    coordBox.style.color = '#fff';
+    coordBox.style.padding = '8px 12px';
+    coordBox.style.borderRadius = '8px';
+    coordBox.style.fontFamily = 'monospace';
+    coordBox.style.fontSize = '0.9rem';
+    coordBox.style.zIndex = '9999';
+    coordBox.textContent = 'Move cursor over map...';
+    document.body.appendChild(coordBox);
+
+    // Update box with cursor position as percentages
+    mapWrapper.addEventListener('mousemove', function (e) {
+        const rect = mapWrapper.getBoundingClientRect();
+        const top = ((e.clientY - rect.top) / rect.height) * 100;
+        const left = ((e.clientX - rect.left) / rect.width) * 100;
+        coordBox.textContent = `top: ${top.toFixed(1)}%; left: ${left.toFixed(1)}%;`;
+    });
+
+    mapWrapper.addEventListener('mouseleave', () => {
+        coordBox.textContent = 'Move cursor over map...';
+    });
+});
+</script>
+--}}
+
 @endsection

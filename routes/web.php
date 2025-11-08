@@ -82,22 +82,15 @@ Route::middleware('auth')->group(function () {
 | a server-driven Users tab backed by AdminUserController.
 |--------------------------------------------------------------------------
 */
-Route::middleware(['auth', 'admin'])->group(function () {
+Route::post('/enter-user-preview', function () {
+    Session::put('user_preview', true);
+    return redirect('/')->with('activeTab', 'home');
+})->name('enter.user.preview');
 
-    // Redirect /admin to Users tab controller
-    Route::get('/admin', fn () => redirect()->route('admin.users.index'))->name('admin');
-
-    // Users management (DB-backed)
-    Route::get('/admin/users', [AdminUserController::class, 'index'])->name('admin.users.index');
-    Route::post('/admin/users', [AdminUserController::class, 'store'])->name('admin.users.store');
-    Route::patch('/admin/users/{user}/role', [AdminUserController::class, 'updateRole'])->name('admin.users.updateRole');
-    Route::delete('/admin/users/{user}', [AdminUserController::class, 'destroy'])->name('admin.users.destroy');
-
-    // Placeholders for future functionality (Admin->Settings mock-up)
-    // Route::post('/admin/critical-devices', [AdminUserController::class, 'criticalStore'])->name('admin.critical.store');
-    // Route::patch('/admin/critical-devices/{device}', [AdminUserController::class, 'criticalUpdate'])->name('admin.critical.update');
-    // Route::delete('/admin/critical-devices/{device}', [AdminUserController::class, 'criticalDestroy'])->name('admin.critical.destroy');
-});
+Route::post('/exit-user-preview', function () {
+    Session::forget('user_preview');
+    return back();
+})->name('exit.user.preview');
 
 /*
 |--------------------------------------------------------------------------

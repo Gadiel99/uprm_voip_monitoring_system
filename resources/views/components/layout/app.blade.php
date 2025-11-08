@@ -1,3 +1,39 @@
+{{--
+/*
+ * File: app.blade.php
+ * Project: UPRM VoIP Monitoring System
+ * Description: Main application layout template providing the overall structure
+ *              for the monitoring system interface including navigation, sidebar,
+ *              and content areas.
+ * 
+ * Author: [Hector R. sepulveda]
+ * Date Created: October 2025
+ * Last Modified: October 30, 2025
+ * 
+ * Purpose:
+ *   This file serves as the master layout for the entire application. It includes:
+ *   - Top navigation bar with user menu and notifications
+ *   - Left sidebar with main navigation links
+ *   - Dashboard tabs for different system sections
+ *   - Account settings modal
+ *   - User preview mode functionality
+ * 
+ * Dependencies:
+ *   - Bootstrap 5.3.3 (CSS framework)
+ *   - Bootstrap Icons 1.11.3
+ *   - Laravel Blade templating engine
+ * 
+ * Usage:
+ *   @extends('components.layout.app')
+ *   @section('content')
+ *       <!-- Page content here -->
+ *   @endsection
+ * 
+ * IEEE Standards Compliance:
+ *   - Follows IEEE 829 documentation standards
+ *   - Adheres to IEEE 1016 software design description
+ */
+--}}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -7,28 +43,46 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>UPRM Monitoring System</title>
 
-    {{-- Bootstrap 5 --}}
+    {{-- External CSS and JavaScript Libraries --}}
+    {{-- Bootstrap 5.3.3 - Frontend CSS framework --}}
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
-    {{-- Bootstrap Icons --}}
+    {{-- Bootstrap Icons 1.11.3 - Icon library --}}
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
 
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <style>
+        /*
+         * Section: Custom CSS Styles
+         * Description: Application-wide styling definitions following UPRM branding guidelines
+         * Color Scheme:
+         *   - Primary Green: #00844b (UPRM institutional color)
+         *   - Background: #f8f9fa (Light gray)
+         *   - Text: #333 (Dark gray)
+         */
+
+        /* Global body styling */
         body {
             background-color: #f8f9fa;
             font-family: 'Segoe UI', sans-serif;
         }
 
-        /* Navbar */
+        /* 
+         * Component: Top Navigation Bar
+         * Purpose: Main navigation container at top of page
+         */
         .navbar {
             background-color: #ffffff;
             border-bottom: 1px solid #dee2e6;
         }
 
-        /* Sidebar */
+        /* 
+         * Component: Left Sidebar
+         * Purpose: Main navigation menu container
+         * Dimensions: 240px width, 100vh height
+         */
         .sidebar {
             width: 240px;
             min-height: 100vh;
@@ -37,6 +91,7 @@
             padding-top: 1rem;
         }
 
+        /* Sidebar navigation links - default state */
         .sidebar .nav-link {
             color: #333;
             font-weight: 500;
@@ -44,30 +99,40 @@
             margin: 3px 0;
         }
 
+        /* Sidebar navigation links - active state */
         .sidebar .nav-link.active {
             background-color: #d7f5df;
             color: #198754 !important;
             font-weight: 600;
         }
 
-        /* Top tabs */
+        /* 
+         * Component: Dashboard Tab Navigation
+         * Purpose: Secondary navigation for main dashboard sections
+         */
         .nav-tabs {
             border-bottom: 1px solid #dee2e6;
             background-color: #fff;
         }
 
+        /* Active tab indicator with UPRM green underline */
         .nav-tabs .nav-link.active {
             border-bottom: 3px solid #00844b;
             color: #00844b !important;
             font-weight: 600;
         }
 
+        /* Tab hover effect */
         .nav-tabs .nav-link:hover {
             background-color: #f1f3f4;
             color: #00844b;
             transition: all 0.2s ease;
         }
 
+        /* 
+         * Component: Main Content Area
+         * Purpose: Container for page-specific content
+         */
         main {
             background-color: #fff;
             border-radius: 8px;
@@ -75,7 +140,10 @@
             box-shadow: 0 0 8px rgba(0, 0, 0, 0.05);
         }
 
-        /* Account Settings Modal Styles */
+        /* 
+         * Component: Account Settings Modal Pills
+         * Purpose: Tab navigation within account settings modal
+         */
         .nav-pills .nav-link {
             color: #000;
             border-radius: 8px;
@@ -83,21 +151,24 @@
             font-weight: 500;
         }
 
+        /* Active pill tab with UPRM green background */
         .nav-pills .nav-link.active {
             background-color: #00844b !important;
             color: #fff !important;
         }
 
+        /* Modal dialog styling */
         .modal-content {
             border-radius: 16px;
         }
 
+        /* Dark button variant */
         .btn-dark {
             background-color: #0b0b0b;
             border: none;
         }
 
-        /* Notifications dropdown */
+        /* Notification dropdown */
         .dropdown-menu {
             border-radius: 10px;
             border: none;
@@ -128,6 +199,7 @@
             animation: slideDown 0.3s ease;
         }
 
+        /* Banner slide-in animation */
         @keyframes slideDown {
             from { opacity: 0; transform: translateY(-5px); }
             to { opacity: 1; transform: translateY(0); }
@@ -136,12 +208,16 @@
 </head>
 
 <body>
-    @php $isUserPreview = session('user_preview', false); @endphp
+    @php
+        // Check if user preview mode is active
+        $isUserPreview = session('user_preview', false);
+    @endphp
 
     {{-- Navbar: branding, notificaciones, menú de usuario y "User Preview" --}}
     <nav class="navbar navbar-expand-lg sticky-top">
         <div class="container-fluid">
 
+            {{-- University logo and name --}}
             <a class="navbar-brand d-flex align-items-center" href="{{ url('/') }}">
                 <img src="{{ asset('images/logo-uprm.png') }}" alt="UPRM Logo" height="36" class="me-2">
                 <span class="fw-semibold text-dark">UPRM Monitoring System</span>
@@ -149,7 +225,7 @@
 
             <div class="d-flex align-items-center gap-3">
 
-                {{-- Notifications (frontend only) --}}
+                {{-- Notifications dropdown --}}
                 <div class="dropdown">
                     <a href="#" class="text-dark position-relative" data-bs-toggle="dropdown" aria-expanded="false">
                         <i class="bi bi-bell fs-5"></i>
@@ -169,24 +245,22 @@
                     </ul>
                 </div>
 
-                {{-- Dark mode placeholder --}}
-                <i class="bi bi-moon text-dark"></i>
-
-                {{-- User Dropdown --}}
+                {{-- User account dropdown --}}
                 <div class="dropdown">
                     <a
                         class="d-flex align-items-center text-decoration-none text-dark dropdown-toggle"
                         href="#"
                         data-bs-toggle="dropdown"
                     >
-                        <i class="bi bi-person-circle me-1"></i>
-                        {{ Auth::user()->name ?? 'Guest' }}
+                       <i class="bi bi-person-circle me-1"></i>
+                        <span id="userNameDisplay">Admin</span>
                     </a>
 
                     <ul class="dropdown-menu dropdown-menu-end shadow-sm">
 
                         <li class="dropdown-header fw-semibold px-3">My Account</li>
 
+                        {{-- Open account settings modal --}}
                         <li>
                             <a
                                 class="dropdown-item"
@@ -199,33 +273,31 @@
                             </a>
                         </li>
 
-                        {{-- Role switch --}}
-                        @admin
-                            @if ($isUserPreview)
-                                <li>
-                                    <form action="{{ url('/exit-user-preview') }}" method="POST">
-                                        @csrf
-                                        <button type="submit" class="dropdown-item fw-semibold" style="color: #007bff !important;">
-                                            <i class="bi bi-eye-slash me-2" style="color: #007bff !important;"></i>Exit User Preview
-                                        </button>
-                                    </form>
-                                </li>
-                            @else
-                                <li>
-                                    <form action="{{ url('/enter-user-preview') }}" method="POST">
-                                        @csrf
-                                        <button type="submit" class="dropdown-item">
-                                            <i class="bi bi-eye me-2 text-secondary"></i>
-                                            User Preview
-                                        </button>
-                                    </form>
-                                </li>
-                            @endif
-                        @endadmin
+                        {{-- User preview mode toggle --}}
+                        @if ($isUserPreview)
+                            <li>
+                                <form action="{{ url('/exit-user-preview') }}" method="POST">
+                                    @csrf
+                                    <button type="submit" class="dropdown-item fw-semibold" style="color: #007bff !important;">
+                                        <i class="bi bi-eye-slash me-2" style="color: #007bff !important;"></i>Exit User Preview
+                                    </button>
+                                </form>
+                            </li>
+                        @else
+                            <li>
+                                <form action="{{ url('/enter-user-preview') }}" method="POST">
+                                    @csrf
+                                    <button type="submit" class="dropdown-item">
+                                        <i class="bi bi-eye me-2 text-secondary"></i>
+                                        User Preview
+                                    </button>
+                                </form>
+                            </li>
+                        @endif
 
                         <li><hr class="dropdown-divider"></li>
 
-                        {{-- Logout (submits POST /logout) --}}
+                        {{-- Logout action --}}
                         <li>
                             <form id="logoutForm" action="{{ url('/logout') }}" method="POST" class="d-none">
                                 @csrf
@@ -259,6 +331,7 @@
         <div class="sidebar p-3">
             <ul class="nav flex-column">
 
+                {{-- Dashboard link --}}
                 <li class="nav-item mb-2">
                     <a
                         href="{{ url('/') }}"
@@ -269,6 +342,7 @@
                     </a>
                 </li>
 
+                {{-- Help link --}}
                 <li class="nav-item">
                     <a
                         href="{{ url('/help') }}"
@@ -282,8 +356,10 @@
             </ul>
         </div>
 
+        {{-- Main content area --}}
         <div class="flex-grow-1">
-            {{-- Tabs de Dashboard visibles en rutas específicas --}}
+
+            {{-- Dashboard top tabs (conditional render) --}}
             @if (
                 request()->is('/') ||
                 request()->is('alerts') ||
@@ -313,21 +389,23 @@
                             Reports
                         </a>
                     </li>
-                    @admin
-                        @if (! $isUserPreview)
-                            <li class="nav-item">
-                                <a
-                                    href="{{ route('admin.users.index') }}"
-                                    class="nav-link {{ request()->is('admin') || request()->is('admin/*') ? 'active' : '' }}"
-                                >
-                                    Admin
-                                </a>
-                            </li>
-                        @endif
-                    @endadmin
+
+                    {{-- Admin tab only if not in user preview --}}
+                    @if (! $isUserPreview)
+                        <li class="nav-item">
+                            <a
+                                href="{{ url('/admin') }}"
+                                class="nav-link {{ request()->is('admin') ? 'active' : '' }}"
+                            >
+                                Admin
+                            </a>
+                        </li>
+                    @endif
+
                 </ul>
             @endif
 
+            {{-- Page content injection --}}
             <main class="m-4">
                 @yield('content')
             </main>
@@ -339,11 +417,13 @@
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content border-0 shadow-lg rounded-4">
 
+                {{-- Modal header --}}
                 <div class="modal-header border-0 pb-0">
                     <h5 class="modal-title fw-semibold" id="accountSettingsLabel">Account Settings</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
 
+                {{-- Modal body --}}
                 <div class="modal-body">
                     @if (session('status'))
                         <div class="alert alert-success py-2 mb-3">
@@ -351,20 +431,10 @@
                         </div>
                     @endif
 
-                    {{-- Modal Tabs --}}
+                    {{-- Account modal tabs --}}
                     <ul class="nav nav-pills mb-4 justify-content-center" id="accountTab" role="tablist">
                         <li class="nav-item">
-                            <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#profileTab" type="button">
-                                Profile Picture
-                            </button>
-                        </li>
-                        <li class="nav-item">
-                            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#usernameTab" type="button">
-                                Username
-                            </button>
-                        </li>
-                        <li class="nav-item">
-                            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#emailTab" type="button">
+                            <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#emailTab" type="button">
                                 Email
                             </button>
                         </li>
@@ -377,54 +447,10 @@
 
                     <div class="tab-content">
 
-                        {{-- Profile Picture --}}
-                        <div class="tab-pane fade show active text-center" id="profileTab" role="tabpanel">
-                            <div class="mb-3">
-                                <img
-                                    src="{{ asset('images/default-avatar.png') }}"
-                                    alt="User Avatar"
-                                    class="rounded-circle border mb-3"
-                                    width="120"
-                                    height="120"
-                                >
-                                <h6 class="fw-semibold mb-0">{{ Auth::user()->name }}</h6>
-                                <small class="text-muted">{{ Auth::user()->email }}</small>
-                            </div>
-
-                            <button class="btn btn-dark mb-2" disabled>Upload New Picture</button>
-                            <p class="text-muted small">Coming soon</p>
-                        </div>
-
-                        {{-- Username --}}
-                        <div class="tab-pane fade" id="usernameTab" role="tabpanel">
-                            <form method="POST" action="{{ route('profile.update') }}">
-                                @csrf
-                                @method('patch')
-                                <input type="hidden" name="return_to" value="{{ url()->current() }}#accountSettingsModal">
-                                <input type="hidden" name="tab" value="username"><!-- NEW -->
-
-                                <label class="form-label fw-semibold">Current Username</label>
-                                <input type="text" class="form-control mb-3" value="{{ Auth::user()->name }}" readonly>
-
-                                <label class="form-label fw-semibold">New Username</label>
-                                <input type="text" name="name" class="form-control mb-2" value="{{ old('name', Auth::user()->name) }}" required>
-                                <input type="hidden" name="email" value="{{ Auth::user()->email }}">
-                                @error('name') <div class="text-danger small mb-2">{{ $message }}</div> @enderror
-
-                                <button class="btn btn-dark w-100" type="submit">Update Username</button>
-                            </form>
-                        </div>
-
-                        {{-- Email --}}
-                        <div class="tab-pane fade" id="emailTab" role="tabpanel">
-                            <form method="POST" action="{{ route('profile.update') }}">
-                                @csrf
-                                @method('patch')
-                                <input type="hidden" name="return_to" value="{{ url()->current() }}#accountSettingsModal">
-                                <input type="hidden" name="tab" value="email"><!-- NEW -->
-
-                                <label class="form-label fw-semibold">Current Email</label>
-                                <input type="email" class="form-control mb-3" value="{{ Auth::user()->email }}" readonly>
+                        {{-- Email tab --}}
+                        <div class="tab-pane fade show active" id="emailTab" role="tabpanel">
+                            <label class="form-label fw-semibold">Current Email</label>
+                            <input type="email" class="form-control mb-3" value="admin@uprm.edu" readonly>
 
                                 <label class="form-label fw-semibold">New Email</label>
                                 <input type="email" name="email" class="form-control mb-2" value="{{ old('email', Auth::user()->email) }}" required>
@@ -435,7 +461,7 @@
                             </form>
                         </div>
 
-                        {{-- Password --}}
+                        {{-- Password tab --}}
                         <div class="tab-pane fade" id="passwordTab" role="tabpanel">
                             <form method="POST" action="{{ route('profile.password') }}">
                                 @csrf
@@ -472,62 +498,173 @@
         </div>
     </div>
 
-    {{-- Simulated notifications --}}
+    {{-- Frontend demo JS for account settings --}}
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const notifContent = document.getElementById('notif-content');
-            const notifBadge = document.getElementById('notif-badge');
+document.addEventListener('DOMContentLoaded', () => {
+    console.log("🧩 Account Settings Frontend Demo Active");
 
-            // Static demo data
-            const notifications = [
-                { title: 'Emergency Services', desc: 'Phone 787-555-0100 is offline', level: 'critical' },
-                { title: 'Security Office', desc: 'Phone 787-555-0200 is offline', level: 'warning' }
-            ];
+    // Load stored demo account info
+    const saved = JSON.parse(localStorage.getItem('demoAccountInfo')) || {
+        username: 'Admin User',
+        email: 'admin@uprm.edu',
+    };
 
-            if (notifications.length > 0) {
-                notifBadge.classList.remove('d-none');
-                notifBadge.textContent = notifications.length;
+    // Fill modal display fields
+    document.querySelectorAll('#usernameTab input[readonly]').forEach(el => el.value = saved.username);
+    document.querySelectorAll('#emailTab input[readonly]').forEach(el => el.value = saved.email);
 
-                notifContent.innerHTML = notifications.map(n => `
-                    <li class="dropdown-item d-flex align-items-start gap-2">
-                        <i class="bi bi-exclamation-octagon text-danger fs-5"></i>
-                        <div>
-                            <div class="fw-semibold text-danger">${n.title}</div>
-                            <small class="text-muted">${n.desc}</small>
-                        </div>
-                    </li>
-                `).join('');
+    // Update Username handler
+    document.querySelector('#usernameTab button').addEventListener('click', () => {
+        const newUsername = document.querySelector('#usernameTab input[placeholder]').value.trim();
+        if (!newUsername) return alert('⚠️ Please enter a new username.');
+
+        saved.username = newUsername;
+        localStorage.setItem('demoAccountInfo', JSON.stringify(saved));
+
+        // Update displayed username
+        document.querySelectorAll('#usernameTab input[readonly]').forEach(el => el.value = newUsername);
+        if (document.querySelector('#userNameDisplay')) {
+            document.querySelector('#userNameDisplay').innerText = newUsername;
+        }
+
+        alert('✅ Username updated (frontend demo only)');
+    });
+
+    // Update Email handler
+    document.querySelector('#emailTab button').addEventListener('click', () => {
+        const newEmail = document.querySelector('#emailTab input[placeholder]').value.trim();
+        if (!newEmail.includes('@')) return alert('⚠️ Enter a valid email address.');
+
+        saved.email = newEmail;
+        localStorage.setItem('demoAccountInfo', JSON.stringify(saved));
+
+        // Update displayed email
+        document.querySelectorAll('#emailTab input[readonly]').forEach(el => el.value = newEmail);
+
+        alert('✅ Email updated (frontend demo only)');
+    });
+
+    // Update Password handler
+    document.querySelector('#passwordTab button').addEventListener('click', () => {
+        const current = document.querySelector('#passwordTab input[placeholder="Enter current password"]').value;
+        const newPass = document.querySelector('#passwordTab input[placeholder="Enter new password"]').value;
+        const confirm = document.querySelector('#passwordTab input[placeholder="Confirm new password"]').value;
+
+        if (!newPass || newPass.length < 6) return alert('⚠️ Password must be at least 6 characters.');
+        if (newPass !== confirm) return alert('❌ Passwords do not match.');
+
+        alert('🔒 Password updated (frontend demo only)');
+        document.querySelectorAll('#passwordTab input').forEach(i => i.value = '');
+    });
+});
+</script>
+
+{{-- Critical device notifications --}}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const notifContent = document.getElementById('notif-content');
+    const notifBadge = document.getElementById('notif-badge');
+
+    // Function to check critical devices and update notifications
+    function updateCriticalDeviceNotifications() {
+        const notifications = [];
+        
+        // Get critical devices from localStorage (synced from admin panel)
+        const criticalDevices = JSON.parse(localStorage.getItem('criticalDevices') || '[]');
+        
+        // Check each critical device for offline status
+        criticalDevices.forEach(device => {
+            if (device.status === 'Offline') {
+                notifications.push({
+                    title: device.owner || 'Critical Device',
+                    desc: `Device ${device.ip} is offline`,
+                    level: 'critical',
+                    ip: device.ip,
+                    mac: device.mac
+                });
             }
-
-            // Reabrir modal si hubo una actualización
-            @if (session('status'))
-                const modalEl = document.getElementById('accountSettingsModal');
-                if (modalEl) new bootstrap.Modal(modalEl).show();
-            @endif
-
-            // Reabrir modal y activar pestaña correcta en éxito o error
-            @php
-                $openModal = session('status') || $errors->any();
-                $accountTab = session('account_tab') ?? (
-                    $errors->has('email') ? 'email' :
-                    ($errors->has('current_password') || $errors->has('password') || $errors->has('password_confirmation') ? 'password' :
-                    ($errors->has('name') ? 'username' : null))
-                );
-            @endphp
-            @if ($openModal)
-                const modalEl = document.getElementById('accountSettingsModal');
-                const bsModal = new bootstrap.Modal(modalEl);
-                bsModal.show();
-
-                @if ($accountTab)
-                    const tabBtn = document.querySelector(`[data-bs-target="#{{ $accountTab }}Tab"]`);
-                    if (tabBtn) {
-                        const tab = new bootstrap.Tab(tabBtn);
-                        tab.show();
-                    }
-                @endif
-            @endif
         });
-    </script>
+
+        // Populate notifications if any
+        if (notifications.length > 0) {
+            notifBadge.classList.remove('d-none');
+            notifBadge.textContent = notifications.length;
+
+            notifContent.innerHTML = notifications.map(n => `
+                <li class="dropdown-item d-flex align-items-start gap-2 py-2">
+                    <i class="bi bi-exclamation-octagon text-danger fs-5"></i>
+                    <div>
+                        <div class="fw-semibold text-danger">${n.title}</div>
+                        <small class="text-muted">${n.desc}</small>
+                    </div>
+                </li>
+            `).join('');
+        } else {
+            notifBadge.classList.add('d-none');
+            notifContent.innerHTML = '<li class="text-center text-muted py-3">No new notifications</li>';
+        }
+    }
+
+    // Initial update
+    updateCriticalDeviceNotifications();
+
+    // Update notifications every 15 seconds
+    setInterval(updateCriticalDeviceNotifications, 15000);
+
+    // Listen for storage changes (when admin updates critical devices)
+    window.addEventListener('storage', (e) => {
+        if (e.key === 'criticalDevices') {
+            updateCriticalDeviceNotifications();
+        }
+    });
+});
+</script>
+
+{{-- Global logging for navigation and important actions --}}
+<script>
+// Helper function to add log (same as in admin page)
+if (typeof window.addLog === 'undefined') {
+    window.addLog = function(type, message, user = 'Admin') {
+        const logs = JSON.parse(localStorage.getItem('systemLogs') || '[]');
+        const timestamp = new Date().toISOString().replace('T', ' ').substring(0, 19);
+        
+        logs.unshift({
+            timestamp: timestamp,
+            type: type,
+            message: message,
+            user: user,
+            id: Date.now()
+        });
+        
+        if (logs.length > 500) logs.pop();
+        localStorage.setItem('systemLogs', JSON.stringify(logs));
+    }
+}
+
+// Log page navigation
+document.addEventListener('DOMContentLoaded', function() {
+    const currentPage = window.location.pathname.split('/').pop() || 'home';
+    const pageNames = {
+        '': 'Home',
+        'alerts': 'Alerts',
+        'devices': 'Devices',
+        'reports': 'Reports',
+        'admin': 'Admin',
+        'settings': 'Settings',
+        'help': 'Help'
+    };
+    
+    const pageName = pageNames[currentPage] || currentPage;
+    addLog('INFO', `Navigated to ${pageName} page`);
+});
+
+// Log logout
+const logoutBtn = document.querySelector('form[action*="logout"] button');
+if (logoutBtn) {
+    logoutBtn.addEventListener('click', function() {
+        addLog('INFO', 'User logged out from system');
+    });
+}
+</script>
 </body>
 </html>

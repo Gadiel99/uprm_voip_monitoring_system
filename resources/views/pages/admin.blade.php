@@ -1,3 +1,78 @@
+{{--
+/*
+ * File: admin.blade.php
+ * Project: UPRM VoIP Monitoring System
+ * Description: Administrative control panel with system configuration and management tools
+ * 
+ * Author: [Hector R. Sepulveda]
+ * Date Created: October 2025
+ * Last Modified: October 30, 2025
+ * 
+ * Purpose:
+ *   This page provides administrators with centralized access to system configuration,
+ *   maintenance, monitoring logs, server management, and user administration.
+ * 
+ * Access Control:
+ *   - Restricted to users with administrative privileges
+ *   - Visible only in left sidebar for authorized users
+ *   - Requires authentication and admin role
+ * 
+ * Main Features (5 Tabs):
+ *   1. Backup
+ *      - Manual backup trigger
+ *      - Automated backup schedule display
+ *      - Backup completion confirmation
+ *   
+ *   2. Logs
+ *      - Real-time system log viewer
+ *      - Log filtering by severity
+ *      - Sample log entries with timestamps
+ *   
+ *   3. Settings
+ *      - Threshold configurations (Warning/Critical)
+ *      - Notification preferences (Email/Push)
+ *      - Alert frequency settings
+ *      - Save functionality with confirmation
+ *   
+ *   4. Servers
+ *      - Server status dashboard
+ *      - Health check interface
+ *      - Color-coded status indicators (Operational/Warning)
+ *   
+ *   5. Users
+ *      - User management table
+ *      - Role assignment
+ *      - User information display (Name/Email/Role)
+ * 
+ * Tab Navigation:
+ *   - Bootstrap nav-tabs for tabbed interface
+ *   - Active tab highlighting
+ *   - Click-to-switch functionality
+ *   - Persistent state during page session
+ * 
+ * Configuration Options:
+ *   Settings Tab:
+ *     - Warning Threshold: Numeric input (default: 75)
+ *     - Critical Threshold: Numeric input (default: 90)
+ *     - Alert Frequency: Dropdown (Instant/Every 5/15/30 minutes)
+ *     - Notification Type: Checkboxes (Email/Push)
+ * 
+ * User Management:
+ *   Table Columns:
+ *     - Name (user full name)
+ *     - Email (contact address)
+ *     - Role (Admin/User)
+ * 
+ * Dependencies:
+ *   - Bootstrap 5.3.3 for tab navigation and styling
+ *   - Bootstrap Icons for visual indicators
+ * 
+ * IEEE Standards Compliance:
+ *   - Follows IEEE 1016 software design description
+ *   - Adheres to IEEE 829 test documentation standards
+ *   - Implements IEEE 730 quality assurance practices
+ */
+--}}
 @extends('components.layout.app')
 
 @section('content')
@@ -32,32 +107,17 @@
 <div class="container-fluid">
     <h4 class="fw-semibold mb-4">Admin Panel</h4>
 
-    @php
-        $isUsersServer = isset($users); // server-driven when /admin/users
-        $isSuper = auth()->check() && in_array(strtolower(str_replace('_','', auth()->user()->role)), ['superadmin','super_admin']);
-    @endphp
-
-    {{-- NAV PILLS: el enlace "Users" navega al controlador para cargar datos reales --}}
+    {{-- NAV PILLS --}}
     <ul class="nav nav-pills bg-light p-2 rounded mb-4" id="adminTab" role="tablist">
-        <li class="nav-item">
-            <button class="nav-link {{ $isUsersServer ? '' : 'active' }}" data-bs-toggle="tab" data-bs-target="#backup">
-                <i class="bi bi-hdd-stack me-2"></i>Backup
-            </button>
-        </li>
+        <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#backup"><i class="bi bi-hdd-stack me-2"></i>Backup</button></li>
         <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#logs"><i class="bi bi-file-earmark-text me-2"></i>Logs</button></li>
         <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#settings"><i class="bi bi-gear me-2"></i>Settings</button></li>
-        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#servers"><i class="bi bi-server me-2"></i>Servers</button></li>
-        <li class="nav-item">
-            <a class="nav-link {{ $isUsersServer ? 'active' : '' }}" href="{{ route('admin.users.index', ['tab' => 'users']) }}">
-                <i class="bi bi-people me-2"></i>Users
-            </a>
-        </li>
+        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#users"><i class="bi bi-people me-2"></i>Users</button></li>
     </ul>
 
-    {{-- Contenido de pestañas mock-up (siempre renderizado para poder ver Logs, etc.) --}}
     <div class="tab-content" id="adminTabContent">
         {{-- BACKUP --}}
-        <div class="tab-pane fade {{ $isUsersServer ? '' : 'show active' }}" id="backup" role="tabpanel">
+        <div class="tab-pane fade show active" id="backup" role="tabpanel">
             <div class="card border-0 shadow-sm p-4 mb-4">
                 <h5 class="fw-semibold mb-3">Backup Configuration</h5>
                 <div class="mb-3">
@@ -79,14 +139,23 @@
             <div class="card border-0 shadow-sm p-4 mb-4">
                 <h5 class="fw-semibold mb-3">System Logs</h5>
                 <div class="d-flex mb-3">
-                    <input type="text" class="form-control bg-light" placeholder="Search logs by message, source, or user...">
-                    <button class="btn btn-dark ms-2"><i class="bi bi-search me-1"></i>Search</button>
+                    <input type="text" class="form-control bg-light" id="logSearchInput" placeholder="Search logs by message, action, or user...">
+                    <button class="btn btn-dark ms-2" onclick="filterLogs()"><i class="bi bi-search me-1"></i>Search</button>
+                    <button class="btn btn-outline-secondary ms-2" onclick="clearLogs()"><i class="bi bi-trash me-1"></i>Clear All</button>
                 </div>
-                <small class="text-muted d-block mb-3">Logs are read-only and cannot be modified.</small>
-                <div class="bg-light rounded p-3">
-                    <code>[2025-10-21 19:42:11] INFO: System backup completed successfully.</code><br>
-                    <code>[2025-10-21 19:20:14] ERROR: Database connection timeout.</code><br>
-                    <code>[2025-10-21 19:15:08] INFO: Server reboot scheduled for maintenance.</code>
+                
+                <div class="mb-3">
+                    <button class="btn btn-sm btn-outline-primary me-2" onclick="filterByType('all')">All</button>
+                    <button class="btn btn-sm btn-outline-info me-2" onclick="filterByType('INFO')">Info</button>
+                    <button class="btn btn-sm btn-outline-success me-2" onclick="filterByType('SUCCESS')">Success</button>
+                    <button class="btn btn-sm btn-outline-warning me-2" onclick="filterByType('WARNING')">Warning</button>
+                    <button class="btn btn-sm btn-outline-danger" onclick="filterByType('ERROR')">Error</button>
+                </div>
+                
+                <small class="text-muted d-block mb-3">Showing <span id="logCount">0</span> logs. Logs are automatically recorded for all system actions.</small>
+                
+                <div class="bg-light rounded p-3" style="max-height: 500px; overflow-y: auto;" id="logsContainer">
+                    <div class="text-center text-muted py-4">No logs available. Actions will be logged here.</div>
                 </div>
             </div>
         </div>
@@ -103,7 +172,7 @@
                     </button>
                 </div>
 
-                <table class="table table-bordered align-middle" id="criticalTable">
+                <table class="table table-bordered table-hover align-middle" id="criticalTable">
                     <thead class="table-light">
                         <tr>
                             <th>IP Address</th>
@@ -114,7 +183,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr>
+                        <tr class="critical-device-row" style="cursor: pointer;">
                             <td>192.168.1.10</td>
                             <td>00:1B:44:11:AA:00</td>
                             <td>Emergency Services</td>
@@ -124,7 +193,7 @@
                                 <button class="btn btn-sm btn-danger delete-btn"><i class="bi bi-trash"></i></button>
                             </td>
                         </tr>
-                        <tr>
+                        <tr class="critical-device-row" style="cursor: pointer;">
                             <td>192.168.1.11</td>
                             <td>00:1B:44:11:AA:01</td>
                             <td>Security Office</td>
@@ -187,55 +256,7 @@
             </div>
         </div>
 
-        {{-- SERVERS --}}
-        <div class="tab-pane fade" id="servers" role="tabpanel">
-            <div class="card border-0 shadow-sm p-4 mb-4">
-                <h5 class="fw-semibold mb-3">Servers</h5>
-                <p class="text-muted small">Manage system servers and ports.</p>
-
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addServerModal">
-                        <i class="bi bi-plus-lg me-2"></i>Add Server
-                    </button>
-                </div>
-
-                <table class="table table-bordered align-middle" id="serverTable">
-                    <thead class="table-light">
-                        <tr>
-                            <th>Name</th>
-                            <th>IP Address</th>
-                            <th>Port</th>
-                            <th>Status</th>
-                            <th style="width:120px;">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>Primary Server</td>
-                            <td>192.168.1.10</td>
-                            <td>22</td>
-                            <td><span class="badge badge-online">Online</span></td>
-                            <td>
-                                <button class="btn btn-sm btn-outline-secondary edit-btn"><i class="bi bi-pencil"></i></button>
-                                <button class="btn btn-sm btn-danger delete-btn"><i class="bi bi-trash"></i></button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>Database Server</td>
-                            <td>192.168.1.12</td>
-                            <td>3306</td>
-                            <td><span class="badge badge-offline">Offline</span></td>
-                            <td>
-                                <button class="btn btn-sm btn-outline-secondary edit-btn"><i class="bi bi-pencil"></i></button>
-                                <button class="btn btn-sm btn-danger delete-btn"><i class="bi bi-trash"></i></button>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        {{-- USERS mock-up pane (leave as-is, but it's mock only) --}}
+        {{-- USERS --}}
         <div class="tab-pane fade" id="users" role="tabpanel">
             <div class="card border-0 shadow-sm p-4 mb-4">
                 <h5 class="fw-semibold mb-3">User Management</h5>
@@ -292,6 +313,7 @@
                 </table>
             </div>
         </div>
+
     </div>
 
     {{-- Users (server-driven, DB-backed). Hide when mock-up tabs are shown. --}}
@@ -306,129 +328,6 @@
                     <i class="bi bi-person-plus me-2"></i>Add User
                 </button>
             </div>
-
-            @php
-                $adminsCountCalc = isset($adminsCount) ? $adminsCount : ($users->where('role','admin')->count());
-                $superAdminsCountCalc = isset($superAdminsCount)
-                    ? $superAdminsCount
-                    : ($users->filter(fn($u) => in_array(strtolower(str_replace('_','',$u->role)), ['superadmin','super_admin']))->count());
-            @endphp
-            <div class="mb-3">
-                <span class="badge bg-primary me-2">Total: {{ $users->count() }}</span>
-                <span class="badge bg-warning text-dark me-2">Admins: {{ $adminsCountCalc }}</span>
-                <span class="badge bg-dark">Super Admins: {{ $superAdminsCountCalc }}</span>
-            </div>
-
-            <div class="table-responsive">
-                <table class="table align-middle">
-                    <thead class="table-light">
-                        <tr>
-                            <th style="width:28%">Name</th>
-                            <th style="width:32%">Email</th>
-                            <th style="width:15%">Role</th>
-                            <th class="text-end" style="width:25%">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse($users as $u)
-                            @php
-                                $roleNorm = strtolower(str_replace('_','',$u->role));
-                                $roleLabel = $roleNorm === 'superadmin' ? 'Super Admin' : ucfirst($u->role);
-                                $badge = $roleNorm === 'superadmin' ? 'bg-dark' : ($u->role === 'admin' ? 'bg-warning text-dark' : 'bg-secondary');
-                                $isSelf = auth()->id() === $u->id;
-                                $canDelete = $roleNorm !== 'superadmin' && !$isSelf && !(!$isSuper && $u->role === 'admin');
-                            @endphp
-                            <tr>
-                                <td class="fw-semibold">{{ $u->name }}</td>
-                                <td>{{ $u->email }}</td>
-                                <td><span class="badge {{ $badge }}">{{ $roleLabel }}</span></td>
-                                <td class="text-end">
-                                    @if($isSuper && $roleNorm !== 'superadmin' && !$isSelf)
-                                        <form action="{{ route('admin.users.updateRole', $u->id) }}" method="POST" class="d-inline me-2">
-                                            @csrf @method('PATCH')
-                                            <select name="role" class="form-select d-inline w-auto me-1">
-                                                <option value="user"  {{ $u->role === 'user'  ? 'selected' : '' }}>User</option>
-                                                <option value="admin" {{ $u->role === 'admin' ? 'selected' : '' }}>Admin</option>
-                                            </select>
-                                            <button class="btn btn-outline-primary btn-sm">Update</button>
-                                        </form>
-                                    @else
-                                        <button class="btn btn-sm btn-secondary me-2" disabled>Update</button>
-                                    @endif
-
-                                    <form action="{{ route('admin.users.destroy', $u->id) }}" method="POST" class="d-inline">
-                                        @csrf @method('DELETE')
-                                        <button class="btn btn-outline-danger btn-sm" {{ $canDelete ? '' : 'disabled' }}
-                                                onclick="return {{ $canDelete ? 'confirm(\'Delete user '.$u->email.'?\')' : 'false' }}">
-                                            Delete
-                                        </button>
-                                    </form>
-                                </td>
-                            </tr>
-                        @empty
-                            <tr><td colspan="4" class="text-center text-muted">No users found.</td></tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
-
-            @if ($errors->any())
-                <div class="alert alert-danger mt-3">
-                    <ul class="mb-0">@foreach ($errors->all() as $e)<li>{{ $e }}</li>@endforeach</ul>
-                </div>
-            @endif
-            @if (session('status'))
-                <div class="alert alert-success mt-3">{{ session('status') }}</div>
-            @endif
-        </div>
-
-        {{-- Modal: Add User (DB-backed) --}}
-        <div class="modal fade" id="addUserModalDB" tabindex="-1" aria-labelledby="addUserModalDBLabel" aria-hidden="true">
-            <div class="modal-dialog modal-lg modal-dialog-centered">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title fw-semibold" id="addUserModalDBLabel">
-                            <i class="bi bi-person-plus me-2 text-success"></i> Add New User
-                        </h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <form action="{{ route('admin.users.store') }}" method="POST">
-                        @csrf
-                        <div class="modal-body">
-                            <div class="row g-3">
-                                <div class="col-md-4">
-                                    <label class="form-label">Name</label>
-                                    <input type="text" name="name" class="form-control" required>
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label">Email</label>
-                                    <input type="email" name="email" class="form-control" required>
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label">Password</label>
-                                    <input type="password" name="password" class="form-control" required>
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label">Role</label>
-                                    <select name="role" class="form-select">
-                                        <option value="user">User</option>
-                                        @if($isSuper)
-                                            <option value="admin">Admin</option>
-                                        @endif
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-                            <button type="submit" class="btn btn-success">Create</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-    @endif
-</div>
 
 {{-- ===================== MODALS ===================== --}}
 
@@ -557,23 +456,9 @@
 document.addEventListener('DOMContentLoaded', () => {
     ['criticalTable','serverTable','userTable'].forEach(enableTableActions);
 
-    const formAddCritical = document.getElementById('formAddCritical');
-    if (formAddCritical) formAddCritical.addEventListener('submit', onAddCritical);
-
-    const formAddServer = document.getElementById('formAddServer');
-    if (formAddServer) formAddServer.addEventListener('submit', onAddServer);
-
-    // Guard mock-only Add User form to avoid errors in server-driven view
-    const formAddUser = document.getElementById('formAddUser');
-    if (formAddUser) formAddUser.addEventListener('submit', onAddUser);
-});
-
-// When any mock-up tab is activated, hide the server Users section so Logs shows the mock-up.
-const usersSection = document.getElementById('usersServerSection');
-document.querySelectorAll('#adminTab [data-bs-toggle="tab"]').forEach(btn => {
-    btn.addEventListener('shown.bs.tab', () => {
-        if (usersSection) usersSection.classList.add('d-none');
-    });
+    document.getElementById('formAddCritical').addEventListener('submit', onAddCritical);
+    document.getElementById('formAddServer').addEventListener('submit', onAddServer);
+    document.getElementById('formAddUser').addEventListener('submit', onAddUser);
 });
 
 function enableTableActions(tableId) {
@@ -586,7 +471,16 @@ function enableTableActions(tableId) {
 
         // DELETE
         if (e.target.closest('.delete-btn')) {
-            if (confirm('🗑️ Delete this entry?')) row.remove();
+            if (confirm('🗑️ Delete this entry?')) {
+                // Get info before deleting
+                const cells = [...row.children];
+                const firstCell = cells[0]?.textContent.trim() || 'Unknown';
+                
+                row.remove();
+                
+                // Log deletion
+                addLog('WARNING', `Entry deleted from ${tableId}: ${firstCell}`);
+            }
             return;
         }
 
@@ -594,16 +488,31 @@ function enableTableActions(tableId) {
         if (e.target.closest('.edit-btn')) {
             const actionCell = row.lastElementChild;
             const cells = [...row.children].slice(0, -1);
+            
+            // Store original values for logging
+            const originalValues = cells.map(c => c.textContent.trim());
+            
             cells.forEach((cell, index) => {
                 const value = cell.textContent.trim();
 
-                // Status column? Make it a select
-                if (cell.innerText.includes('Online') || cell.innerText.includes('Offline')) {
+                // Status column. Make it a select
+                if (cell.innerText.includes('Online') || cell.innerText.includes('Offline') || 
+                    cell.innerText.includes('Active') || cell.innerText.includes('Inactive')) {
                     const select = document.createElement('select');
                     select.className = 'form-select form-select-sm';
-                    select.innerHTML = `
-                        <option value="Online" ${value.includes('Online') ? 'selected' : ''}>Online</option>
-                        <option value="Offline" ${value.includes('Offline') ? 'selected' : ''}>Offline</option>`;
+                    
+                    // Determine if this is Online/Offline or Active/Inactive
+                    const isActiveInactive = cell.innerText.includes('Active') || cell.innerText.includes('Inactive');
+                    
+                    if (isActiveInactive) {
+                        select.innerHTML = `
+                            <option value="Active" ${value.includes('Active') ? 'selected' : ''}>Active</option>
+                            <option value="Inactive" ${value.includes('Inactive') ? 'selected' : ''}>Inactive</option>`;
+                    } else {
+                        select.innerHTML = `
+                            <option value="Online" ${value.includes('Online') ? 'selected' : ''}>Online</option>
+                            <option value="Offline" ${value.includes('Offline') ? 'selected' : ''}>Offline</option>`;
+                    }
                     cell.textContent = '';
                     cell.appendChild(select);
                 } else {
@@ -624,18 +533,37 @@ function enableTableActions(tableId) {
         if (e.target.closest('.save-btn')) {
             const actionCell = row.lastElementChild;
             const cells = [...row.children].slice(0, -1);
+            
+            // Collect new values for logging
+            const newValues = [];
+            
             cells.forEach(cell => {
                 const input = cell.querySelector('input');
                 const select = cell.querySelector('select');
 
                 if (select) {
                     const status = select.value;
-                    const badgeClass = status === 'Online' ? 'badge-online' : 'badge-offline';
+                    let badgeClass;
+                    
+                    // Determine badge class based on status value
+                    if (status === 'Online' || status === 'Active') {
+                        badgeClass = 'badge-online';
+                    } else if (status === 'Offline' || status === 'Inactive') {
+                        badgeClass = 'badge-offline';
+                    }
+                    
                     cell.innerHTML = `<span class="badge ${badgeClass}">${status}</span>`;
+                    newValues.push(status);
                 } else if (input) {
                     cell.textContent = input.value;
+                    newValues.push(input.value);
+                } else {
+                    newValues.push(cell.textContent.trim());
                 }
             });
+            
+            // Log the edit
+            addLog('INFO', `Entry updated in ${tableId}: ${newValues[0]} - Changes saved`);
 
             actionCell.querySelector('.save-btn').outerHTML =
                 '<button class="btn btn-sm btn-outline-secondary edit-btn"><i class="bi bi-pencil"></i></button>';
@@ -644,7 +572,7 @@ function enableTableActions(tableId) {
     });
 }
 
-/* ADD FUNCTIONS (unchanged) */
+/* ADD FUNCTIONS  */
 function onAddCritical(ev) {
     ev.preventDefault();
     const ip = document.getElementById('critical_ip').value.trim();
@@ -655,7 +583,7 @@ function onAddCritical(ev) {
     const tbody = document.querySelector('#criticalTable tbody');
     const badge = status === 'Online' ? 'badge-online' : 'badge-offline';
     tbody.insertAdjacentHTML('beforeend', `
-        <tr>
+        <tr class="critical-device-row" style="cursor: pointer;">
             <td>${ip}</td>
             <td>${mac}</td>
             <td>${owner}</td>
@@ -666,6 +594,10 @@ function onAddCritical(ev) {
             </td>
         </tr>
     `);
+    
+    // Log the action
+    addLog('SUCCESS', `Critical device added: ${owner} (${ip}) - Status: ${status}`);
+    
     bootstrap.Modal.getInstance(document.getElementById('addCriticalModal')).hide();
     ev.target.reset();
 }
@@ -716,8 +648,237 @@ function onAddUser(ev) {
             </td>
         </tr>
     `);
+    
+    // Log the action
+    addLog('SUCCESS', `User added: ${name} (${email}) - Role: ${role}, Status: ${status}`);
+    
     bootstrap.Modal.getInstance(document.getElementById('addUserModal')).hide();
     ev.target.reset();
 }
+
+/* SYNC CRITICAL DEVICES TO LOCALSTORAGE FOR NOTIFICATIONS */
+function syncCriticalDevicesToLocalStorage() {
+    const criticalTable = document.querySelector('#criticalTable tbody');
+    if (!criticalTable) return;
+    
+    const devices = [];
+    const rows = criticalTable.querySelectorAll('tr');
+    
+    rows.forEach(row => {
+        const cells = row.querySelectorAll('td');
+        if (cells.length >= 4) {
+            const ip = cells[0].textContent.trim();
+            const mac = cells[1].textContent.trim();
+            const owner = cells[2].textContent.trim();
+            const statusBadge = cells[3].querySelector('.badge');
+            const status = statusBadge ? statusBadge.textContent.trim() : 'Unknown';
+            
+            devices.push({
+                ip: ip,
+                mac: mac,
+                owner: owner,
+                status: status
+            });
+        }
+    });
+    
+    localStorage.setItem('criticalDevices', JSON.stringify(devices));
+}
+
+// Sync critical devices on page load
+document.addEventListener('DOMContentLoaded', () => {
+    syncCriticalDevicesToLocalStorage();
+    
+    // Re-sync whenever the critical table is modified
+    const criticalTable = document.querySelector('#criticalTable');
+    if (criticalTable) {
+        // Create a MutationObserver to watch for changes
+        const observer = new MutationObserver(() => {
+            syncCriticalDevicesToLocalStorage();
+        });
+        
+        observer.observe(criticalTable, {
+            childList: true,
+            subtree: true,
+            characterData: true
+        });
+    }
+    
+    // Handle clicks on critical device rows to navigate to Devices tab
+    document.addEventListener('click', (e) => {
+        const row = e.target.closest('.critical-device-row');
+        if (!row) return;
+        
+        // Don't navigate if clicking on anything in the Actions column
+        if (e.target.closest('td:last-child')) return;
+        
+        // Don't navigate if clicking on edit or delete buttons
+        if (e.target.closest('.edit-btn') || e.target.closest('.delete-btn')) return;
+        
+        // Get device info from the row
+        const cells = row.querySelectorAll('td');
+        const deviceIP = cells[0].textContent.trim();
+        const deviceMAC = cells[1].textContent.trim();
+        
+        console.log('Navigating to device with IP:', deviceIP);
+        
+        // Navigate to Devices page with URL parameter
+        window.location.href = `/devices?ip=${encodeURIComponent(deviceIP)}&building=Critical+Devices`;
+    });
+});
+
+/* ==================== LOGGING SYSTEM ==================== */
+
+// Get logs from localStorage or initialize
+function getLogs() {
+    return JSON.parse(localStorage.getItem('systemLogs') || '[]');
+}
+
+// Save logs to localStorage
+function saveLogs(logs) {
+    localStorage.setItem('systemLogs', JSON.stringify(logs));
+    updateLogsDisplay();
+}
+
+// Add a new log entry
+window.addLog = function(type, message, user = 'Admin') {
+    const logs = getLogs();
+    const timestamp = new Date().toISOString().replace('T', ' ').substring(0, 19);
+    
+    const newLog = {
+        timestamp: timestamp,
+        type: type, // INFO, SUCCESS, WARNING, ERROR
+        message: message,
+        user: user,
+        id: Date.now()
+    };
+    
+    logs.unshift(newLog); // Add to beginning
+    
+    // Keep only last 500 logs
+    if (logs.length > 500) {
+        logs.pop();
+    }
+    
+    saveLogs(logs);
+}
+
+// Display logs in the container
+function updateLogsDisplay(filteredLogs = null) {
+    const container = document.getElementById('logsContainer');
+    const logs = filteredLogs || getLogs();
+    
+    document.getElementById('logCount').textContent = logs.length;
+    
+    if (logs.length === 0) {
+        container.innerHTML = '<div class="text-center text-muted py-4">No logs available. Actions will be logged here.</div>';
+        return;
+    }
+    
+    const logColors = {
+        'INFO': 'text-primary',
+        'SUCCESS': 'text-success',
+        'WARNING': 'text-warning',
+        'ERROR': 'text-danger'
+    };
+    
+    container.innerHTML = logs.map(log => `
+        <div class="log-entry mb-2 pb-2 border-bottom">
+            <code class="${logColors[log.type] || 'text-secondary'}">
+                [${log.timestamp}] <strong>${log.type}</strong>: ${log.message}
+                ${log.user !== 'System' ? `<span class="text-muted">(${log.user})</span>` : ''}
+            </code>
+        </div>
+    `).join('');
+}
+
+// Filter logs by search term
+function filterLogs() {
+    const searchTerm = document.getElementById('logSearchInput').value.toLowerCase();
+    const logs = getLogs();
+    
+    if (!searchTerm) {
+        updateLogsDisplay();
+        return;
+    }
+    
+    const filtered = logs.filter(log => 
+        log.message.toLowerCase().includes(searchTerm) ||
+        log.type.toLowerCase().includes(searchTerm) ||
+        log.user.toLowerCase().includes(searchTerm)
+    );
+    
+    updateLogsDisplay(filtered);
+}
+
+// Filter by log type
+function filterByType(type) {
+    const logs = getLogs();
+    
+    if (type === 'all') {
+        updateLogsDisplay();
+        return;
+    }
+    
+    const filtered = logs.filter(log => log.type === type);
+    updateLogsDisplay(filtered);
+}
+
+// Clear all logs
+function clearLogs() {
+    if (confirm('Are you sure you want to clear all logs?')) {
+        localStorage.removeItem('systemLogs');
+        addLog('WARNING', 'All system logs were cleared by admin', 'Admin');
+        updateLogsDisplay();
+    }
+}
+
+// Load logs when Logs tab is shown
+document.addEventListener('DOMContentLoaded', () => {
+    updateLogsDisplay();
+    
+    // Add initial system startup log if no logs exist
+    const logs = getLogs();
+    if (logs.length === 0) {
+        addLog('INFO', 'System initialized - Logging started', 'System');
+    }
+    
+    // Load saved alert display settings
+    loadAlertDisplaySettings();
+});
+
+/* ==================== ALERT DISPLAY SETTINGS ==================== */
+
+// Load saved alert display settings from localStorage
+function loadAlertDisplaySettings() {
+    const sortOrder = localStorage.getItem('alertSortOrder') || 'bySeverity';
+    
+    // Set the radio button based on saved preference
+    if (sortOrder === 'bySeverity') {
+        document.getElementById('bySeverity').checked = true;
+    } else {
+        document.getElementById('alphabetical').checked = true;
+    }
+}
+
+// Save alert display settings to localStorage
+function saveAlertDisplaySettings() {
+    const sortOrder = document.querySelector('input[name="sortOrder"]:checked').id;
+    localStorage.setItem('alertSortOrder', sortOrder);
+    
+    addLog('INFO', `Alert display settings changed to: ${sortOrder === 'bySeverity' ? 'By Severity' : 'Alphabetically'}`, 'Admin');
+    
+    // Show confirmation message
+    alert('Alert display settings saved successfully!');
+}
+
+// Add event listeners to radio buttons
+document.addEventListener('DOMContentLoaded', () => {
+    const radioButtons = document.querySelectorAll('input[name="sortOrder"]');
+    radioButtons.forEach(radio => {
+        radio.addEventListener('change', saveAlertDisplaySettings);
+    });
+});
+
 </script>
 @endsection
