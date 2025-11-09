@@ -368,7 +368,7 @@
                 request()->is('/') ||
                 request()->is('alerts') ||
                 request()->is('devices') ||
-                request()->is('reports') ||
+                request()->is('reports') || request()->is('reports/*') ||
                 request()->is('admin') ||
                 request()->is('admin/*')
             )

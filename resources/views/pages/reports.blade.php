@@ -52,265 +52,230 @@
  * 
  * Dependencies:
  *   - Bootstrap 5.3.3
- *   - Vanilla JavaScript (no external libraries)
+{{--
+/**
+ * Reports Page View
  * 
- * IEEE Standards Compliance:
- *   - Follows IEEE 1016 software design description
- *   - Adheres to IEEE 829 test documentation standards
- *   - Implements IEEE 730 quality assurance practices
+ * Purpose:
+ *   Provides device search, filtering, and reporting interface for VoIP system.
+ *   Enables users to search devices by user, MAC, IP, status, and building.
+ *   Displays system overview statistics and detailed search results.
+ * 
+ * Controller:
+ *   ReportsController@index - Initial page load with stats
+ *   ReportsController@search - Filtered search results
+ * 
+ * Features:
+ *   - Real-time device search with multiple filters
+ *   - System overview with statistics cards
+ *   - Results table with device details
+ *   - Server-side data from database
+ *   - Reset functionality to clear all filters
+ * 
+ * Search Filters:
+ *   - User: Text search by assigned user name
+ *   - MAC Address: Filter by network MAC address
+ *   - IP Address: Filter by IP address
+ *   - Status: Dropdown (Online/Offline)
+ *   - Building: Dropdown selection from database
+ * 
+ * Results Table Columns:
+ *   - User (assigned user name or N/A)
+ *   - MAC Address (network identifier)
+ *   - IP Address (device IP)
+ *   - Status (color-coded badge)
+ *   - Building (location or Unassigned)
+ * 
+ * System Overview Cards:
+ *   - Total Devices: Count of registered devices
+ *   - Active Now: Currently online devices
+ *   - Inactive: Offline devices  
+ *   - Buildings: Total monitored locations
+ * 
+ * Status Badge Colors:
+ *   - Online: Green (bg-success)
+ *   - Offline: Red (bg-danger)
+ * 
+ * Dependencies:
+ *   - Bootstrap 5.3.3
+ *   - Laravel Blade templating
+ *   - Server-side data from ReportsController
  */
 --}}
 @extends('components.layout.app')
 
 @section('content')
+<style>
+    /* Match existing design language from devices/admin pages */
+    .reports-section-heading { font-weight:600; }
+    .stat-tile { border-radius:14px; padding:1.25rem 1rem; min-height:120px; display:flex; flex-direction:column; justify-content:center; }
+    .stat-tile h3 { font-weight:700; margin:0; }
+    .tile-total { background:#f4f7ff; }
+    .tile-active { background:#e6f9ed; }
+    .tile-inactive { background:#fff7e6; }
+    .tile-buildings { background:#e6f9ed; }
+    .stat-desc { font-size:.75rem; margin-top:.25rem; color:#11618b; }
+    .stat-desc.inactive { color:#b38300; }
+    .stat-desc.active { color:#006f3f; }
+    .search-label { font-size:.75rem; font-weight:600; text-transform:uppercase; letter-spacing:.5px; color:#555; }
+    .results-empty i { font-size:3rem; opacity:.25; }
+    .btn-success { background:#00844b; border-color:#00844b; }
+    .btn-success:hover { background:#006f3f; border-color:#006f3f; }
+    .btn-outline-secondary:hover { background:#f1f3f4; }
+    .reports-wrapper-card { border-radius:14px; }
+    .results-table code { font-size:.85rem; }
+</style>
+
 <div class="container-fluid">
-    <h4 class="fw-semibold mb-4">Reports</h4>
+    <h4 class="reports-section-heading mb-4">Reports</h4>
 
-    {{-- ================= REPORTS SEARCH FORM ================= --}}
-    <div class="card border-0 shadow-sm p-4 mb-4">
-        <h5 class="fw-semibold mb-3">Device Reports Search</h5>
+    <div class="card border-0 shadow-sm p-4 reports-wrapper-card">
+        {{-- DEVICE REPORTS SEARCH --}}
+        <div class="mb-4" id="reportsSearchCard">
+            <h6 class="fw-semibold mb-3">Device Reports Search</h6>
+            <form method="GET" action="{{ route('reports') }}" id="searchForm">
+                <div class="row g-4">
+                    <div class="col-md-4">
+                        <label class="search-label" for="searchUser">User</label>
+                        <input type="text" id="searchUser" name="user" class="form-control" placeholder="Search by user name..." value="{{ $filters['user'] ?? '' }}">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="search-label" for="searchMac">MAC Address</label>
+                        <input type="text" id="searchMac" name="mac" class="form-control" placeholder="Search by MAC address..." value="{{ $filters['mac'] ?? '' }}">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="search-label" for="searchIp">IP Address</label>
+                        <input type="text" id="searchIp" name="ip" class="form-control" placeholder="Search by IP address..." value="{{ $filters['ip'] ?? '' }}">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="search-label" for="searchStatus">Status</label>
+                        <select id="searchStatus" name="status" class="form-select">
+                            <option value="">All Status</option>
+                            <option value="online" {{ isset($filters['status']) && $filters['status'] == 'online' ? 'selected' : '' }}>Online</option>
+                            <option value="offline" {{ isset($filters['status']) && $filters['status'] == 'offline' ? 'selected' : '' }}>Offline</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="search-label" for="searchBuilding">Building</label>
+                        <select id="searchBuilding" name="building_id" class="form-select">
+                            <option value="">All Buildings</option>
+                            @foreach($buildings as $building)
+                                <option value="{{ $building->building_id }}" {{ isset($filters['building_id']) && $filters['building_id'] == $building->building_id ? 'selected' : '' }}>{{ $building->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-md-4 d-flex align-items-end gap-2">
+                        <button type="submit" class="btn btn-success px-4" id="searchBtn"><i class="bi bi-search me-1"></i>Search</button>
+                        <button type="button" class="btn btn-outline-secondary px-4" id="resetBtn"><i class="bi bi-arrow-clockwise me-1"></i>Reset</button>
+                    </div>
+                </div>
+            </form>
+        </div>
 
-        {{-- Search Filters Form --}}
-        <form id="searchForm">
-            <div class="row g-3 align-items-end mb-3">
-                {{-- User filter --}}
-                <div class="col-md-4">
-                    <label class="form-label">User</label>
-                    <input type="text" id="searchUser" class="form-control bg-light" placeholder="Search by user name...">
+        {{-- SEARCH RESULTS --}}
+        <div class="mb-4" id="reportsResultsCard">
+            <h6 class="fw-semibold mb-3">Search Results</h6>
+            @if(isset($devices) && count($devices) > 0)
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover align-middle results-table">
+                        <thead class="table-light">
+                            <tr>
+                                <th>User</th>
+                                <th>MAC Address</th>
+                                <th>IP Address</th>
+                                <th>Status</th>
+                                <th>Building</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($devices as $device)
+                                <tr>
+                                    <td>
+                                        @if(count($device->extensions) > 0)
+                                            @foreach($device->extensions as $ext)
+                                                <div>{{ $ext['name'] }}</div>
+                                            @endforeach
+                                        @else
+                                            <span class="text-muted">N/A</span>
+                                        @endif
+                                    </td>
+                                    <td><code>{{ $device->mac_address }}</code></td>
+                                    <td><code>{{ $device->ip_address }}</code></td>
+                                    <td>
+                                        @if($device->status == 'online')
+                                            <span class="badge bg-success">Online</span>
+                                        @else
+                                            <span class="badge bg-danger">Offline</span>
+                                        @endif
+                                        @if($device->is_critical)
+                                            <span class="badge bg-warning text-dark ms-1">Critical</span>
+                                        @endif
+                                    </td>
+                                    <td>{{ $device->building_name }}</td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
                 </div>
-                {{-- MAC filter --}}
-                <div class="col-md-4">
-                    <label class="form-label">MAC Address</label>
-                    <input type="text" id="searchMac" class="form-control bg-light" placeholder="Search by MAC address...">
+            @else
+                <div class="results-empty text-center py-4 text-muted">
+                    <i class="bi bi-search"></i>
+                    <p class="mt-3 mb-0">
+                        @if(isset($filters) && (isset($filters['user']) || isset($filters['mac']) || isset($filters['ip']) || isset($filters['status']) || isset($filters['building_id'])))
+                            No devices found matching your search criteria.
+                        @else
+                            No results to display.
+                        @endif
+                    </p>
                 </div>
-                {{-- IP filter --}}
-                <div class="col-md-4">
-                    <label class="form-label">IP Address</label>
-                    <input type="text" id="searchIp" class="form-control bg-light" placeholder="Search by IP address...">
-                </div>
-            </div>
+            @endif
+        </div>
 
-            <div class="row g-3 align-items-end">
-                {{-- Status filter --}}
-                <div class="col-md-4">
-                    <label class="form-label">Status</label>
-                    <select id="searchStatus" class="form-select bg-light">
-                        <option value="">All Status</option>
-                        <option>Online</option>
-                        <option>Offline</option>
-                        <option>Critical</option>
-                    </select>
+        {{-- SYSTEM OVERVIEW --}}
+        <div id="reportsOverviewCard">
+            <h6 class="fw-semibold mb-3">System Overview</h6>
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <div class="stat-tile tile-total text-center">
+                        <h6 class="text-muted mb-1">Total Devices</h6>
+                        <h3 class="text-primary">{{ $stats['total_devices'] }}</h3>
+                        <div class="stat-desc">Registered in system</div>
+                    </div>
                 </div>
-                {{-- Building filter --}}
-                <div class="col-md-4">
-                    <label class="form-label">Building</label>
-                    <select id="searchBuilding" class="form-select bg-light">
-                        <option value="">All Buildings</option>
-                        <option>Stefani</option>
-                        <option>General Library</option>
-                        <option>Student Center</option>
-                        <option>Engineering Complex</option>
-                        <option>Computer Science Department</option>
-                        <option>Administration</option>
-                        <option>Physics</option>
-                        <option>Chardon</option>
-                    </select>
+                <div class="col-md-3">
+                    <div class="stat-tile tile-active text-center">
+                        <h6 class="text-muted mb-1">Active Now</h6>
+                        <h3 class="text-success">{{ $stats['active_devices'] }}</h3>
+                        <div class="stat-desc active">Currently online</div>
+                    </div>
                 </div>
-                {{-- Search and Reset buttons --}}
-                <div class="col-md-4 d-flex justify-content-end align-items-center gap-3">
-                    <button type="button" id="searchBtn" class="btn btn-success px-5 py-2">
-                        <i class="bi bi-search me-2"></i> Search
-                    </button>
-                    <button type="reset" id="resetBtn" class="btn btn-outline-secondary px-4 py-2">
-                        <i class="bi bi-arrow-counterclockwise me-2"></i> Reset
-                    </button>
+                <div class="col-md-3">
+                    <div class="stat-tile tile-inactive text-center">
+                        <h6 class="text-muted mb-1">Inactive</h6>
+                        <h3 class="text-warning">{{ $stats['inactive_devices'] }}</h3>
+                        <div class="stat-desc inactive">Offline devices</div>
+                    </div>
                 </div>
-            </div>
-        </form>
-    </div>
-
-    {{-- ================= SEARCH RESULTS TABLE ================= --}}
-    <div class="card border-0 shadow-sm p-4 mb-4">
-        <h5 class="fw-semibold mb-3">Search Results</h5>
-        <table class="table table-bordered table-hover align-middle" id="resultsTable">
-            <thead class="table-light">
-                <tr>
-                    <th>User</th>
-                    <th>MAC Address</th>
-                    <th>IP Address</th>
-                    <th>Status</th>
-                    <th>Building</th>
-                </tr>
-            </thead>
-            <tbody>
-                {{-- Rows populated dynamically via JS --}}
-            </tbody>
-        </table>
-        <p id="noResults" class="text-muted fst-italic mt-2">No results to display.</p>
-    </div>
-
-    {{-- ================= SYSTEM OVERVIEW CARDS ================= --}}
-    <div class="card border-0 shadow-sm p-4">
-        <h5 class="fw-semibold mb-3">System Overview</h5>
-        <div class="row g-3">
-            {{-- Total devices --}}
-            <div class="col-md-3">
-                <div class="border rounded-3 p-3 text-center" style="background-color: #f0f6ff;">
-                    <h6 class="fw-semibold">Total Devices</h6>
-                    <h2 class="fw-bold text-primary mb-1" id="totalDevices">0</h2>
-                    <p class="text-primary small mb-0">Registered in system</p>
-                </div>
-            </div>
-            {{-- Active devices --}}
-            <div class="col-md-3">
-                <div class="border rounded-3 p-3 text-center" style="background-color: #ecfdf5;">
-                    <h6 class="fw-semibold">Active Now</h6>
-                    <h2 class="fw-bold text-success mb-1" id="activeDevices">0</h2>
-                    <p class="text-success small mb-0">Currently online</p>
-                </div>
-            </div>
-            {{-- Inactive devices --}}
-            <div class="col-md-3">
-                <div class="border rounded-3 p-3 text-center" style="background-color: #fffbea;">
-                    <h6 class="fw-semibold">Inactive</h6>
-                    <h2 class="fw-bold text-warning mb-1" id="inactiveDevices">0</h2>
-                    <p class="text-warning small mb-0">Offline devices</p>
-                </div>
-            </div>
-            {{-- Total buildings monitored --}}
-            <div class="col-md-3">
-                <div class="border rounded-3 p-3 text-center" style="background-color: #ecfdf5;">
-                    <h6 class="fw-semibold">Buildings</h6>
-                    <h2 class="fw-bold text-success mb-1" id="totalBuildings">0</h2>
-                    <p class="text-success small mb-0">Monitored locations</p>
+                <div class="col-md-3">
+                    <div class="stat-tile tile-buildings text-center">
+                        <h6 class="text-muted mb-1">Buildings</h6>
+                        <h3 class="text-success">{{ $stats['total_buildings'] }}</h3>
+                        <div class="stat-desc">Monitored locations</div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
-{{-- ================= JAVASCRIPT SEARCH LOGIC ================= --}}
 <script>
-document.addEventListener('DOMContentLoaded', () => {
-    // Sample device data - expanded with all buildings from map
-    const data = [
-        // Stefani Building
-        { user: 'admin', mac: '00:1B:44:11:3A:B7', ip: '192.168.1.10', status: 'Online', building: 'Stefani' },
-        { user: 'jdoe', mac: '00:1B:44:11:3A:B8', ip: '192.168.1.11', status: 'Online', building: 'Stefani' },
-        { user: 'msmith', mac: '00:1B:44:11:3A:B9', ip: '192.168.1.12', status: 'Offline', building: 'Stefani' },
-        
-        // Biblioteca
-        { user: 'jsantos', mac: '00:1B:44:11:4A:11', ip: '192.168.2.10', status: 'Online', building: 'Biblioteca' },
-        { user: 'acastro', mac: '00:1B:44:11:4A:12', ip: '192.168.2.11', status: 'Online', building: 'Biblioteca' },
-        
-        // Centro de Estudiantes
-        { user: 'drios', mac: '00:1B:44:11:5A:21', ip: '192.168.3.10', status: 'Online', building: 'Centro de Estudiantes' },
-        { user: 'clopez', mac: '00:1B:44:11:5A:22', ip: '192.168.3.11', status: 'Offline', building: 'Centro de Estudiantes' },
-        
-        // Chardon Building
-        { user: 'rperez', mac: '00:1B:44:11:6A:31', ip: '192.168.4.10', status: 'Online', building: 'Chardon' },
-        { user: 'lgarcia', mac: '00:1B:44:11:6A:32', ip: '192.168.4.11', status: 'Offline', building: 'Chardon' },
-        
-        // Fisica
-        { user: 'jfernandez', mac: '00:1B:44:11:8A:51', ip: '192.168.6.10', status: 'Online', building: 'Fisica' },
-        { user: 'sgonzalez', mac: '00:1B:44:11:8A:52', ip: '192.168.6.11', status: 'Offline', building: 'Fisica' },
-        
-        // Quimica
-        { user: 'druiz', mac: '00:1B:44:11:9A:61', ip: '192.168.7.10', status: 'Online', building: 'Quimica' },
-        
-        // Biologia
-        { user: 'mdiaz', mac: '00:1B:44:11:AA:71', ip: '192.168.8.10', status: 'Online', building: 'Biologia' },
-        { user: 'ctorres', mac: '00:1B:44:11:AA:72', ip: '192.168.8.11', status: 'Online', building: 'Biologia' },
-        
-        // Ing.Civil
-        { user: 'erodriguez', mac: '00:1B:44:11:7A:41', ip: '192.168.5.10', status: 'Online', building: 'Ing.Civil' },
-        
-        // Ing.Industrial
-        { user: 'mmartinez', mac: '00:1B:44:11:7A:42', ip: '192.168.5.11', status: 'Online', building: 'Ing.Industrial' },
-        
-        // Celis
-        { user: 'alopez', mac: '00:1B:44:11:6A:33', ip: '192.168.4.12', status: 'Online', building: 'Celis' },
-        
-        // Musa
-        { user: 'rmendez', mac: '00:1B:44:11:BA:81', ip: '192.168.9.10', status: 'Online', building: 'Musa' }
-    ];
-
-    const tbody = document.querySelector('#resultsTable tbody');
-    const noResults = document.getElementById('noResults');
-
-    // Calculate and update System Overview statistics
-    function updateSystemOverview() {
-        const totalDevices = data.length;
-        const activeDevices = data.filter(d => d.status === 'Online').length;
-        const inactiveDevices = data.filter(d => d.status === 'Offline' || d.status === 'Critical').length;
-        const uniqueBuildings = [...new Set(data.map(d => d.building))].length;
-        
-        document.getElementById('totalDevices').textContent = totalDevices;
-        document.getElementById('activeDevices').textContent = activeDevices;
-        document.getElementById('inactiveDevices').textContent = inactiveDevices;
-        document.getElementById('totalBuildings').textContent = uniqueBuildings;
-    }
-    
-    // Update overview on page load
-    updateSystemOverview();
-
-    // Function to render table rows dynamically
-    function renderTable(rows) {
-        tbody.innerHTML = '';
-        if (rows.length === 0) {
-            noResults.textContent = "No results to display.";
-            noResults.classList.remove('d-none');
-            return;
-        }
-
-        noResults.classList.add('d-none');
-
-        rows.forEach(r => {
-            // Badge color based on device status
-            let badgeClass = r.status === 'Online' ? 'bg-success' :
-                             r.status === 'Offline' ? 'bg-danger' :
-                             'bg-warning text-dark';
-
-            tbody.insertAdjacentHTML('beforeend', `
-                <tr>
-                    <td>${r.user}</td>
-                    <td>${r.mac}</td>
-                    <td>${r.ip}</td>
-                    <td><span class="badge ${badgeClass}">${r.status}</span></td>
-                    <td>${r.building}</td>
-                </tr>
-            `);
-        });
-    }
-
-    // Initially show no results
-    renderTable([]);
-
-    // Search button click event
-    document.getElementById('searchBtn').addEventListener('click', () => {
-        const user = document.getElementById('searchUser').value.toLowerCase();
-        const mac = document.getElementById('searchMac').value.toLowerCase();
-        const ip = document.getElementById('searchIp').value.toLowerCase();
-        const status = document.getElementById('searchStatus').value.toLowerCase();
-        const building = document.getElementById('searchBuilding').value.toLowerCase();
-
-        // Filter data based on input values
-        const filtered = data.filter(d =>
-            (!user || d.user.toLowerCase().includes(user)) &&
-            (!mac || d.mac.toLowerCase().includes(mac)) &&
-            (!ip || d.ip.toLowerCase().includes(ip)) &&
-            (!status || d.status.toLowerCase() === status) &&
-            (!building || d.building.toLowerCase().includes(building))
-        );
-
-        renderTable(filtered);
-    });
-
-    // Reset button clears search and results
-    document.getElementById('resetBtn').addEventListener('click', () => {
-        document.getElementById('searchForm').reset();
-        renderTable([]);
-    });
+// Reset button: clear form inputs and navigate back to base reports route without query params
+document.getElementById('resetBtn').addEventListener('click', function() {
+    const form = document.getElementById('searchForm');
+    form.querySelectorAll('input').forEach(i => i.value='');
+    form.querySelectorAll('select').forEach(s => s.selectedIndex = 0);
+    // Use replace so back button does not return to filtered state
+    window.location.replace("{{ route('reports') }}");
 });
 </script>
 @endsection

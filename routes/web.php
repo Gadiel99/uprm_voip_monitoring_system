@@ -6,6 +6,7 @@ use App\Http\Controllers\AdminUserController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AccountController;
 use App\Http\Controllers\ProfileController; // <-- add
+use App\Http\Controllers\ReportsController;
 
 /**
  * Controllers overview:
@@ -46,7 +47,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/devices/critical', [DevicesController::class, 'criticalDevices'])->name('devices.critical');
     Route::get('/devices/building/{building}', [DevicesController::class, 'byBuilding'])->name('devices.byBuilding');
 
-    Route::view('/reports', 'pages.reports')->name('reports');
+    // Reports: search and filtering
+    Route::get('/reports', [ReportsController::class, 'index'])->name('reports');
+    Route::get('/reports/search', [ReportsController::class, 'search'])->name('reports.search');
 
     // Deprecated: standalone Settings page (Admin->Settings mock-up remains within Admin)
     // Route::view('/settings', 'pages.settings')->name('settings');
