@@ -8,7 +8,7 @@ use App\Models\Networks;
 class Devices extends Model
 {
     protected $primaryKey = 'device_id';
-    protected $fillable = ['ip_address', 'network_id', 'status'];
+    protected $fillable = ['mac_address', 'ip_address', 'network_id', 'status', 'is_critical'];
     
     public function network()
     {
