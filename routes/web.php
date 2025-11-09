@@ -82,15 +82,15 @@ Route::middleware('auth')->group(function () {
 | a server-driven Users tab backed by AdminUserController.
 |--------------------------------------------------------------------------
 */
-Route::post('/enter-user-preview', function () {
-    Session::put('user_preview', true);
-    return redirect('/')->with('activeTab', 'home');
-})->name('enter.user.preview');
+// Route::post('/enter-user-preview', function () {
+//     Session::put('user_preview', true);
+//     return redirect('/')->with('activeTab', 'home');
+// })->name('enter.user.preview');
 
-Route::post('/exit-user-preview', function () {
-    Session::forget('user_preview');
-    return back();
-})->name('exit.user.preview');
+// Route::post('/exit-user-preview', function () {
+//     Session::forget('user_preview');
+//     return back();
+// })->name('exit.user.preview');
 
 /*
 |--------------------------------------------------------------------------
