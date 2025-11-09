@@ -129,7 +129,7 @@ class ETLService
             
             return $this->metrics;
             
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             Log::error('ETL process failed', [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
@@ -394,7 +394,7 @@ class ETLService
                     return $file->getPathname();
                 }
             }
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             Log::warning('Error searching for file', [
                 'directory' => $directory,
                 'filename' => $filename,
@@ -465,12 +465,12 @@ class ETLService
             return null;
         }
         
-        $subnet = "{$ipParts[0]}.{$ipParts[1]}.{$ipParts[2]}.0/24";
+        // Match format from building_networks.csv (without /24)
+        $subnet = "{$ipParts[0]}.{$ipParts[1]}.{$ipParts[2]}.0";
         
         return Networks::firstOrCreate(
             ['subnet' => $subnet],
             [
-                'building_id' => 1, // Default building
                 'total_devices' => 0,
                 'offline_devices' => 0,
             ]
@@ -584,9 +584,8 @@ class ETLService
                 // Check if device exists
                 $deviceExists = Devices::where('mac_address', $formattedMac)->exists();
                 
-                // Create or update device
+                // Create or update device - build the data array
                 $deviceData = [
-                    'mac_address' => $formattedMac,
                     'status' => $status,
                     'is_critical' => false,
                 ];
@@ -600,8 +599,8 @@ class ETLService
                 }
                 
                 $device = Devices::updateOrCreate(
-                    ['mac_address' => $formattedMac],
-                    $deviceData
+                    ['mac_address' => $formattedMac], // WHERE clause
+                    $deviceData // Data to insert/update
                 );
                 
                 // Update metrics
@@ -662,7 +661,7 @@ class ETLService
                     }
                 }
                 
-            } catch (\Exception $e) {
+            } catch (Exception $e) {
                 Log::error('Error processing phone', [
                     'phone' => $phone,
                     'error' => $e->getMessage()
