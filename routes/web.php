@@ -42,6 +42,7 @@ Route::middleware('auth')->group(function () {
 
     // Devices: building-level browsing
     Route::get('/devices', [DevicesController::class, 'index'])->name('devices');
+    Route::get('/devices/critical', [DevicesController::class, 'criticalDevices'])->name('devices.critical');
     Route::get('/devices/building/{building}', [DevicesController::class, 'byBuilding'])->name('devices.byBuilding');
 
     Route::view('/reports', 'pages.reports')->name('reports');
