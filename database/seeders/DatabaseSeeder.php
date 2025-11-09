@@ -16,7 +16,7 @@ class DatabaseSeeder extends Seeder
 
         User::factory()->create([
             'name' => 'superadmin',
-            'email' => 'superadmin@viop.uprm.edu',
+            'email' => 'superadmin@uprm.edu',
             'password' => Hash::make('SuperAdmin2025!'),
             'role' => 'superadmin'
         ]);
