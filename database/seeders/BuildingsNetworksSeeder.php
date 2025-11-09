@@ -16,31 +16,31 @@ class BuildingsNetworksSeeder extends Seeder
      */
     public function run(): void
     {
+        // Path to the CSV file
         $path = storage_path('app/seed/building_networks.csv');
+
+        // Check if file exists.
         if (!file_exists($path)) {
             $this->command->error("CSV file not found at path: $path");
             return;
         }
 
+        // Read CSV data
         $rows = $this->readCsv($path);
-        
-        $this->command->info("Total rows read from CSV: " . count($rows));
-        
+
         // Debug: Show first row structure
-        if (!empty($rows)) {
-            $this->command->info("First row keys: " . implode(', ', array_keys($rows[0])));
-            $this->command->info("First row: " . json_encode($rows[0]));
-        }
+        // if (!empty($rows)) {
+        //     $this->command->info("First row keys: " . implode(', ', array_keys($rows[0])));
+        //     $this->command->info("First row: " . json_encode($rows[0]));
+        // }
 
         $rows = array_filter($rows, function ($r) {
             if (!isset($r['buildings']) || !isset($r['subnet'])) return false;
             $b = trim((string)$r['buildings']);
             return $b !== '' && !in_array(Str::lower($b), ['unknown', 'unkown', 'desconocido']);
         });
-        
-        $this->command->info("Rows after filtering: " . count($rows));
 
-        // Índices para no repetir INSERTs
+        // Indexes for avoiding duplicate INSERTs
         $buildingCache = [];
         $networkCache  = [];
 
@@ -91,8 +91,8 @@ class BuildingsNetworksSeeder extends Seeder
                 }
             }
         });
-
-        $this->command->info('Building ↔ Network mapping imported successfully (Unknown skipped).');
+        
+        $this->command->info('🏢 Building ↔ 📡Network mapping imported successfully.');
     }
 
     private function readCsv(string $path): array
