@@ -13,10 +13,11 @@ return new class extends Migration
     {
         Schema::create('devices', function (Blueprint $table) {
             $table->id('device_id');
-            $table->string('ip_address')->unique();
-            $table->string('status')->default('offline'); // Changed from offline_devices to status
+            $table->string('mac_address')->unique(); // MAC address is the primary identifier
+            $table->string('ip_address')->nullable(); // IP can be null if device is offline
+            $table->string('status')->default('offline'); // online/offline status
             $table->boolean('is_critical')->default(false);
-            $table->unsignedBigInteger('network_id');
+            $table->unsignedBigInteger('network_id')->nullable(); // Network can be null if offline
             $table->timestamps();
 
             $table->foreign('network_id')
