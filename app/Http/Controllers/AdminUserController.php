@@ -19,6 +19,12 @@ use Illuminate\Support\Facades\Hash;
  */
 class AdminUserController extends Controller
 {
+    /** Normalize role string to compare across 'super_admin' and 'superadmin'. */
+    private function normalizeRole(?string $role): ?string
+    {
+        return $role ? strtolower(str_replace('_','', $role)) : null;
+    }
+
     /**
      * Muestra la lista de usuarios y badges de conteos.
      *
@@ -28,25 +34,20 @@ class AdminUserController extends Controller
     {
         $users = \App\Models\User::orderByRaw("
                 CASE LOWER(REPLACE(role, '_',''))
-                    WHEN 'superadmin' THEN 0
-                    WHEN 'admin' THEN 1
-                    ELSE 2
+                    WHEN 'admin' THEN 0
+                    ELSE 1
                 END
             ")
             ->orderBy('name')
             ->get();
 
         $adminsCount = $users->where('role', 'admin')->count();
-        $superAdminsCount = $users
-            ->filter(fn($u) => in_array(strtolower(str_replace('_','',$u->role)), ['superadmin']))
-            ->count();
 
         return view('pages.admin', [
             'activeTab' => 'users',
             'isUsersServer' => true,
             'users' => $users,
             'adminsCount' => $adminsCount,
-            'superAdminsCount' => $superAdminsCount,
         ]);
     }
 
@@ -65,24 +66,13 @@ class AdminUserController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'name'     => ['required','string','max:255'],
-            'email'    => ['required','email','max:255','unique:users,email'],
-            'password' => ['required', Password::min(8)],
-            'role'     => ['nullable','in:user,admin,super_admin'],
+            'name'     => ['required','string','min:2','max:255','regex:/\S/'],
+            'email'    => ['required','string','email:rfc','max:255','unique:users,email'],
+            'password' => ['required', Password::min(8)->max(64)->mixedCase()->letters()->numbers()->symbols()->uncompromised()],
+            'role'     => ['nullable','in:user,admin'],
         ]);
 
-        $actor = $request->user();
         $role  = $request->input('role', 'user');
-
-        // Solo el super_admin puede crear admins/super_admins
-        if ($role !== 'user' && $actor->role !== 'super_admin') {
-            return back()->withErrors(['role' => 'Only super admin can create admins.'])->withInput();
-        }
-
-        // Garantizar único super_admin
-        if ($role === 'super_admin' && User::where('role', 'super_admin')->exists()) {
-            return back()->withErrors(['role' => 'There is already a super admin.'])->withInput();
-        }
 
         User::create([
             'name'     => $request->name,
@@ -112,14 +102,6 @@ class AdminUserController extends Controller
         ]);
 
         $actor = $request->user();
-        if ($actor->role !== 'super_admin') {
-            abort(403, 'Only super admin can change roles.');
-        }
-
-        // No permitir tocar super_admin
-        if ($user->role === 'super_admin') {
-            return back()->withErrors(['role' => 'Cannot modify super admin role.']);
-        }
 
         // Evitar que alguien se quite privilegios a sí mismo accidentalmente
         if ($actor->id === $user->id) {
@@ -145,11 +127,6 @@ class AdminUserController extends Controller
     public function destroy(Request $request, User $user)
     {
         $actor = $request->user();
-
-        // Solo admin/super_admin llegan aquí por middleware; ahora política fina:
-        if ($user->role === 'super_admin') {
-            return back()->withErrors(['delete' => 'Cannot delete the super admin.']);
-        }
         // Admin no puede eliminar Admin
         if ($actor->role === 'admin' && $user->role === 'admin') {
             return back()->withErrors(['delete' => 'Admins cannot delete other admins.']);
@@ -164,44 +141,22 @@ class AdminUserController extends Controller
     }
 
     /**
-     * Actualiza datos básicos del usuario (nombre, email y password opcional).
-     * Solo super_admin puede cambiar el rol desde este endpoint (si se envía).
+     * Update endpoint limited to ROLE CHANGES only.
+     * All other credential updates are handled by users themselves via Account Settings.
      */
     public function update(Request $request, User $user)
     {
-        $rules = [
-            'name'  => ['required','string','max:255'],
-            'email' => ['required','email','max:255','unique:users,email,'.$user->id],
-            'password' => ['nullable', Password::min(8)],
-        ];
+        // Validate only role and delegate authz to super_admin
+        $validated = $request->validate([
+            'role' => ['required','in:user,admin'],
+        ]);
 
-        // Role only allowed for super_admin; if present, validate value
-        if ($request->filled('role')) {
-            $rules['role'] = ['in:user,admin,super_admin'];
+        $actor = $request->user();
+        if ($actor->id === $user->id) {
+            return redirect()->route('admin', ['tab' => 'users'])->withErrors(['role' => 'You cannot change your own role here.']);
         }
 
-        $validated = $request->validate($rules);
-
-        $payload = [
-            'name'  => $validated['name'],
-            'email' => $validated['email'],
-        ];
-
-        if (!empty($validated['password'])) {
-            $payload['password'] = Hash::make($validated['password']);
-        }
-
-        // Only super_admin can change roles and cannot demote/alter a super_admin arbitrarily
-        if ($request->filled('role') && $request->user()->role === 'super_admin') {
-            // Protect unique super_admin: avoid making two accidentally
-            if (($validated['role'] ?? null) === 'super_admin' && User::where('role', 'super_admin')->where('id', '!=', $user->id)->exists()) {
-                return redirect()->route('admin', ['tab' => 'users'])->withErrors(['role' => 'There is already a super admin.']);
-            }
-            $payload['role'] = $validated['role'];
-        }
-
-        $user->update($payload);
-
-        return redirect()->route('admin', ['tab' => 'users'])->with('status', 'User updated.');
+        $user->update(['role' => $validated['role']]);
+        return redirect()->route('admin', ['tab' => 'users'])->with('status', 'Role updated.');
     }
 }

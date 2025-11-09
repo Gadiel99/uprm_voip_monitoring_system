@@ -16,7 +16,6 @@
  *   - Left sidebar with main navigation links
  *   - Dashboard tabs for different system sections
  *   - Account settings modal
- *   - User preview mode functionality
  * 
  * Dependencies:
  *   - Bootstrap 5.3.3 (CSS framework)
@@ -188,36 +187,19 @@
             border-radius: 6px;
         }
 
-        /* User Preview Banner */
-        .preview-banner {
-            background-color: #e7f0ff;
-            color: #004085;
-            font-size: 0.9rem;
-            border-bottom: 1px solid #b8daff;
-            text-align: center;
-            padding: 0.5rem 1rem;
-            animation: slideDown 0.3s ease;
-        }
 
-        /* Banner slide-in animation */
-        @keyframes slideDown {
-            from { opacity: 0; transform: translateY(-5px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
     </style>
 </head>
 
 <body>
     @php
-        // Check if user preview mode is active
-        $isUserPreview = session('user_preview', false);
         // Determine if authenticated user is admin or super_admin
         $roleRaw = Auth::user()->role ?? null;
         $normalizedRole = $roleRaw ? strtolower(str_replace('_','', $roleRaw)) : null;
         $isAdminRole = in_array($normalizedRole, ['admin','superadmin']);
     @endphp
 
-    {{-- Navbar: branding, notificaciones, menú de usuario y "User Preview" --}}
+    {{-- Navbar: branding, notifications, and user menu --}}
     <nav class="navbar navbar-expand-lg sticky-top">
         <div class="container-fluid">
 
@@ -257,7 +239,7 @@
                         data-bs-toggle="dropdown"
                     >
                        <i class="bi bi-person-circle me-1"></i>
-                        <span id="userNameDisplay">Admin</span>
+                        <span id="userNameDisplay">{{ Auth::user()->name }}</span>
                     </a>
 
                     <ul class="dropdown-menu dropdown-menu-end shadow-sm">
@@ -276,28 +258,6 @@
                                 Account Settings
                             </a>
                         </li>
-
-                        {{-- User preview mode toggle --}}
-                        @if ($isUserPreview)
-                            <li>
-                                <form action="{{ url('/exit-user-preview') }}" method="POST">
-                                    @csrf
-                                    <button type="submit" class="dropdown-item fw-semibold" style="color: #007bff !important;">
-                                        <i class="bi bi-eye-slash me-2" style="color: #007bff !important;"></i>Exit User Preview
-                                    </button>
-                                </form>
-                            </li>
-                        @else
-                            <li>
-                                <form action="{{ url('/enter-user-preview') }}" method="POST">
-                                    @csrf
-                                    <button type="submit" class="dropdown-item">
-                                        <i class="bi bi-eye me-2 text-secondary"></i>
-                                        User Preview
-                                    </button>
-                                </form>
-                            </li>
-                        @endif
 
                         <li><hr class="dropdown-divider"></li>
 
@@ -322,13 +282,6 @@
             </div>
         </div>
     </nav>
-
-    {{-- User Preview Banner --}}
-    @if ($isUserPreview)
-        <div class="preview-banner">
-            👁 Viewing as <strong>User Role</strong> — Click <strong>"Exit User Preview"</strong> in the menu to return to Admin.
-        </div>
-    @endif
 
     <div class="d-flex">
         {{-- Sidebar: navegación lateral simple (Dashboard/Help) --}}
@@ -394,8 +347,8 @@
                         </a>
                     </li>
 
-                    {{-- Admin tab only for admins and not in user preview --}}
-                    @if ($isAdminRole && ! $isUserPreview)
+                    {{-- Admin tab only for admins --}}
+                    @if ($isAdminRole)
                         <li class="nav-item">
                             <a
                                 href="{{ url('/admin') }}"
@@ -438,7 +391,12 @@
                     {{-- Account modal tabs --}}
                     <ul class="nav nav-pills mb-4 justify-content-center" id="accountTab" role="tablist">
                         <li class="nav-item">
-                            <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#emailTab" type="button">
+                            <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#usernameTab" type="button">
+                                Name
+                            </button>
+                        </li>
+                        <li class="nav-item">
+                            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#emailTab" type="button">
                                 Email
                             </button>
                         </li>
@@ -451,14 +409,57 @@
 
                     <div class="tab-content">
 
+                        {{-- Name tab --}}
+                        <div class="tab-pane fade show active" id="usernameTab" role="tabpanel">
+                            <form method="POST" action="{{ route('profile.username') }}">
+                                @csrf
+                                @method('patch')
+                                <input type="hidden" name="return_to" value="{{ url()->current() }}#accountSettingsModal">
+                                <input type="hidden" name="tab" value="username">
+
+                                <label class="form-label fw-semibold">Current Name</label>
+                                <input type="text" class="form-control mb-3" value="{{ Auth::user()->name }}" readonly>
+
+                                <label class="form-label fw-semibold">New Name</label>
+                                <input
+                                    type="text"
+                                    name="name"
+                                    class="form-control mb-2"
+                                    value="{{ old('name') }}"
+                                    placeholder="Enter new name"
+                                    minlength="2"
+                                    pattern=".*\S.*"
+                                    title="Name cannot be blank or whitespace only"
+                                    maxlength="255"
+                                    required
+                                >
+                                @error('name') <div class="text-danger small mb-2">{{ $message }}</div> @enderror
+
+                                <button class="btn btn-dark w-100" type="submit">Update Name</button>
+                            </form>
+                        </div>
+
                         {{-- Email tab --}}
-                        <div class="tab-pane fade show active" id="emailTab" role="tabpanel">
-                            <label class="form-label fw-semibold">Current Email</label>
-                            <input type="email" class="form-control mb-3" value="admin@uprm.edu" readonly>
+                        <div class="tab-pane fade" id="emailTab" role="tabpanel">
+                            <form method="POST" action="{{ route('profile.email') }}">
+                                @csrf
+                                @method('patch')
+                                <input type="hidden" name="return_to" value="{{ url()->current() }}#accountSettingsModal">
+                                <input type="hidden" name="tab" value="email">
+                                
+                                <label class="form-label fw-semibold">Current Email</label>
+                                <input type="email" class="form-control mb-3" value="{{ Auth::user()->email }}" readonly>
 
                                 <label class="form-label fw-semibold">New Email</label>
-                                <input type="email" name="email" class="form-control mb-2" value="{{ old('email', Auth::user()->email) }}" required>
-                                <input type="hidden" name="name" value="{{ Auth::user()->name }}">
+                                <input
+                                    type="email"
+                                    name="email"
+                                    class="form-control mb-2"
+                                    value="{{ old('email') }}"
+                                    placeholder="Enter new email"
+                                    autocomplete="email"
+                                    required
+                                >
                                 @error('email') <div class="text-danger small mb-2">{{ $message }}</div> @enderror
 
                                 <button class="btn btn-dark w-100" type="submit">Update Email</button>
@@ -474,18 +475,39 @@
                                 <input type="hidden" name="tab" value="password"><!-- NEW -->
 
                                 <label class="form-label fw-semibold">Current Password</label>
-                                <input type="password" name="current_password" class="form-control mb-2" placeholder="Enter current password" required>
+                                <input type="password" id="acc_current_password" name="current_password" class="form-control mb-2" placeholder="Enter current password" autocomplete="current-password" required>
                                 @error('current_password') <div class="text-danger small mb-2">{{ $message }}</div> @enderror
 
                                 <label class="form-label fw-semibold">New Password</label>
-                                <input type="password" name="password" class="form-control mb-2" placeholder="Enter new password" required>
+                                <input
+                                    type="password"
+                                    id="acc_new_password"
+                                    name="password"
+                                    class="form-control mb-2"
+                                    placeholder="Example: CampusNet#24!"
+                                    minlength="8"
+                                    maxlength="64"
+                                    pattern=".{8,64}"
+                                    title="Use 8-64 characters with upper- and lowercase letters, a number, and a symbol"
+                                    autocomplete="new-password"
+                                    required
+                                >
                                 @error('password') <div class="text-danger small mb-2">{{ $message }}</div> @enderror
 
                                 <label class="form-label fw-semibold">Confirm New Password</label>
-                                <input type="password" name="password_confirmation" class="form-control mb-2" placeholder="Confirm new password" required>
+                                <input type="password" id="acc_new_password_confirmation" name="password_confirmation" class="form-control mb-2" placeholder="Confirm new password" autocomplete="new-password" required>
                                 @error('password_confirmation') <div class="text-danger small mb-2">{{ $message }}</div> @enderror
 
-                                <small class="text-muted d-block mb-2">Password must be at least 8 characters</small>
+                                <div class="text-muted small d-block mb-2">
+                                    Password requirements:
+                                    <ul class="small mb-0">
+                                        <li>8–64 characters</li>
+                                        <li>At least one uppercase and one lowercase letter</li>
+                                        <li>At least one number</li>
+                                        <li>At least one symbol (e.g., ! @ # $ %)</li>
+                                        <li>Must be different from your current password</li>
+                                    </ul>
+                                </div>
 
                                 <button class="btn btn-dark w-100" type="submit">Update Password</button>
                             </form>
@@ -502,66 +524,51 @@
         </div>
     </div>
 
-    {{-- Frontend demo JS for account settings --}}
+    {{-- Removed demo JS that overwrote dynamic account data --}}
     <script>
-document.addEventListener('DOMContentLoaded', () => {
-    console.log("🧩 Account Settings Frontend Demo Active");
+    document.addEventListener('DOMContentLoaded', () => {
+        // Only auto-open the Account Settings modal when the server explicitly
+        // requests a specific tab (e.g., after profile updates). Avoid opening
+        // it for unrelated flash messages like 'Role updated' from Admin page.
+        @if (session('account_tab'))
+            const modalEl = document.getElementById('accountSettingsModal');
+            if (modalEl) {
+                const modal = new bootstrap.Modal(modalEl);
+                modal.show();
+                const activeTab = @json(session('account_tab','username'));
+                const trigger = document.querySelector(`[data-bs-target="#${activeTab}Tab"]`);
+                if (trigger) {
+                    const tab = new bootstrap.Tab(trigger);
+                    tab.show();
+                }
+            }
+        @endif
 
-    // Load stored demo account info
-    const saved = JSON.parse(localStorage.getItem('demoAccountInfo')) || {
-        username: 'Admin User',
-        email: 'admin@uprm.edu',
-    };
-
-    // Fill modal display fields
-    document.querySelectorAll('#usernameTab input[readonly]').forEach(el => el.value = saved.username);
-    document.querySelectorAll('#emailTab input[readonly]').forEach(el => el.value = saved.email);
-
-    // Update Username handler
-    document.querySelector('#usernameTab button').addEventListener('click', () => {
-        const newUsername = document.querySelector('#usernameTab input[placeholder]').value.trim();
-        if (!newUsername) return alert('⚠️ Please enter a new username.');
-
-        saved.username = newUsername;
-        localStorage.setItem('demoAccountInfo', JSON.stringify(saved));
-
-        // Update displayed username
-        document.querySelectorAll('#usernameTab input[readonly]').forEach(el => el.value = newUsername);
-        if (document.querySelector('#userNameDisplay')) {
-            document.querySelector('#userNameDisplay').innerText = newUsername;
+        // Password fields: show as text on focus, mask on blur
+        function autoShowPassword(inputId) {
+            const input = document.getElementById(inputId);
+            if (!input) return;
+            input.addEventListener('focus', function() {
+                input.type = 'text';
+            });
+            input.addEventListener('blur', function() {
+                input.type = 'password';
+            });
         }
-
-        alert('✅ Username updated (frontend demo only)');
+        // Attach to all password fields in Account Settings modal
+        function attachAutoShowAll() {
+            autoShowPassword('acc_current_password');
+            autoShowPassword('acc_new_password');
+            autoShowPassword('acc_new_password_confirmation');
+        }
+        // Attach on page load and when modal is shown
+        attachAutoShowAll();
+        const modalEl2 = document.getElementById('accountSettingsModal');
+        if (modalEl2) {
+            modalEl2.addEventListener('shown.bs.modal', attachAutoShowAll);
+        }
     });
-
-    // Update Email handler
-    document.querySelector('#emailTab button').addEventListener('click', () => {
-        const newEmail = document.querySelector('#emailTab input[placeholder]').value.trim();
-        if (!newEmail.includes('@')) return alert('⚠️ Enter a valid email address.');
-
-        saved.email = newEmail;
-        localStorage.setItem('demoAccountInfo', JSON.stringify(saved));
-
-        // Update displayed email
-        document.querySelectorAll('#emailTab input[readonly]').forEach(el => el.value = newEmail);
-
-        alert('✅ Email updated (frontend demo only)');
-    });
-
-    // Update Password handler
-    document.querySelector('#passwordTab button').addEventListener('click', () => {
-        const current = document.querySelector('#passwordTab input[placeholder="Enter current password"]').value;
-        const newPass = document.querySelector('#passwordTab input[placeholder="Enter new password"]').value;
-        const confirm = document.querySelector('#passwordTab input[placeholder="Confirm new password"]').value;
-
-        if (!newPass || newPass.length < 6) return alert('⚠️ Password must be at least 6 characters.');
-        if (newPass !== confirm) return alert('❌ Passwords do not match.');
-
-        alert('🔒 Password updated (frontend demo only)');
-        document.querySelectorAll('#passwordTab input').forEach(i => i.value = '');
-    });
-});
-</script>
+    </script>
 
 {{-- Critical device notifications --}}
 <script>

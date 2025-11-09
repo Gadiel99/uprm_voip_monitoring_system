@@ -12,8 +12,11 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
-        'admin' => \App\Http\Middleware\AdminOnly::class,
+            'admin' => \App\Http\Middleware\AdminOnly::class,
         ]);
+        // Mark authenticated users as online for a short TTL to display
+        // online/offline status in the Admin -> Users table.
+        $middleware->appendToGroup('web', [\App\Http\Middleware\MarkUserOnline::class]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

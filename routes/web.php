@@ -56,17 +56,6 @@ Route::middleware('auth')->group(function () {
 
     Route::view('/help', 'pages.help')->name('help');
 
-    // User Preview (admins only): toggles limited UI without leaving session
-    Route::post('/enter-user-preview', function () {
-        session()->put('user_preview', true);
-        return back();
-    })->middleware('admin')->name('enter.user.preview');
-
-    Route::post('/exit-user-preview', function () {
-        session()->forget('user_preview');
-        return back();
-    })->middleware('admin')->name('exit.user.preview');
-
     // Profile management routes (Breeze-like)
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
@@ -76,8 +65,8 @@ Route::middleware('auth')->group(function () {
     // Legacy compatibility to avoid 404s and old bookmarks/forms
     Route::get('/profile/username', fn () => redirect()->route('profile.edit'));
     Route::get('/profile/email', fn () => redirect()->route('profile.edit'));
-    Route::patch('/profile/username', [ProfileController::class, 'updateUsername']);
-    Route::patch('/profile/email', [ProfileController::class, 'updateEmail']);
+    Route::patch('/profile/username', [ProfileController::class, 'updateUsername'])->name('profile.username');
+    Route::patch('/profile/email', [ProfileController::class, 'updateEmail'])->name('profile.email');
 });
 
 /*

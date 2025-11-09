@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\View\View;
 
 /**
@@ -65,11 +66,18 @@ class ProfileController extends Controller
      */
     public function updateUsername(Request $request): RedirectResponse
     {
-        $validated = $request->validate([
-            'name' => ['required','string','max:255'],
+        $validator = Validator::make($request->all(), [
+            'name' => ['required','string','min:2','max:255','regex:/\S/'],
         ]);
-
-        $request->user()->update(['name' => $validated['name']]);
+        if ($validator->fails()) {
+            return Redirect::back()
+                ->withErrors($validator)
+                ->withInput()
+                ->with('account_tab', 'username');
+        }
+        $validated = $validator->validated();
+        $clean = trim($validated['name']);
+        $request->user()->update(['name' => $clean]);
 
         return Redirect::to($this->targetUrl($request))
             ->with('status', 'username-updated')
@@ -84,15 +92,21 @@ class ProfileController extends Controller
      */
     public function updateEmail(Request $request): RedirectResponse
     {
-        $validated = $request->validate([
+        $validator = Validator::make($request->all(), [
             'email' => [
-                'required','string','email','max:255',
+                'required','string','email:rfc','max:255',
                 Rule::unique('users','email')->ignore($request->user()->id),
             ],
         ]);
-
+        if ($validator->fails()) {
+            return Redirect::back()
+                ->withErrors($validator)
+                ->withInput()
+                ->with('account_tab', 'email');
+        }
+        $validated = $validator->validated();
         $u = $request->user();
-        $u->email = strtolower($validated['email']);
+        $u->email = strtolower(trim($validated['email']));
         if ($u->isDirty('email')) {
             $u->email_verified_at = null;
         }
@@ -111,13 +125,28 @@ class ProfileController extends Controller
      */
     public function updatePassword(Request $request): RedirectResponse
     {
-        $request->validate([
-            'current_password' => ['required','current_password'],
-            'password'         => ['required', Password::min(8)->uncompromised(), 'confirmed'],
-        ]);
-
         $u = $request->user();
-        $u->password = Hash::make($request->password);
+        $validator = Validator::make($request->all(), [
+            'current_password' => ['required','current_password'],
+            'password' => [
+                'required','string',
+                Password::min(8)->max(64)->mixedCase()->letters()->numbers()->symbols()->uncompromised(),
+                'confirmed',
+                function($attribute,$value,$fail) use ($u) {
+                    if (Hash::check($value, $u->password)) {
+                        $fail('The new password must be different from the current password.');
+                    }
+                },
+            ],
+        ]);
+        if ($validator->fails()) {
+            return Redirect::back()
+                ->withErrors($validator)
+                ->withInput()
+                ->with('account_tab', 'password');
+        }
+        $validated = $validator->validated();
+        $u->password = Hash::make($validated['password']);
         $u->save();
 
         return Redirect::to($this->targetUrl($request))
