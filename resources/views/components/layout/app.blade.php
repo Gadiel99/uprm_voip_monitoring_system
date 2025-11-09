@@ -211,6 +211,10 @@
     @php
         // Check if user preview mode is active
         $isUserPreview = session('user_preview', false);
+        // Determine if authenticated user is admin or super_admin
+        $roleRaw = Auth::user()->role ?? null;
+        $normalizedRole = $roleRaw ? strtolower(str_replace('_','', $roleRaw)) : null;
+        $isAdminRole = in_array($normalizedRole, ['admin','superadmin']);
     @endphp
 
     {{-- Navbar: branding, notificaciones, menú de usuario y "User Preview" --}}
@@ -390,8 +394,8 @@
                         </a>
                     </li>
 
-                    {{-- Admin tab only if not in user preview --}}
-                    @if (! $isUserPreview)
+                    {{-- Admin tab only for admins and not in user preview --}}
+                    @if ($isAdminRole && ! $isUserPreview)
                         <li class="nav-item">
                             <a
                                 href="{{ url('/admin') }}"

@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\DevicesController;
 use App\Http\Controllers\AdminUserController;
+use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AccountController;
 use App\Http\Controllers\ProfileController; // <-- add
 
@@ -83,15 +84,17 @@ Route::middleware('auth')->group(function () {
 | a server-driven Users tab backed by AdminUserController.
 |--------------------------------------------------------------------------
 */
-// Route::post('/enter-user-preview', function () {
-//     Session::put('user_preview', true);
-//     return redirect('/')->with('activeTab', 'home');
-// })->name('enter.user.preview');
+Route::middleware(['auth','admin'])->group(function () {
+    // Admin dashboard
+    Route::get('/admin', [AdminController::class, 'index'])->name('admin');
 
-// Route::post('/exit-user-preview', function () {
-//     Session::forget('user_preview');
-//     return back();
-// })->name('exit.user.preview');
+    // Users tab (DB-backed)
+    Route::get('/admin/users', [AdminUserController::class, 'index'])->name('admin.users');
+    Route::post('/admin/users', [AdminUserController::class, 'store'])->name('admin.users.store');
+    Route::patch('/admin/users/{user}', [AdminUserController::class, 'update'])->name('admin.users.update');
+    Route::patch('/admin/users/{user}/role', [AdminUserController::class, 'updateRole'])->name('admin.users.role');
+    Route::delete('/admin/users/{user}', [AdminUserController::class, 'destroy'])->name('admin.users.destroy');
+});
 
 /*
 |--------------------------------------------------------------------------

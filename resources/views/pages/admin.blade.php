@@ -262,6 +262,20 @@
                 <h5 class="fw-semibold mb-3">User Management</h5>
                 <p class="text-muted small">Manage system users, roles, and access permissions.</p>
 
+                {{-- Flash messages --}}
+                @if (session('status'))
+                    <div class="alert alert-success py-2">{{ session('status') }}</div>
+                @endif
+                @if ($errors->any())
+                    <div class="alert alert-danger py-2">
+                        <ul class="mb-0">
+                            @foreach ($errors->all() as $err)
+                                <li>{{ $err }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
+
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addUserModal">
                         <i class="bi bi-person-plus me-2"></i>Add User
@@ -274,41 +288,96 @@
                             <th>Name</th>
                             <th>Email</th>
                             <th>Role</th>
+                            <th>Created</th>
                             <th>Status</th>
-                            <th style="width:120px;">Actions</th>
+                            <th style="width:200px;">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <tr>
-                            <td>Admin</td>
-                            <td>admin@uprm.edu</td>
-                            <td>Admin</td>
-                            <td><span class="badge badge-online">Active</span></td>
-                            <td>
-                                <button class="btn btn-sm btn-outline-secondary edit-btn"><i class="bi bi-pencil"></i></button>
-                                <button class="btn btn-sm btn-danger delete-btn"><i class="bi bi-trash"></i></button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>Operator</td>
-                            <td>operator@uprm.edu</td>
-                            <td>User</td>
-                            <td><span class="badge badge-online">Active</span></td>
-                            <td>
-                                <button class="btn btn-sm btn-outline-secondary edit-btn"><i class="bi bi-pencil"></i></button>
-                                <button class="btn btn-sm btn-danger delete-btn"><i class="bi bi-trash"></i></button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>Guest</td>
-                            <td>guest@uprm.edu</td>
-                            <td>User</td>
-                            <td><span class="badge badge-offline">Inactive</span></td>
-                            <td>
-                                <button class="btn btn-sm btn-outline-secondary edit-btn"><i class="bi bi-pencil"></i></button>
-                                <button class="btn btn-sm btn-danger delete-btn"><i class="bi bi-trash"></i></button>
-                            </td>
-                        </tr>
+                        @isset($users)
+                            @forelse($users as $u)
+                                <tr>
+                                    <td>{{ $u->name }}</td>
+                                    <td>{{ $u->email }}</td>
+                                    <td>
+                                        <span class="badge bg-{{ in_array($u->role,['admin','super_admin']) ? 'success' : 'secondary' }}">{{ $u->role }}</span>
+                                    </td>
+                                    <td>{{ $u->created_at?->diffForHumans() ?? '—' }}</td>
+                                    <td>
+                                        @php $active = !is_null($u->email_verified_at); @endphp
+                                        <span class="badge {{ $active ? 'badge-online' : 'badge-offline' }}">{{ $active ? 'Active' : 'Inactive' }}</span>
+                                    </td>
+                                    <td class="d-flex gap-1">
+                                        {{-- Edit user modal trigger --}}
+                                        <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#editUserModal-{{ $u->id }}" title="Edit user">
+                                            <i class="bi bi-pencil"></i>
+                                        </button>
+                                        @if(auth()->user()->role === 'super_admin' && $u->id !== auth()->id() && $u->role !== 'super_admin')
+                                            <form action="{{ route('admin.users.role', $u) }}" method="POST" class="d-inline">
+                                                @csrf
+                                                @method('PATCH')
+                                                <input type="hidden" name="role" value="{{ $u->role === 'admin' ? 'user' : 'admin' }}">
+                                                <button class="btn btn-sm btn-outline-secondary" title="Toggle role"><i class="bi bi-shuffle"></i></button>
+                                            </form>
+                                        @endif
+                                        @if($u->id !== auth()->id() && $u->role !== 'super_admin')
+                                            <form action="{{ route('admin.users.destroy', $u) }}" method="POST" onsubmit="return confirm('Delete user {{ $u->name }}?')">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button class="btn btn-sm btn-danger"><i class="bi bi-trash"></i></button>
+                                            </form>
+                                        @endif
+                                    </td>
+                                </tr>
+                                {{-- Edit User Modal --}}
+                                <div class="modal fade" id="editUserModal-{{ $u->id }}" tabindex="-1" aria-labelledby="editUserModalLabel-{{ $u->id }}" aria-hidden="true">
+                                  <div class="modal-dialog">
+                                    <div class="modal-content border-0 shadow-sm">
+                                      <div class="modal-header bg-success text-white">
+                                        <h5 class="modal-title" id="editUserModalLabel-{{ $u->id }}"><i class="bi bi-person-gear me-2"></i>Edit User</h5>
+                                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                      </div>
+                                      <form method="POST" action="{{ route('admin.users.update', $u) }}">
+                                        @csrf
+                                        @method('PATCH')
+                                        <div class="modal-body">
+                                            <div class="mb-3">
+                                                <label class="form-label fw-semibold">Name</label>
+                                                <input type="text" name="name" class="form-control" value="{{ $u->name }}" required>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label fw-semibold">Email</label>
+                                                <input type="email" name="email" class="form-control" value="{{ $u->email }}" required>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label fw-semibold">New Password <small class="text-muted">(optional)</small></label>
+                                                <input type="password" name="password" class="form-control" placeholder="Leave blank to keep current">
+                                            </div>
+                                            @if(auth()->user()->role === 'super_admin')
+                                            <div class="mb-3">
+                                                <label class="form-label fw-semibold">Role</label>
+                                                <select class="form-select" name="role">
+                                                    <option value="user" {{ $u->role === 'user' ? 'selected' : '' }}>User</option>
+                                                    <option value="admin" {{ $u->role === 'admin' ? 'selected' : '' }}>Admin</option>
+                                                    <option value="super_admin" {{ $u->role === 'super_admin' ? 'selected' : '' }}>Super Admin</option>
+                                                </select>
+                                            </div>
+                                            @endif
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                            <button type="submit" class="btn btn-success">Save Changes</button>
+                                        </div>
+                                      </form>
+                                    </div>
+                                  </div>
+                                </div>
+                            @empty
+                                <tr><td colspan="5" class="text-center text-muted">No users found.</td></tr>
+                            @endforelse
+                        @else
+                            <tr><td colspan="5" class="text-center text-muted">User data unavailable.</td></tr>
+                        @endisset
                     </tbody>
                 </table>
             </div>
@@ -316,18 +385,7 @@
 
     </div>
 
-    {{-- Users (server-driven, DB-backed). Hide when mock-up tabs are shown. --}}
-    @if ($isUsersServer)
-        <div id="usersServerSection" class="card border-0 shadow-sm p-4 mb-4">
-            <div class="d-flex justify-content-between align-items-center mb-2">
-                <div>
-                    <h5 class="fw-semibold mb-1">User Management</h5>
-                    <small class="text-muted">Manage users and roles. Only super admin can promote/demote admins.</small>
-                </div>
-                <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addUserModalDB">
-                    <i class="bi bi-person-plus me-2"></i>Add User
-                </button>
-            </div>
+</div>
 
 {{-- ===================== MODALS ===================== --}}
 
@@ -409,50 +467,63 @@
   </div>
 </div>
 
-{{-- Add User --}}
+{{-- Add User (server-side) --}}
 <div class="modal fade" id="addUserModal" tabindex="-1" aria-labelledby="addUserModalLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content border-0 shadow-sm">
-      <div class="modal-header bg-success text-white">
-        <h5 class="modal-title" id="addUserModalLabel"><i class="bi bi-person-plus me-2"></i>Add User</h5>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-      </div>
-      <form id="formAddUser">
-        <div class="modal-body">
-            <div class="mb-3">
-                <label class="form-label fw-semibold">Name</label>
-                <input type="text" class="form-control" id="user_name" placeholder="Full name" required>
+    <div class="modal-dialog">
+        <div class="modal-content border-0 shadow-sm">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title" id="addUserModalLabel"><i class="bi bi-person-plus me-2"></i>Add User</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
-            <div class="mb-3">
-                <label class="form-label fw-semibold">Email</label>
-                <input type="email" class="form-control" id="user_email" placeholder="example@uprm.edu" required>
-            </div>
-            <div class="mb-3">
-                <label class="form-label fw-semibold">Role</label>
-                <select class="form-select" id="user_role">
-                    <option>Admin</option>
-                    <option selected>User</option>
-                </select>
-            </div>
-            <div class="mb-3">
-                <label class="form-label fw-semibold">Status</label>
-                <select class="form-select" id="user_status">
-                    <option selected>Active</option>
-                    <option>Inactive</option>
-                </select>
-            </div>
+            <form method="POST" action="{{ route('admin.users.store') }}">
+                @csrf
+                <div class="modal-body">
+                        <div class="mb-3">
+                                <label class="form-label fw-semibold">Name</label>
+                                <input type="text" name="name" class="form-control" placeholder="Full name" required>
+                        </div>
+                        <div class="mb-3">
+                                <label class="form-label fw-semibold">Email</label>
+                                <input type="email" name="email" class="form-control" placeholder="example@uprm.edu" required>
+                        </div>
+                        <div class="mb-3">
+                                <label class="form-label fw-semibold">Password</label>
+                                <input type="password" name="password" class="form-control" placeholder="Min 8 characters" required>
+                        </div>
+                        <div class="mb-3">
+                                <label class="form-label fw-semibold">Role</label>
+                                <select class="form-select" name="role">
+                                        <option value="user" selected>User</option>
+                                        @if(auth()->user()->role === 'super_admin')
+                                                <option value="admin">Admin</option>
+                                                <option value="super_admin">Super Admin</option>
+                                        @endif
+                                </select>
+                        </div>
+                </div>
+                <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-success">Create User</button>
+                </div>
+            </form>
         </div>
-        <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-            <button type="submit" class="btn btn-success">Save</button>
-        </div>
-      </form>
     </div>
-  </div>
 </div>
 
 {{-- ===================== UNIVERSAL JS ===================== --}}
 <script>
+// Activate a requested tab from the server (e.g., when visiting /admin/users)
+document.addEventListener('DOMContentLoaded', () => {
+    const requested = @json($activeTab ?? null);
+    if (requested) {
+        const trigger = document.querySelector(`[data-bs-target="#${requested}"]`);
+        if (trigger) {
+            const tab = new bootstrap.Tab(trigger);
+            tab.show();
+        }
+    }
+});
+
 document.addEventListener('DOMContentLoaded', () => {
     ['criticalTable','serverTable','userTable'].forEach(enableTableActions);
 

@@ -43,6 +43,7 @@ class AdminUserController extends Controller
 
         return view('pages.admin', [
             'activeTab' => 'users',
+            'isUsersServer' => true,
             'users' => $users,
             'adminsCount' => $adminsCount,
             'superAdminsCount' => $superAdminsCount,
@@ -90,7 +91,7 @@ class AdminUserController extends Controller
             'role'     => $role,
         ]);
 
-        return back()->with('status', 'User created.');
+        return redirect()->route('admin', ['tab' => 'users'])->with('status', 'User created.');
     }
 
     /**
@@ -126,7 +127,7 @@ class AdminUserController extends Controller
         }
 
         $user->update(['role' => $request->role]);
-        return back()->with('status', 'Role updated.');
+        return redirect()->route('admin', ['tab' => 'users'])->with('status', 'Role updated.');
     }
 
     /**
@@ -159,6 +160,48 @@ class AdminUserController extends Controller
         }
 
         $user->delete();
-        return back()->with('status', 'User deleted.');
+        return redirect()->route('admin', ['tab' => 'users'])->with('status', 'User deleted.');
+    }
+
+    /**
+     * Actualiza datos básicos del usuario (nombre, email y password opcional).
+     * Solo super_admin puede cambiar el rol desde este endpoint (si se envía).
+     */
+    public function update(Request $request, User $user)
+    {
+        $rules = [
+            'name'  => ['required','string','max:255'],
+            'email' => ['required','email','max:255','unique:users,email,'.$user->id],
+            'password' => ['nullable', Password::min(8)],
+        ];
+
+        // Role only allowed for super_admin; if present, validate value
+        if ($request->filled('role')) {
+            $rules['role'] = ['in:user,admin,super_admin'];
+        }
+
+        $validated = $request->validate($rules);
+
+        $payload = [
+            'name'  => $validated['name'],
+            'email' => $validated['email'],
+        ];
+
+        if (!empty($validated['password'])) {
+            $payload['password'] = Hash::make($validated['password']);
+        }
+
+        // Only super_admin can change roles and cannot demote/alter a super_admin arbitrarily
+        if ($request->filled('role') && $request->user()->role === 'super_admin') {
+            // Protect unique super_admin: avoid making two accidentally
+            if (($validated['role'] ?? null) === 'super_admin' && User::where('role', 'super_admin')->where('id', '!=', $user->id)->exists()) {
+                return redirect()->route('admin', ['tab' => 'users'])->withErrors(['role' => 'There is already a super admin.']);
+            }
+            $payload['role'] = $validated['role'];
+        }
+
+        $user->update($payload);
+
+        return redirect()->route('admin', ['tab' => 'users'])->with('status', 'User updated.');
     }
 }

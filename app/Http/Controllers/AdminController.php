@@ -45,12 +45,17 @@ class AdminController extends Controller
 
         // Try to read last ~100 lines of the laravel.log for the "Logs" tab
         $logLines = $this->tailLaravelLog(100);
+        // Flag to let Blade know if we should show server-driven Users section
+        $isUsersServer = true;
 
         return view('pages.admin', [
-            'stats' => $stats,
-            'recentUsers' => $recentUsers,
-            'buildings' => $buildings,
-            'logLines' => $logLines,
+            'stats'         => $stats,
+            'recentUsers'   => $recentUsers,
+            'buildings'     => $buildings,
+            'logLines'      => $logLines,
+            'isUsersServer' => $isUsersServer,
+            'users'         => $recentUsers, // fallback for now; AdminUserController overrides
+            'activeTab'     => $request->get('tab') // optional active tab switching
         ]);
     }
 
