@@ -76,9 +76,6 @@
 @extends('components.layout.app')
 
 @section('content')
-{{-- Panel de Administración:
-   - Backup/Logs/Settings/Servers: mock-ups cliente (solo UI).
-   - Users: pestaña con datos reales desde el controlador (DB). --}}
 <style>
     /* === Institutional Green Theme === */
     .nav-pills .nav-link.active {
@@ -102,28 +99,6 @@
     .btn-success:hover { background-color: #006f3f; border-color: #006f3f; }
     .btn-outline-secondary:hover { background-color: #f1f3f4; color: #000; }
     .btn-danger:hover { background-color: #c82333; border-color: #c82333; color: #fff; }
-
-     /* === User table grid (custom instead of Bootstrap borders) ===
-         Approach: remove native table borders and draw a clean CSS grid using
-         row/column separators. Prevent double seams & header/body mismatch. */
-     #userTable { border-collapse: separate; border-spacing: 0; position: relative; }
-     #userTable thead th { background:#f8f9fa; font-weight:600; }
-     #userTable th, #userTable td { padding: .65rem .9rem; }
-     /* Horizontal lines */
-     #userTable tbody tr { border-top:1px solid #dee2e6; }
-     #userTable tbody tr:last-child { border-bottom:1px solid #dee2e6; }
-     /* Vertical lines: use pseudo-elements to avoid double borders */
-     #userTable thead tr, #userTable tbody tr { display: table-row; }
-     #userTable thead th, #userTable tbody td { position: relative; }
-     #userTable thead th:not(:first-child)::before,
-     #userTable tbody td:not(:first-child)::before {
-          content:''; position:absolute; top:0; bottom:0; left:0; width:1px; background:#dee2e6;
-     }
-     /* Outer frame */
-     #userTable-container { border:1px solid #dee2e6; border-radius:4px; overflow:hidden; }
-     #userTable td.actions-col { white-space:nowrap; }
-     /* Hover row (optional subtle) */
-     #userTable tbody tr:hover { background:#f5f7f8; }
 </style>
 
 <div class="container-fluid">
@@ -138,6 +113,7 @@
     </ul>
 
     <div class="tab-content" id="adminTabContent">
+
         {{-- BACKUP --}}
         <div class="tab-pane fade show active" id="backup" role="tabpanel">
             <div class="card border-0 shadow-sm p-4 mb-4">
@@ -284,124 +260,59 @@
                 <h5 class="fw-semibold mb-3">User Management</h5>
                 <p class="text-muted small">Manage system users, roles, and access permissions.</p>
 
-                {{-- Flash messages --}}
-                @if (session('status'))
-                    <div class="alert alert-success py-2">{{ session('status') }}</div>
-                @endif
-                @if ($errors->any())
-                    <div class="alert alert-danger py-2">
-                        <ul class="mb-0">
-                            @foreach ($errors->all() as $err)
-                                <li>{{ $err }}</li>
-                            @endforeach
-                        </ul>
-                    </div>
-                @endif
-
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addUserModal">
                         <i class="bi bi-person-plus me-2"></i>Add User
                     </button>
                 </div>
 
-                @isset($users)
-                <style>
-                    /* Minimal clean table styling (Bootstrap base + subtle grid) */
-                    .users-table { border:1px solid #dee2e6; border-radius:6px; overflow:hidden; }
-                    .users-table table { margin:0; border-collapse:collapse; }
-                    .users-table thead th { background:#f8f9fa; font-weight:600; }
-                    .users-table th, .users-table td { border-bottom:1px solid #e3e6e8; }
-                    .users-table th:not(:last-child), .users-table td:not(:last-child) { border-right:1px solid #e3e6e8; }
-                    .users-table tbody tr:last-child td { border-bottom:none; }
-                    .users-table tbody tr:hover { background:#f5f7f8; }
-                    .users-table td.actions-col { white-space:nowrap; text-align:center; }
-                    /* Compact action buttons */
-                    .users-action-btn { width:34px; height:34px; display:inline-flex; align-items:center; justify-content:center; padding:0; }
-                    .users-action-btn i { font-size:14px; line-height:1; }
-                    .badge-online  { background-color:#e6f9ed; color:#00844b; }
-                    .badge-offline { background-color:#fdeaea; color:#c82333; }
-                </style>
-                <div class="users-table mb-2">
-                    <table class="table table-sm align-middle mb-0">
-                        <thead>
-                            <tr>
-                                <th>Name</th>
-                                <th>Email</th>
-                                <th>Role</th>
-                                <th>Created</th>
-                                <th>Status</th>
-                                <th style="width:160px;">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                        @forelse($users as $u)
-                            @php $online = \Illuminate\Support\Facades\Cache::has('user-online-'.$u->id); @endphp
-                            @php $isActorAdmin = (strtolower(str_replace('_','', auth()->user()->role ?? '')) === 'admin'); @endphp
-                            @php $canEditRole = $isActorAdmin && $u->id !== auth()->id(); @endphp
-                            <tr>
-                                <td>{{ $u->name }}</td>
-                                <td>{{ $u->email }}</td>
-                                <td><span class="badge bg-{{ $u->role === 'admin' ? 'success' : 'secondary' }}">{{ $u->role }}</span></td>
-                                <td>{{ $u->created_at?->diffForHumans() ?? '—' }}</td>
-                                <td><span class="badge {{ $online ? 'badge-online' : 'badge-offline' }}">{{ $online ? 'Online' : 'Offline' }}</span></td>
-                                <td class="actions-col">
-                                    @if($canEditRole)
-                                        <button class="btn btn-outline-secondary users-action-btn" data-bs-toggle="modal" data-bs-target="#editUserModal-{{ $u->id }}" title="Change role"><i class="bi bi-person-gear"></i></button>
-                                    @endif
-                                    @if($u->id !== auth()->id())
-                                        <form action="{{ route('admin.users.destroy', $u) }}" method="POST" onsubmit="return confirm('Delete user {{ $u->name }}?')" class="d-inline-block m-0">
-                                            @csrf @method('DELETE')
-                                            <button class="btn btn-danger users-action-btn" title="Delete user"><i class="bi bi-trash"></i></button>
-                                        </form>
-                                    @endif
-                                    @if(!$canEditRole && $u->id === auth()->id())
-                                        <span class="text-muted small">—</span>
-                                    @endif
-                                </td>
-                            </tr>
-                            <div class="modal fade" id="editUserModal-{{ $u->id }}" tabindex="-1" aria-hidden="true">
-                              <div class="modal-dialog">
-                                <div class="modal-content border-0 shadow-sm">
-                                  <div class="modal-header bg-success text-white">
-                                    <h5 class="modal-title"><i class="bi bi-person-gear me-2"></i>Change Role</h5>
-                                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                                  </div>
-                                  <form method="POST" action="{{ route('admin.users.update', $u) }}">
-                                    @csrf @method('PATCH')
-                                    <div class="modal-body">
-                                        @if($canEditRole)
-                                            <label class="form-label fw-semibold">Role</label>
-                                            <select class="form-select" name="role" required>
-                                                <option value="user" {{ $u->role === 'user' ? 'selected' : '' }}>User</option>
-                                                <option value="admin" {{ $u->role === 'admin' ? 'selected' : '' }}>Admin</option>
-                                            </select>
-                                            <small class="text-muted">Change only the role; credentials are managed by the user.</small>
-                                        @else
-                                            <div class="text-muted small">You cannot change this user's role.</div>
-                                        @endif
-                                    </div>
-                                    <div class="modal-footer">
-                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                                        <button type="submit" class="btn btn-success" {{ !$canEditRole ? 'disabled' : '' }}>Save Role</button>
-                                    </div>
-                                  </form>
-                                </div>
-                              </div>
-                            </div>
-                        @empty
-                            <tr><td colspan="6" class="text-center text-muted">No users found.</td></tr>
-                        @endforelse
-                        </tbody>
-                    </table>
-                </div>
-                @else
-                    <div class="text-muted small">User data unavailable.</div>
-                @endisset
+                <table class="table table-bordered align-middle" id="userTable">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Role</th>
+                            <th>Status</th>
+                            <th style="width:120px;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Admin</td>
+                            <td>admin@uprm.edu</td>
+                            <td>Admin</td>
+                            <td><span class="badge badge-online">Active</span></td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-secondary edit-btn"><i class="bi bi-pencil"></i></button>
+                                <button class="btn btn-sm btn-danger delete-btn"><i class="bi bi-trash"></i></button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Operator</td>
+                            <td>operator@uprm.edu</td>
+                            <td>User</td>
+                            <td><span class="badge badge-online">Active</span></td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-secondary edit-btn"><i class="bi bi-pencil"></i></button>
+                                <button class="btn btn-sm btn-danger delete-btn"><i class="bi bi-trash"></i></button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Guest</td>
+                            <td>guest@uprm.edu</td>
+                            <td>User</td>
+                            <td><span class="badge badge-offline">Inactive</span></td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-secondary edit-btn"><i class="bi bi-pencil"></i></button>
+                                <button class="btn btn-sm btn-danger delete-btn"><i class="bi bi-trash"></i></button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
         </div>
 
     </div>
-
 </div>
 
 {{-- ===================== MODALS ===================== --}}
@@ -484,105 +395,56 @@
   </div>
 </div>
 
-{{-- Add User (server-side) --}}
+{{-- Add User --}}
 <div class="modal fade" id="addUserModal" tabindex="-1" aria-labelledby="addUserModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content border-0 shadow-sm">
-            <div class="modal-header bg-success text-white">
-                <h5 class="modal-title" id="addUserModalLabel"><i class="bi bi-person-plus me-2"></i>Add User</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+  <div class="modal-dialog">
+    <div class="modal-content border-0 shadow-sm">
+      <div class="modal-header bg-success text-white">
+        <h5 class="modal-title" id="addUserModalLabel"><i class="bi bi-person-plus me-2"></i>Add User</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <form id="formAddUser">
+        <div class="modal-body">
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Name</label>
+                <input type="text" class="form-control" id="user_name" placeholder="Full name" required>
             </div>
-        <form method="POST" action="{{ route('admin.users.store') }}">
-                @csrf
-                <div class="modal-body">
-                        <div class="mb-3">
-                                <label class="form-label fw-semibold">Name</label>
-                <input type="text" name="name" class="form-control" placeholder="Full name" value="{{ old('name') }}" minlength="2" maxlength="255" pattern=".*\S.*" title="Name cannot be blank or whitespace only" required>
-                        </div>
-                        <div class="mb-3">
-                                <label class="form-label fw-semibold">Email</label>
-                <input type="email" name="email" class="form-control" placeholder="example@uprm.edu" value="{{ old('email') }}" required>
-                        </div>
-                        <div class="mb-3">
-                                <label class="form-label fw-semibold">Password</label>
-                                <input type="password" id="addUser_password" name="password" class="form-control" placeholder="Example: CampusNet#24!" minlength="8" maxlength="64" pattern=".{8,64}" autocomplete="new-password" inputmode="text" title="Use 8-64 characters with upper- and lowercase letters, a number, and a symbol" required>
-                                <div class="text-muted small mt-2">
-                                    Password requirements:
-                                    <ul class="small mb-0">
-                                        <li>8–64 characters</li>
-                                        <li>At least one uppercase and one lowercase letter</li>
-                                        <li>At least one number</li>
-                                        <li>At least one symbol (e.g., ! @ # $ %)</li>
-                                    </ul>
-                                </div>
-                        </div>
-                        <div class="mb-3">
-                                <label class="form-label fw-semibold">Role</label>
-                <select class="form-select" name="role">
-                    <option value="user" selected>User</option>
-                    <option value="admin">Admin</option>
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Email</label>
+                <input type="email" class="form-control" id="user_email" placeholder="example@uprm.edu" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Role</label>
+                <select class="form-select" id="user_role">
+                    <option>Admin</option>
+                    <option selected>User</option>
                 </select>
-                <small class="text-muted">Admins can create other admins or regular users.</small>
-                        </div>
-                </div>
-                <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-success">Create User</button>
-                </div>
-            </form>
+            </div>
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Status</label>
+                <select class="form-select" id="user_status">
+                    <option selected>Active</option>
+                    <option>Inactive</option>
+                </select>
+            </div>
         </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" class="btn btn-success">Save</button>
+        </div>
+      </form>
     </div>
+  </div>
 </div>
 
 {{-- ===================== UNIVERSAL JS ===================== --}}
 <script>
-// Activate a requested tab from the server (e.g., when visiting /admin/users)
-document.addEventListener('DOMContentLoaded', () => {
-    const requested = @json($activeTab ?? null);
-    if (requested) {
-        const trigger = document.querySelector(`[data-bs-target="#${requested}"]`);
-        if (trigger) {
-            const tab = new bootstrap.Tab(trigger);
-            tab.show();
-        }
-    }
-});
-
 document.addEventListener('DOMContentLoaded', () => {
     ['criticalTable','serverTable','userTable'].forEach(enableTableActions);
 
-    document.getElementById('formAddCritical')?.addEventListener('submit', onAddCritical);
-    document.getElementById('formAddServer')?.addEventListener('submit', onAddServer);
-    // This form is not present for server-side Add User; guard to avoid JS errors stopping the rest
-    const addUserMockForm = document.getElementById('formAddUser');
-    if (addUserMockForm) addUserMockForm.addEventListener('submit', onAddUser);
-    
-    // Password fields: show as text on focus, mask on blur
-    function autoShowPassword(inputId) {
-        const input = document.getElementById(inputId);
-        if (!input) return;
-        
-        // Mark input as initialized to prevent duplicate listeners
-        if (input.dataset.passwordListenerAdded) return;
-        input.dataset.passwordListenerAdded = 'true';
-        
-        input.addEventListener('focus', function() {
-            input.type = 'text';
-        });
-        input.addEventListener('blur', function() {
-            input.type = 'password';
-        });
-    }
-    // Attach to Add User modal password field
-    function attachAutoShowAll() {
-        autoShowPassword('addUser_password');
-    }
-    // Attach on page load and when modal is shown
-    attachAutoShowAll();
-    const addUserModal = document.getElementById('addUserModal');
-    if (addUserModal) {
-        addUserModal.addEventListener('shown.bs.modal', attachAutoShowAll);
-    }
+    document.getElementById('formAddCritical').addEventListener('submit', onAddCritical);
+    document.getElementById('formAddServer').addEventListener('submit', onAddServer);
+    document.getElementById('formAddUser').addEventListener('submit', onAddUser);
 });
 
 function enableTableActions(tableId) {
@@ -959,6 +821,33 @@ function clearLogs() {
 
 // Load logs when Logs tab is shown
 document.addEventListener('DOMContentLoaded', () => {
+    // Merge backend logs with frontend logs
+    const backendLogs = @json($systemLogs ?? []);
+    if (backendLogs.length > 0) {
+        let frontendLogs = getLogs();
+        
+        // Merge and remove duplicates based on timestamp + message
+        const mergedLogs = [...backendLogs, ...frontendLogs];
+        const uniqueLogs = mergedLogs.reduce((acc, log) => {
+            const key = `${log.timestamp}-${log.message}`;
+            if (!acc.some(l => `${l.timestamp}-${l.message}` === key)) {
+                acc.push(log);
+            }
+            return acc;
+        }, []);
+        
+        // Sort by timestamp descending
+        uniqueLogs.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+        
+        // Keep only last 500
+        if (uniqueLogs.length > 500) {
+            uniqueLogs.length = 500;
+        }
+        
+        // Save merged logs
+        localStorage.setItem('systemLogs', JSON.stringify(uniqueLogs));
+    }
+    
     updateLogsDisplay();
     
     // Add initial system startup log if no logs exist
@@ -969,6 +858,15 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Load saved alert display settings
     loadAlertDisplaySettings();
+    
+    // Add event listeners for tab navigation logging
+    const tabButtons = document.querySelectorAll('#adminTab button[data-bs-toggle="tab"]');
+    tabButtons.forEach(button => {
+        button.addEventListener('shown.bs.tab', (e) => {
+            const tabName = e.target.textContent.trim();
+            addLog('INFO', `Admin accessed ${tabName} tab`, 'Admin');
+        });
+    });
 });
 
 /* ==================== ALERT DISPLAY SETTINGS ==================== */

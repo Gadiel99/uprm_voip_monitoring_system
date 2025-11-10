@@ -16,7 +16,10 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
         // Mark authenticated users as online for a short TTL to display
         // online/offline status in the Admin -> Users table.
-        $middleware->appendToGroup('web', [\App\Http\Middleware\MarkUserOnline::class]);
+        $middleware->appendToGroup('web', [
+            \App\Http\Middleware\MarkUserOnline::class,
+            \App\Http\Middleware\LogPageAccess::class, // Log all page accesses
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

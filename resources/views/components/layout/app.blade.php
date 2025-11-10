@@ -270,7 +270,7 @@
                             <a
                                 class="dropdown-item text-danger"
                                 href="#"
-                                onclick="event.preventDefault(); document.getElementById('logoutForm').submit();"
+                                onclick="event.preventDefault(); logLogoutAndSubmit();"
                             >
                                 <i class="bi bi-box-arrow-right me-2"></i>
                                 Logout
@@ -669,12 +669,29 @@ document.addEventListener('DOMContentLoaded', function() {
     addLog('INFO', `Navigated to ${pageName} page`);
 });
 
-// Log logout
-const logoutBtn = document.querySelector('form[action*="logout"] button');
-if (logoutBtn) {
-    logoutBtn.addEventListener('click', function() {
-        addLog('INFO', 'User logged out from system');
+// Log logout action and submit form
+function logLogoutAndSubmit() {
+    const userEmail = '{{ Auth::user()->email ?? "Unknown" }}';
+    
+    // Add logout log to localStorage
+    const logs = JSON.parse(localStorage.getItem('systemLogs') || '[]');
+    const timestamp = new Date().toISOString().replace('T', ' ').substring(0, 19);
+    
+    logs.unshift({
+        timestamp: timestamp,
+        type: 'INFO',
+        message: 'User logged out from system',
+        user: userEmail,
+        id: Date.now()
     });
+    
+    // Keep only last 500 logs
+    if (logs.length > 500) logs.pop();
+    
+    localStorage.setItem('systemLogs', JSON.stringify(logs));
+    
+    // Submit the logout form
+    document.getElementById('logoutForm').submit();
 }
 </script>
 </body>
