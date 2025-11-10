@@ -88,22 +88,22 @@
         <h6 class="fw-bold">Getting Started</h6>
         <ol class="mb-4">
             <li>
-                <strong>Dashboard Overview:</strong> Start at the <strong>Home</strong> tab to view the interactive campus map and latest system reports. 
-                Each marker represents a building and is color-coded by alert severity. 
-                Click a building marker to open its detailed view in the <strong>Alerts</strong> tab.
+                <strong>Dashboard Overview:</strong> Start at the <strong>Home</strong> tab to view the interactive campus map and building markers. 
+                Each marker represents a building and is color-coded by alert severity (Green = Normal, Yellow = Warning, Red = Critical). 
+                Click a building marker to view its detailed alerts in the <strong>Alerts</strong> tab.
             </li>
             <li>
                 <strong>Monitor Alerts:</strong> Go to the <strong>Alerts</strong> tab to see current notifications. 
                 Critical alerts require immediate attention and are highlighted in red. 
-                You can sort alerts by <em>severity</em> or <em>alphabetically</em> in <strong>Admin → Settings</strong>.
+                You can sort alerts by <em>severity</em> or <em>alphabetically</em> in <strong>Admin → Settings → Alert Display Settings</strong>.
             </li>
             <li>
-                <strong>Device Management:</strong> Use the <strong>Devices</strong> tab to monitor all connected phones. 
-                Click on any device row to open its <strong>activity graph</strong> for the past month 
-                (green = active, red = inactive).
+                <strong>Device Management:</strong> Use the <strong>Devices</strong> tab to monitor all connected devices. 
+                Click on any building to view its devices, then click on any device row to open its <strong>30-day activity graph</strong> 
+                (green points = active, red points = inactive).
             </li>
             <li>
-                <strong>System Health:</strong> The <strong>Diagnostics</strong> tab provides metrics for devices and buildings across all monitored servers.
+                <strong>Reports:</strong> The <strong>Reports</strong> tab allows you to search and filter devices by user, MAC address, IP address, status, and building.
             </li>
         </ol>
 
@@ -113,15 +113,16 @@
 
         <h6 class="fw-semibold mt-3">Understanding Severity Levels:</h6>
         <ul class="mb-3">
-            <li><span class="text-danger fw-bold">Critical:</span> Immediate action required — system failure or major outage</li>
-            <li><span class="text-warning fw-bold">Medium:</span> Warning condition — monitor closely</li>
-            <li><span class="text-info fw-bold">Low:</span> Informational — routine or resolved system event</li>
+            <li><span class="text-danger fw-bold">Critical:</span> Immediate action required — system failure or major outage (>25% devices offline)</li>
+            <li><span class="text-warning fw-bold">Warning:</span> Warning condition — monitor closely (10-25% devices offline)</li>
+            <li><span class="text-success fw-bold">Normal:</span> System operating normally — all devices functioning properly (<10% devices offline)</li>
         </ul>
 
         {{-- Instructions for interacting with alerts --}}
         <p>
-            <strong>Alert Actions:</strong> Click any alert to view detailed information, acknowledge warnings, or mark issues as resolved. 
-            Building summaries show total affected devices and time since last update.
+            <strong>Alert Badges:</strong> The Alerts page displays count badges showing the number of Critical, Warning, and Normal alerts. 
+            Click on any building to view detailed device-level information and affected devices. 
+            Building summaries show total offline devices out of total devices.
         </p>
 
         {{-- ================= DEVICES ================= --}}
@@ -133,32 +134,24 @@
             <li><span class="text-danger fw-bold">Offline:</span> Device is not responding or disconnected</li>
         </ul>
         <p>
-            Use the <strong>Devices</strong> tab to filter devices by building and quickly identify issues. 
-            Each entry shows the device’s server, user, MAC, and IP address.
+            Use the <strong>Devices</strong> tab to view all buildings and their device statistics. 
+            Click on any building to see detailed device information including: 
+            <strong>IP Address, MAC Address, Owner, Extensions,</strong> and <strong>Status</strong>. 
+            Click on any device row to view its 30-day activity graph showing connection history.
+        </p>
+        <p>
+            <strong>Critical Devices:</strong> High-priority devices are displayed in a separate table at the top of the Devices page 
+            and can be managed in the <strong>Admin → Settings</strong> panel.
         </p>
 
         {{-- ================= SETTINGS ================= --}}
         {{-- How to configure thresholds and notifications --}}
-        <h6 class="fw-bold mt-4">Configuring Thresholds & Notifications</h6>
+        <h6 class="fw-bold mt-4">Configuring Settings</h6>
         <ul class="mb-3">
-            <li><strong>Access Settings:</strong> Go to <strong>Admin → Settings</strong> to configure alert thresholds, notification rules, and sorting preferences.</li>
-            <li><strong>Threshold Types:</strong> Set <em>Warning</em> and <em>Critical</em> levels for devices.</li>
-            <li><strong>Alert Frequency:</strong> Define how often notifications are sent when an issue occurs and while it remains active.</li>
-            <li><strong>Notification Preferences:</strong> Enable or disable <strong>Email</strong> and <strong>Push Notifications</strong> for alerts.</li>
-            <li><strong>Save Changes:</strong> Always click <strong>“Save Configuration”</strong> after editing thresholds or alerts.</li>
-        </ul>
-
-        {{-- ================= DIAGNOSTICS ================= --}}
-        {{-- Explains how to run system diagnostic tests --}}
-        <h6 class="fw-bold mt-4">Running Diagnostics</h6>
-        <ul>
-            <li><strong>Diagnostic Tests:</strong> Run automated tests to verify network connectivity, database performance, backup integrity, and system response time.</li>
-            <li>
-                <strong>Health Summary:</strong> Results are color-coded for clarity — 
-                <span class="text-success fw-bold">Green</span> (Normal), 
-                <span class="text-warning fw-bold">Yellow</span> (Warning), 
-                <span class="text-danger fw-bold">Red</span> (Critical).
-            </li>
+            <li><strong>Access Settings:</strong> Go to <strong>Admin → Settings</strong> to manage critical devices and alert display preferences.</li>
+            <li><strong>Critical Devices:</strong> Add or remove high-priority devices that require special monitoring. Enter the device's IP Address, MAC Address, and Owner information.</li>
+            <li><strong>Alert Display Settings:</strong> Choose to sort alerts <em>By Severity</em> (Critical first) or <em>Alphabetically</em> (by building name).</li>
+            <li><strong>Save Changes:</strong> All changes are saved automatically or require confirmation depending on the setting type.</li>
         </ul>
 
         {{-- ================= ADMIN ================= --}}
@@ -166,14 +159,14 @@
         <h6 class="fw-bold mt-4">Admin Management</h6>
         <ul>
             <li><strong>Access Control:</strong> Only administrators can view and modify the <strong>Admin</strong> tab.</li>
-            <li><strong>Sub-Tabs:</strong></li>
+            <li><strong>Admin Tabs:</strong></li>
             <ul>
-                <li><strong>Backup:</strong> Create or restore system backups as ZIP files.</li>
-                <li><strong>Logs:</strong> Review system activity and event history.</li>
-                <li><strong>Settings:</strong> Adjust alert thresholds, notification options, and sorting behavior.</li>
-                <li><strong>Servers:</strong> Manage connected system servers and monitor their status.</li>
-                <li><strong>Users:</strong> Add, edit, or remove system users and manage their roles.</li>
+                <li><strong>Backup:</strong> Configure backup settings and download system backups as ZIP files.</li>
+                <li><strong>Logs:</strong> Review comprehensive system activity logs including user logins, logouts, page access, and all system actions. Filter logs by type (All, Info, Success, Warning, Error).</li>
+                <li><strong>Settings:</strong> Manage critical devices list and configure alert display settings (sort by severity or alphabetically).</li>
+                <li><strong>Users:</strong> View system users, their roles (Admin/User), email addresses, and online/offline status.</li>
             </ul>
+            <li><strong>Map Markers:</strong> Administrators can add and delete building markers on the campus map using the <strong>Add Marker</strong> and <strong>Delete Marker</strong> buttons on the Home page.</li>
         </ul>
     </div>
 </div>
