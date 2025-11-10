@@ -42,12 +42,11 @@
       <table class="table table-bordered table-hover align-middle">
         <thead class="table-light">
           <tr>
-            <th>Device ID</th>
             <th>IP Address</th>
             <th>MAC Address</th>
-            <th>Status</th>
-            <th>User</th>
+            <th>Owner</th>
             <th>Extensions</th>
+            <th>Status</th>
           </tr>
         </thead>
         <tbody>
@@ -57,10 +56,8 @@
               $badgeClass = $d->status === 'online' ? 'badge-online' : 'badge-offline';
             @endphp
             <tr onclick="showDeviceGraph('{{ $d->ip_address }}', '{{ $d->device_id }}', '{{ $building->name }}')" style="cursor: pointer;">
-              <td class="fw-semibold">{{ $d->device_id }}</td>
-              <td>{{ $d->ip_address }}</td>
+              <td class="fw-semibold">{{ $d->ip_address }}</td>
               <td><code>{{ $d->mac_address ?? 'N/A' }}</code></td>
-              <td><span class="badge {{ $badgeClass }}">{{ ucfirst($d->status ?? 'unknown') }}</span></td>
               <td>
                 @if($exts->isNotEmpty())
                   {{ $exts->first()->user_first_name }} {{ $exts->first()->user_last_name }}
@@ -81,10 +78,11 @@
                   </div>
                 @endif
               </td>
+              <td><span class="badge {{ $badgeClass }}">{{ ucfirst($d->status ?? 'unknown') }}</span></td>
             </tr>
           @empty
             <tr>
-              <td colspan="6" class="text-center text-muted">No devices in this building.</td>
+              <td colspan="5" class="text-center text-muted">No devices in this building.</td>
             </tr>
           @endforelse
         </tbody>
