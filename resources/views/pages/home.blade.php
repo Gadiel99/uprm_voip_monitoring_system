@@ -102,6 +102,55 @@
     </div>
 </div>
 
+{{-- MODAL: CREATE BUILDING --}}
+<div class="modal fade" id="createBuildingModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title">Create Building</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="createBuildingForm">
+                    {{-- Building Name --}}
+                    <div class="mb-3">
+                        <label for="buildingName" class="form-label fw-semibold">Name:</label>
+                        <input 
+                            type="text" 
+                            class="form-control" 
+                            id="buildingName" 
+                            placeholder="e.g. Stefani"
+                            required
+                        >
+                    </div>
+
+                    {{-- Networks Container --}}
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Networks:</label>
+                        <div id="networksContainer">
+                            <input 
+                                type="text" 
+                                class="form-control mb-2 network-input" 
+                                placeholder="e.g. 10.100.100.0"
+                                required
+                            >
+                        </div>
+                        <button type="button" class="btn btn-success btn-sm" id="addNetworkBtn">
+                            <i class="bi bi-plus-circle me-1"></i> Add Network
+                        </button>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-success" id="saveBuildingBtn">
+                    <i class="bi bi-check-circle me-1"></i> Save Building
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 {{-- === MAP CSS STYLING === --}}
 <style>
 /* Container for the map with overflow for panning */
@@ -473,20 +522,17 @@ document.addEventListener('DOMContentLoaded', function () {
         const topPercent = (y / 1199) * 100;
         const leftPercent = (x / 2202) * 100;
 
-        const name = prompt('Enter marker name:');
-        if (name && name.trim()) {
-            markers.push({
-                top: parseFloat(topPercent.toFixed(1)),
-                left: parseFloat(leftPercent.toFixed(1)),
-                name: name.trim()
-            });
+        // Store the position temporarily
+        window.pendingMarkerPosition = {
+            top: parseFloat(topPercent.toFixed(1)),
+            left: parseFloat(leftPercent.toFixed(1))
+        };
 
-            saveMarkers();
-            renderMarkers();
-            alert(`✅ Marker "${name}" added successfully!`);
-        }
+        // Open the modal
+        const modal = new bootstrap.Modal(document.getElementById('createBuildingModal'));
+        modal.show();
 
-        // Exit add mode
+        // Exit add mode (will be reactivated if cancelled)
         addMarkerMode = false;
         addMarkerBtn.classList.remove('active');
         mapContainer.style.cursor = 'grab';
@@ -673,5 +719,82 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 </script>
 --}}
+
+// ===== CREATE BUILDING MODAL HANDLERS =====
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Add Network button
+    document.getElementById('addNetworkBtn').addEventListener('click', function() {
+        const container = document.getElementById('networksContainer');
+        const newInput = document.createElement('input');
+        newInput.type = 'text';
+        newInput.className = 'form-control mb-2 network-input';
+        newInput.placeholder = 'e.g. 10.100.101.0';
+        container.appendChild(newInput);
+    });
+    
+    // Save Building button
+    document.getElementById('saveBuildingBtn').addEventListener('click', function() {
+        const buildingName = document.getElementById('buildingName').value.trim();
+        const networkInputs = document.querySelectorAll('.network-input');
+        const networks = [];
+        
+        // Collect all network values
+        networkInputs.forEach(input => {
+            const value = input.value.trim();
+            if (value) {
+                networks.push(value);
+            }
+        });
+        
+        // Validate
+        if (!buildingName) {
+            alert('❌ Please enter a building name');
+            return;
+        }
+        
+        if (networks.length === 0) {
+            alert('❌ Please enter at least one network');
+            return;
+        }
+        
+        // Add marker with building data
+        const position = window.pendingMarkerPosition;
+        const markers = JSON.parse(localStorage.getItem('campusMarkers') || '[]');
+        
+        markers.push({
+            top: position.top,
+            left: position.left,
+            name: buildingName,
+            networks: networks
+        });
+        
+        localStorage.setItem('campusMarkers', JSON.stringify(markers));
+        
+        // Reload markers on page
+        location.reload();
+        
+        // Close modal
+        const modal = bootstrap.Modal.getInstance(document.getElementById('createBuildingModal'));
+        modal.hide();
+        
+        alert(`✅ Building "${buildingName}" added successfully with ${networks.length} network(s)!`);
+    });
+    
+    // Reset form when modal is closed
+    document.getElementById('createBuildingModal').addEventListener('hidden.bs.modal', function() {
+        document.getElementById('createBuildingForm').reset();
+        const container = document.getElementById('networksContainer');
+        container.innerHTML = `
+            <input 
+                type="text" 
+                class="form-control mb-2 network-input" 
+                placeholder="e.g. 10.100.100.0"
+                required
+            >
+        `;
+    });
+});
+</script>
 
 @endsection

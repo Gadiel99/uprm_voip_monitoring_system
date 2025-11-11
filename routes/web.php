@@ -46,6 +46,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/devices', [DevicesController::class, 'index'])->name('devices');
     Route::get('/devices/critical', [DevicesController::class, 'criticalDevices'])->name('devices.critical');
     Route::get('/devices/building/{building}', [DevicesController::class, 'byBuilding'])->name('devices.byBuilding');
+    Route::get('/devices/building/{building}/network/{network}', [DevicesController::class, 'byNetwork'])->name('devices.byNetwork');
 
     // Reports: search and filtering
     Route::get('/reports', [ReportsController::class, 'index'])->name('reports');

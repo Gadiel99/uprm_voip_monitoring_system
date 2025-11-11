@@ -69,31 +69,74 @@ class DevicesController extends Controller
     }
 
     /**
-     * Detalle de dispositivos por edificio.
-     *
-     * Joins:
-     * devices -> networks -> building_networks (por building_id)
-     * + extensiones agrupadas por device.
+     * Show networks for a specific building (intermediate layer).
      *
      * @param  int|string $buildingId
      * @return \Illuminate\Contracts\View\View|\Symfony\Component\HttpFoundation\Response
      */
     public function byBuilding($buildingId)
     {
-        // Info del edificio
+        // Building info
         $building = DB::table('buildings')->where('building_id', $buildingId)->first();
         abort_if(!$building, 404);
 
-        // Devices del building (join por el pivot)
+        // Get all networks for this building
+        $networks = DB::table('networks as n')
+            ->join('building_networks as bn', 'bn.network_id', '=', 'n.network_id')
+            ->where('bn.building_id', $buildingId)
+            ->orderBy('n.network_address')
+            ->select('n.network_address')
+            ->distinct()
+            ->pluck('network_address');
+
+        // Get devices grouped by network for this building
+        $devicesByNetwork = collect();
+        foreach ($networks as $network) {
+            $devices = DB::table('devices as d')
+                ->join('networks as n', 'n.network_id', '=', 'd.network_id')
+                ->join('building_networks as bn', 'bn.network_id', '=', 'n.network_id')
+                ->where('bn.building_id', $buildingId)
+                ->where('n.network_address', $network)
+                ->select('d.device_id', 'd.ip_address', 'd.status')
+                ->get();
+            
+            $devicesByNetwork->put($network, $devices);
+        }
+
+        return view('pages.devices_by_building', [
+            'building'    => $building,
+            'networks'    => $networks,
+            'devicesByNetwork' => $devicesByNetwork,
+        ]);
+    }
+
+    /**
+     * Show devices for a specific network within a building.
+     *
+     * @param  int|string $buildingId
+     * @param  string $network
+     * @return \Illuminate\Contracts\View\View|\Symfony\Component\HttpFoundation\Response
+     */
+    public function byNetwork($buildingId, $network)
+    {
+        // Building info
+        $building = DB::table('buildings')->where('building_id', $buildingId)->first();
+        abort_if(!$building, 404);
+
+        // Decode network parameter (in case it's URL encoded)
+        $network = urldecode($network);
+
+        // Get devices for this specific network in this building
         $devices = DB::table('devices as d')
             ->join('networks as n', 'n.network_id', '=', 'd.network_id')
             ->join('building_networks as bn', 'bn.network_id', '=', 'n.network_id')
             ->where('bn.building_id', $buildingId)
+            ->where('n.network_address', $network)
             ->orderBy('d.ip_address')
             ->select('d.device_id', 'd.ip_address', 'd.mac_address', 'd.status', 'd.is_critical', 'd.network_id')
             ->get();
 
-        // Extensiones por device
+        // Get extensions for these devices
         $extByDevice = $devices->isEmpty()
             ? collect()
             : DB::table('device_extensions as de')
@@ -103,8 +146,9 @@ class DevicesController extends Controller
                 ->get()
                 ->groupBy('device_id');
 
-        return view('pages.devices_by_building', [
+        return view('pages.devices_in_network', [
             'building'    => $building,
+            'network'     => $network,
             'devices'     => $devices,
             'extByDevice' => $extByDevice,
         ]);

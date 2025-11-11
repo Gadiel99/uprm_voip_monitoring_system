@@ -2,19 +2,16 @@
 
 @section('content')
 <style>
-    /* Card styling */
     .card {
         border-radius: 12px;
         box-shadow: 0 0 10px rgba(0,0,0,0.05);
     }
 
-    /* Highlight table rows on hover */
     .table-hover tbody tr:hover {
         background-color: #f1f3f4;
         cursor: pointer;
     }
 
-    /* Badge styling */
     .badge-online {
         background-color: #e6f9ed;
         color: #00844b;
@@ -30,8 +27,8 @@
   <div class="card border-0 shadow-sm p-4 mb-4">
     <div class="d-flex justify-content-between align-items-center mb-3">
       <div>
-        <h5 class="fw-semibold mb-0">Devices — {{ $building->name }}</h5>
-        <small class="text-muted">Click on any device to view its 30-day activity graph</small>
+        <h5 class="fw-semibold mb-0">Networks — {{ $building->name }}</h5>
+        <small class="text-muted">Select a network to view its devices</small>
       </div>
       <a href="{{ route('devices') }}" class="btn btn-outline-secondary btn-sm">
         <i class="bi bi-arrow-left me-1"></i> Return
@@ -42,47 +39,46 @@
       <table class="table table-bordered table-hover align-middle">
         <thead class="table-light">
           <tr>
-            <th>IP Address</th>
-            <th>MAC Address</th>
-            <th>Owner</th>
-            <th>Extensions</th>
+            <th>Network</th>
+            <th>Total Devices</th>
+            <th>Online</th>
+            <th>Offline</th>
             <th>Status</th>
           </tr>
         </thead>
         <tbody>
-          @forelse($devices as $d)
+          @forelse($networks as $network)
             @php
-              $exts = ($extByDevice ?? collect())->get($d->device_id) ?? collect();
-              $badgeClass = $d->status === 'online' ? 'badge-online' : 'badge-offline';
+              $networkDevices = $devicesByNetwork[$network] ?? collect();
+              $onlineDevices = $networkDevices->where('status', 'online')->count();
+              $totalDevices = $networkDevices->count();
+              $offlineDevices = $totalDevices - $onlineDevices;
+              
+              $badgeClass = 'badge-online';
+              $statusText = 'All Online';
+              if ($offlineDevices > $onlineDevices) {
+                  $badgeClass = 'badge-offline';
+                  $statusText = 'Critical';
+              } elseif ($offlineDevices > 0) {
+                  $badgeClass = 'badge bg-warning text-dark';
+                  $statusText = 'Warning';
+              }
             @endphp
-            <tr onclick="showDeviceGraph('{{ $d->ip_address }}', '{{ $d->device_id }}', '{{ $building->name }}')" style="cursor: pointer;">
-              <td class="fw-semibold">{{ $d->ip_address }}</td>
-              <td>{{ $d->mac_address ?? 'N/A' }}</td>
-              <td>
-                @if($exts->isNotEmpty())
-                  {{ $exts->first()->user_first_name }} {{ $exts->first()->user_last_name }}
-                @else
-                  <span class="text-muted">N/A</span>
-                @endif
+            <tr onclick="window.location.href='{{ route('devices.byNetwork', ['building' => $building->building_id, 'network' => urlencode($network)]) }}'" style="cursor: pointer;">
+              <td class="fw-semibold">
+                <i class="bi bi-diagram-3 me-2 text-primary"></i>
+                {{ $network }}
               </td>
+              <td>{{ $totalDevices }}</td>
+              <td>{{ $onlineDevices }}</td>
+              <td>{{ $offlineDevices }}</td>
               <td>
-                @if($exts->isEmpty())
-                  <span class="text-muted">—</span>
-                @else
-                  <div class="d-flex flex-wrap gap-1">
-                    @foreach($exts as $e)
-                      <span class="badge bg-light text-dark border">
-                        {{ $e->extension_number }}
-                      </span>
-                    @endforeach
-                  </div>
-                @endif
+                <span class="badge {{ $badgeClass }}">{{ $statusText }}</span>
               </td>
-              <td><span class="badge {{ $badgeClass }}">{{ ucfirst($d->status ?? 'unknown') }}</span></td>
             </tr>
           @empty
             <tr>
-              <td colspan="5" class="text-center text-muted">No devices in this building.</td>
+              <td colspan="5" class="text-center text-muted">No networks configured for this building.</td>
             </tr>
           @endforelse
         </tbody>
@@ -90,103 +86,4 @@
     </div>
   </div>
 </div>
-
-{{-- MODAL: DEVICE ACTIVITY GRAPH --}}
-<div class="modal fade" id="graphModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">30-Day Activity: <span id="modalDeviceId"></span></h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <canvas id="activityChart" width="400" height="200"></canvas>
-            </div>
-        </div>
-    </div>
-</div>
-
-{{-- Chart.js CDN --}}
-<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
-
-<script>
-let activityChart = null;
-
-// Show device activity graph in modal
-function showDeviceGraph(ip, deviceId, building) {
-    // Set modal title
-    document.getElementById('modalDeviceId').textContent = `${deviceId} (${ip}) - ${building}`;
-    
-    // Generate random 30-day activity data (0 or 1)
-    const days = Array.from({length: 30}, (_, i) => i + 1);
-    const activityData = Array.from({length: 30}, () => Math.random() > 0.2 ? 1 : 0);
-    
-    // Point colors: green for active (1), red for inactive (0)
-    const pointColors = activityData.map(val => val === 1 ? '#00844b' : '#dc3545');
-    
-    // Destroy existing chart if any
-    if (activityChart) {
-        activityChart.destroy();
-    }
-    
-    // Create new chart
-    const ctx = document.getElementById('activityChart').getContext('2d');
-    activityChart = new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: days,
-            datasets: [{
-                label: 'Device Status',
-                data: activityData,
-                borderColor: '#00844b',
-                backgroundColor: 'rgba(0, 132, 75, 0.1)',
-                borderWidth: 2,
-                pointBackgroundColor: pointColors,
-                pointBorderColor: pointColors,
-                pointRadius: 5,
-                pointHoverRadius: 7,
-                tension: 0.1
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: true,
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    max: 1,
-                    ticks: {
-                        stepSize: 1,
-                        callback: function(value) {
-                            return value === 1 ? 'Active' : 'Inactive';
-                        }
-                    }
-                },
-                x: {
-                    title: {
-                        display: true,
-                        text: 'Day of Month'
-                    }
-                }
-            },
-            plugins: {
-                legend: {
-                    display: false
-                },
-                tooltip: {
-                    callbacks: {
-                        label: function(context) {
-                            return context.parsed.y === 1 ? 'Active' : 'Inactive';
-                        }
-                    }
-                }
-            }
-        }
-    });
-    
-    // Show modal
-    const modal = new bootstrap.Modal(document.getElementById('graphModal'));
-    modal.show();
-}
-</script>
 @endsection
