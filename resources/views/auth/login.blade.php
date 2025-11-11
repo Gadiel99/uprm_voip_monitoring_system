@@ -51,24 +51,13 @@
             </div>
 
             {{-- Password --}}
-            <div class="mb-3 text-start">
+            <div class="mb-4 text-start">
                 <label for="password" class="form-label fw-semibold">Password</label>
                 <div class="input-group">
                     <span class="input-group-text bg-light"><i class="bi bi-lock"></i></span>
                     <input id="password" type="password" name="password" class="form-control"
                            placeholder="Enter your password" required>
                 </div>
-            </div>
-
-            {{-- Remember me + Forgot password --}}
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <div class="form-check">
-                    <input class="form-check-input" type="checkbox" id="rememberMe" name="remember">
-                    <label class="form-check-label small" for="rememberMe">Remember me</label>
-                </div>
-                @if (Route::has('password.request'))
-                    <a href="{{ route('password.request') }}" class="small text-success text-decoration-none">Forgot password?</a>
-                @endif
             </div>
 
             {{-- Login button --}}
