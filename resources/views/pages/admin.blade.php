@@ -260,6 +260,14 @@
                 <h5 class="fw-semibold mb-3">User Management</h5>
                 <p class="text-muted small">Manage system users, roles, and access permissions.</p>
 
+                {{-- Flash messages (success only - errors shown in modal) --}}
+                @if(session('status'))
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        {{ session('status') }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                @endif
+
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addUserModal">
                         <i class="bi bi-person-plus me-2"></i>Add User
@@ -272,41 +280,37 @@
                             <th>Name</th>
                             <th>Email</th>
                             <th>Role</th>
-                            <th>Status</th>
                             <th style="width:120px;">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <tr>
-                            <td>Admin</td>
-                            <td>admin@uprm.edu</td>
-                            <td>Admin</td>
-                            <td><span class="badge badge-online">Active</span></td>
+                        @foreach($users ?? [] as $user)
+                        <tr data-user-id="{{ $user->id }}">
+                            <td>{{ $user->name }}</td>
+                            <td>{{ $user->email }}</td>
+                            <td class="role-cell">
+                                <span class="role-text">{{ ucfirst($user->role) }}</span>
+                                <form action="{{ route('admin.users.update', $user) }}" method="POST" class="role-form d-none" style="display:inline-block;">
+                                    @csrf
+                                    @method('PATCH')
+                                    <select class="form-select form-select-sm" name="role" style="width: auto; display: inline-block;">
+                                        <option value="user" {{ $user->role === 'user' ? 'selected' : '' }}>User</option>
+                                        <option value="admin" {{ $user->role === 'admin' ? 'selected' : '' }}>Admin</option>
+                                    </select>
+                                    <button type="submit" class="btn btn-sm btn-success ms-1"><i class="bi bi-check-lg"></i></button>
+                                    <button type="button" class="btn btn-sm btn-secondary cancel-edit"><i class="bi bi-x-lg"></i></button>
+                                </form>
+                            </td>
                             <td>
-                                <button class="btn btn-sm btn-outline-secondary edit-btn"><i class="bi bi-pencil"></i></button>
-                                <button class="btn btn-sm btn-danger delete-btn"><i class="bi bi-trash"></i></button>
+                                <button class="btn btn-sm btn-outline-secondary edit-role-btn"><i class="bi bi-pencil"></i></button>
+                                <form action="{{ route('admin.users.destroy', $user) }}" method="POST" style="display:inline-block;">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button class="btn btn-sm btn-danger" onclick="return confirm('Delete this user?')"><i class="bi bi-trash"></i></button>
+                                </form>
                             </td>
                         </tr>
-                        <tr>
-                            <td>Operator</td>
-                            <td>operator@uprm.edu</td>
-                            <td>User</td>
-                            <td><span class="badge badge-online">Active</span></td>
-                            <td>
-                                <button class="btn btn-sm btn-outline-secondary edit-btn"><i class="bi bi-pencil"></i></button>
-                                <button class="btn btn-sm btn-danger delete-btn"><i class="bi bi-trash"></i></button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>Guest</td>
-                            <td>guest@uprm.edu</td>
-                            <td>User</td>
-                            <td><span class="badge badge-offline">Inactive</span></td>
-                            <td>
-                                <button class="btn btn-sm btn-outline-secondary edit-btn"><i class="bi bi-pencil"></i></button>
-                                <button class="btn btn-sm btn-danger delete-btn"><i class="bi bi-trash"></i></button>
-                            </td>
-                        </tr>
+                        @endforeach
                     </tbody>
                 </table>
             </div>
@@ -403,29 +407,73 @@
         <h5 class="modal-title" id="addUserModalLabel"><i class="bi bi-person-plus me-2"></i>Add User</h5>
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
       </div>
-      <form id="formAddUser">
+      <form method="POST" action="{{ route('admin.users.store') }}">
+        @csrf
         <div class="modal-body">
+            {{-- Removed top alert; errors now appear inline below fields --}}
+            @php($passwordErrors = $errors->get('password'))
+            @php($emailErrors = $errors->get('email'))
+            
             <div class="mb-3">
                 <label class="form-label fw-semibold">Name</label>
-                <input type="text" class="form-control" id="user_name" placeholder="Full name" required>
+                <input type="text" class="form-control @error('name') is-invalid @enderror" 
+                       name="name" placeholder="Full name" value="{{ old('name') }}"
+                       maxlength="255" autocomplete="name">
+                @error('name')
+                    <div class="invalid-feedback d-block">{{ $message }}</div>
+                @enderror
             </div>
             <div class="mb-3">
                 <label class="form-label fw-semibold">Email</label>
-                <input type="email" class="form-control" id="user_email" placeholder="example@uprm.edu" required>
+                <input type="text" class="form-control @error('email') is-invalid @enderror" 
+                       name="email" placeholder="example@uprm.edu" value="{{ old('email') }}"
+                       maxlength="255" autocomplete="email" required>
+                @if($emailErrors)
+                    <div class="invalid-feedback d-block">
+                        <ul class="mb-0 ps-3">
+                            @foreach($emailErrors as $eErr)
+                                <li>{{ $eErr }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
+            </div>
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Password</label>
+                <input type="password" id="addUserPassword" class="form-control @error('password') is-invalid @enderror" 
+                       name="password" placeholder="Example: CampusNet#24!" 
+                       minlength="8" maxlength="64" 
+                       pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':&quot;\\|,.<>\/?]).{8,64}$"
+                       title="Password must contain: 8-64 characters, at least one uppercase letter, one lowercase letter, one number, and one special character"
+                       autocomplete="new-password" required>
+                @if($passwordErrors)
+                    <div class="invalid-feedback d-block">
+                        <ul class="mb-0 ps-3">
+                            @foreach($passwordErrors as $pErr)
+                                <li>{{ $pErr }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
+                <div class="text-muted small mt-2">
+                    Password requirements:
+                    <ul class="small mb-0">
+                        <li>8–64 characters</li>
+                        <li>At least one uppercase and one lowercase letter</li>
+                        <li>At least one number</li>
+                        <li>At least one symbol (e.g., ! @ # $ %)</li>
+                    </ul>
+                </div>
             </div>
             <div class="mb-3">
                 <label class="form-label fw-semibold">Role</label>
-                <select class="form-select" id="user_role">
-                    <option>Admin</option>
-                    <option selected>User</option>
+                <select class="form-select @error('role') is-invalid @enderror" name="role" required>
+                    <option value="user" {{ old('role') == 'user' ? 'selected' : '' }}>User</option>
+                    <option value="admin" {{ old('role') == 'admin' ? 'selected' : '' }}>Admin</option>
                 </select>
-            </div>
-            <div class="mb-3">
-                <label class="form-label fw-semibold">Status</label>
-                <select class="form-select" id="user_status">
-                    <option selected>Active</option>
-                    <option>Inactive</option>
-                </select>
+                @error('role')
+                    <div class="invalid-feedback">{{ $message }}</div>
+                @enderror
             </div>
         </div>
         <div class="modal-footer">
@@ -435,16 +483,134 @@
       </form>
     </div>
   </div>
-</div>
-
-{{-- ===================== UNIVERSAL JS ===================== --}}
+</div>{{-- ===================== UNIVERSAL JS ===================== --}}
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-    ['criticalTable','serverTable','userTable'].forEach(enableTableActions);
-
-    document.getElementById('formAddCritical').addEventListener('submit', onAddCritical);
-    document.getElementById('formAddServer').addEventListener('submit', onAddServer);
-    document.getElementById('formAddUser').addEventListener('submit', onAddUser);
+    // ===== Tab Activation =====
+    const activeTab = @json($activeTab ?? null);
+    if (activeTab) {
+        const tabTrigger = document.querySelector(`[data-bs-target="#${activeTab}"]`);
+        if (tabTrigger) {
+            const tab = new bootstrap.Tab(tabTrigger);
+            tab.show();
+        }
+    }
+    
+    // ===== Reopen Add User Modal if validation errors exist =====
+    @if($errors->any() && old('_token'))
+        const addUserModal = new bootstrap.Modal(document.getElementById('addUserModal'));
+        addUserModal.show();
+    @endif
+    
+    // ===== Users Tab Functionality =====
+    // User table: Edit role functionality
+    document.querySelectorAll('.edit-role-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const row = this.closest('tr');
+            const roleCell = row.querySelector('.role-cell');
+            const roleText = roleCell.querySelector('.role-text');
+            const roleForm = roleCell.querySelector('.role-form');
+            
+            roleText.classList.add('d-none');
+            roleForm.classList.remove('d-none');
+            this.disabled = true;
+        });
+    });
+    
+    // Cancel edit role
+    document.querySelectorAll('.cancel-edit').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const row = this.closest('tr');
+            const roleCell = row.querySelector('.role-cell');
+            const roleText = roleCell.querySelector('.role-text');
+            const roleForm = roleCell.querySelector('.role-form');
+            const editBtn = row.querySelector('.edit-role-btn');
+            
+            roleText.classList.remove('d-none');
+            roleForm.classList.add('d-none');
+            editBtn.disabled = false;
+        });
+    });
+    
+    // Password field: show as plain text on focus, mask on blur
+    const passwordField = document.getElementById('addUserPassword');
+    if (passwordField) {
+        passwordField.addEventListener('focus', function() {
+            this.type = 'text';
+        });
+        passwordField.addEventListener('blur', function() {
+            this.type = 'password';
+        });
+    }
+    
+    // ===== Settings Tab - Critical Devices =====
+    ['criticalTable','serverTable'].forEach(enableTableActions);
+    document.getElementById('formAddCritical')?.addEventListener('submit', onAddCritical);
+    document.getElementById('formAddServer')?.addEventListener('submit', onAddServer);
+    
+    syncCriticalDevicesToLocalStorage();
+    const criticalTable = document.querySelector('#criticalTable');
+    if (criticalTable) {
+        const observer = new MutationObserver(() => {
+            syncCriticalDevicesToLocalStorage();
+        });
+        observer.observe(criticalTable, {
+            childList: true,
+            subtree: true,
+            characterData: true
+        });
+    }
+    
+    // Handle clicks on critical device rows
+    document.addEventListener('click', (e) => {
+        const row = e.target.closest('.critical-device-row');
+        if (!row) return;
+        if (e.target.closest('td:last-child')) return;
+        if (e.target.closest('.edit-btn') || e.target.closest('.delete-btn')) return;
+        
+        const cells = row.querySelectorAll('td');
+        const deviceIP = cells[0].textContent.trim();
+        window.location.href = `/devices?ip=${encodeURIComponent(deviceIP)}&building=Critical+Devices`;
+    });
+    
+    // ===== Logs Tab =====
+    const backendLogs = @json($systemLogs ?? []);
+    if (backendLogs.length > 0) {
+        let frontendLogs = getLogs();
+        const mergedLogs = [...backendLogs, ...frontendLogs];
+        const uniqueLogs = mergedLogs.reduce((acc, log) => {
+            const key = `${log.timestamp}-${log.message}`;
+            if (!acc.some(l => `${l.timestamp}-${l.message}` === key)) {
+                acc.push(log);
+            }
+            return acc;
+        }, []);
+        uniqueLogs.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+        if (uniqueLogs.length > 500) uniqueLogs.length = 500;
+        localStorage.setItem('systemLogs', JSON.stringify(uniqueLogs));
+    }
+    
+    updateLogsDisplay();
+    const logs = getLogs();
+    if (logs.length === 0) {
+        addLog('INFO', 'System initialized - Logging started', 'System');
+    }
+    
+    loadAlertDisplaySettings();
+    
+    const tabButtons = document.querySelectorAll('#adminTab button[data-bs-toggle="tab"]');
+    tabButtons.forEach(button => {
+        button.addEventListener('shown.bs.tab', (e) => {
+            const tabName = e.target.textContent.trim();
+            addLog('INFO', `Admin accessed ${tabName} tab`, 'Admin');
+        });
+    });
+    
+    // Alert display settings radio buttons
+    const radioButtons = document.querySelectorAll('input[name="sortOrder"]');
+    radioButtons.forEach(radio => {
+        radio.addEventListener('change', saveAlertDisplaySettings);
+    });
 });
 
 function enableTableActions(tableId) {
@@ -613,34 +779,9 @@ function onAddServer(ev) {
     ev.target.reset();
 }
 
-function onAddUser(ev) {
-    ev.preventDefault();
-    const name = document.getElementById('user_name').value.trim();
-    const email = document.getElementById('user_email').value.trim();
-    const role = document.getElementById('user_role').value;
-    const status = document.getElementById('user_status').value;
-
-    const tbody = document.querySelector('#userTable tbody');
-    const badge = (status === 'Active') ? 'badge-online' : 'badge-offline';
-    tbody.insertAdjacentHTML('beforeend', `
-        <tr>
-            <td>${name}</td>
-            <td>${email}</td>
-            <td>${role}</td>
-            <td><span class="badge ${badge}">${status}</span></td>
-            <td>
-                <button class="btn btn-sm btn-outline-secondary edit-btn"><i class="bi bi-pencil"></i></button>
-                <button class="btn btn-sm btn-danger delete-btn"><i class="bi bi-trash"></i></button>
-            </td>
-        </tr>
-    `);
-    
-    // Log the action
-    addLog('SUCCESS', `User added: ${name} (${email}) - Role: ${role}, Status: ${status}`);
-    
-    bootstrap.Modal.getInstance(document.getElementById('addUserModal')).hide();
-    ev.target.reset();
-}
+// function onAddUser(ev) {
+//     ...removed, now handled by backend...
+// }
 
 /* SYNC CRITICAL DEVICES TO LOCALSTORAGE FOR NOTIFICATIONS */
 function syncCriticalDevicesToLocalStorage() {
@@ -670,48 +811,6 @@ function syncCriticalDevicesToLocalStorage() {
     
     localStorage.setItem('criticalDevices', JSON.stringify(devices));
 }
-
-// Sync critical devices on page load
-document.addEventListener('DOMContentLoaded', () => {
-    syncCriticalDevicesToLocalStorage();
-    
-    // Re-sync whenever the critical table is modified
-    const criticalTable = document.querySelector('#criticalTable');
-    if (criticalTable) {
-        // Create a MutationObserver to watch for changes
-        const observer = new MutationObserver(() => {
-            syncCriticalDevicesToLocalStorage();
-        });
-        
-        observer.observe(criticalTable, {
-            childList: true,
-            subtree: true,
-            characterData: true
-        });
-    }
-    
-    // Handle clicks on critical device rows to navigate to Devices tab
-    document.addEventListener('click', (e) => {
-        const row = e.target.closest('.critical-device-row');
-        if (!row) return;
-        
-        // Don't navigate if clicking on anything in the Actions column
-        if (e.target.closest('td:last-child')) return;
-        
-        // Don't navigate if clicking on edit or delete buttons
-        if (e.target.closest('.edit-btn') || e.target.closest('.delete-btn')) return;
-        
-        // Get device info from the row
-        const cells = row.querySelectorAll('td');
-        const deviceIP = cells[0].textContent.trim();
-        const deviceMAC = cells[1].textContent.trim();
-        
-        console.log('Navigating to device with IP:', deviceIP);
-        
-        // Navigate to Devices page with URL parameter
-        window.location.href = `/devices?ip=${encodeURIComponent(deviceIP)}&building=Critical+Devices`;
-    });
-});
 
 /* ==================== LOGGING SYSTEM ==================== */
 
@@ -819,56 +918,6 @@ function clearLogs() {
     }
 }
 
-// Load logs when Logs tab is shown
-document.addEventListener('DOMContentLoaded', () => {
-    // Merge backend logs with frontend logs
-    const backendLogs = @json($systemLogs ?? []);
-    if (backendLogs.length > 0) {
-        let frontendLogs = getLogs();
-        
-        // Merge and remove duplicates based on timestamp + message
-        const mergedLogs = [...backendLogs, ...frontendLogs];
-        const uniqueLogs = mergedLogs.reduce((acc, log) => {
-            const key = `${log.timestamp}-${log.message}`;
-            if (!acc.some(l => `${l.timestamp}-${l.message}` === key)) {
-                acc.push(log);
-            }
-            return acc;
-        }, []);
-        
-        // Sort by timestamp descending
-        uniqueLogs.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-        
-        // Keep only last 500
-        if (uniqueLogs.length > 500) {
-            uniqueLogs.length = 500;
-        }
-        
-        // Save merged logs
-        localStorage.setItem('systemLogs', JSON.stringify(uniqueLogs));
-    }
-    
-    updateLogsDisplay();
-    
-    // Add initial system startup log if no logs exist
-    const logs = getLogs();
-    if (logs.length === 0) {
-        addLog('INFO', 'System initialized - Logging started', 'System');
-    }
-    
-    // Load saved alert display settings
-    loadAlertDisplaySettings();
-    
-    // Add event listeners for tab navigation logging
-    const tabButtons = document.querySelectorAll('#adminTab button[data-bs-toggle="tab"]');
-    tabButtons.forEach(button => {
-        button.addEventListener('shown.bs.tab', (e) => {
-            const tabName = e.target.textContent.trim();
-            addLog('INFO', `Admin accessed ${tabName} tab`, 'Admin');
-        });
-    });
-});
-
 /* ==================== ALERT DISPLAY SETTINGS ==================== */
 
 // Load saved alert display settings from localStorage
@@ -887,20 +936,10 @@ function loadAlertDisplaySettings() {
 function saveAlertDisplaySettings() {
     const sortOrder = document.querySelector('input[name="sortOrder"]:checked').id;
     localStorage.setItem('alertSortOrder', sortOrder);
-    
     addLog('INFO', `Alert display settings changed to: ${sortOrder === 'bySeverity' ? 'By Severity' : 'Alphabetically'}`, 'Admin');
-    
-    // Show confirmation message
     alert('Alert display settings saved successfully!');
 }
 
-// Add event listeners to radio buttons
-document.addEventListener('DOMContentLoaded', () => {
-    const radioButtons = document.querySelectorAll('input[name="sortOrder"]');
-    radioButtons.forEach(radio => {
-        radio.addEventListener('change', saveAlertDisplaySettings);
-    });
-});
-
+// Note: Radio button listeners are attached in the main DOMContentLoaded above
 </script>
 @endsection

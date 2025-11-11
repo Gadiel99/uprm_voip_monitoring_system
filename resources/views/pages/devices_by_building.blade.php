@@ -57,7 +57,7 @@
             @endphp
             <tr onclick="showDeviceGraph('{{ $d->ip_address }}', '{{ $d->device_id }}', '{{ $building->name }}')" style="cursor: pointer;">
               <td class="fw-semibold">{{ $d->ip_address }}</td>
-              <td><code>{{ $d->mac_address ?? 'N/A' }}</code></td>
+              <td>{{ $d->mac_address ?? 'N/A' }}</td>
               <td>
                 @if($exts->isNotEmpty())
                   {{ $exts->first()->user_first_name }} {{ $exts->first()->user_last_name }}

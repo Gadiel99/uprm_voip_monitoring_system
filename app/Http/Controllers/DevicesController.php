@@ -90,7 +90,7 @@ class DevicesController extends Controller
             ->join('building_networks as bn', 'bn.network_id', '=', 'n.network_id')
             ->where('bn.building_id', $buildingId)
             ->orderBy('d.ip_address')
-            ->select('d.device_id', 'd.ip_address', 'd.status', 'd.is_critical', 'd.network_id')
+            ->select('d.device_id', 'd.ip_address', 'd.mac_address', 'd.status', 'd.is_critical', 'd.network_id')
             ->get();
 
         // Extensiones por device
@@ -121,7 +121,7 @@ class DevicesController extends Controller
         $devices = DB::table('devices as d')
             ->where('d.is_critical', true)
             ->orderBy('d.ip_address')
-            ->select('d.device_id', 'd.ip_address', 'd.status', 'd.is_critical', 'd.network_id')
+            ->select('d.device_id', 'd.ip_address', 'd.mac_address', 'd.status', 'd.is_critical', 'd.network_id')
             ->get();
 
         // Extensiones por device

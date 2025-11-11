@@ -48,6 +48,7 @@ class AdminUserController extends Controller
             'isUsersServer' => true,
             'users' => $users,
             'adminsCount' => $adminsCount,
+            'systemLogs' => [],
         ]);
     }
 
@@ -81,7 +82,7 @@ class AdminUserController extends Controller
             'role'     => $role,
         ]);
 
-        return redirect()->route('admin', ['tab' => 'users'])->with('status', 'User created.');
+        return redirect()->route('admin.users')->with('status', 'User created successfully.')->with('showAddModal', false);
     }
 
     /**
@@ -109,7 +110,7 @@ class AdminUserController extends Controller
         }
 
         $user->update(['role' => $request->role]);
-        return redirect()->route('admin', ['tab' => 'users'])->with('status', 'Role updated.');
+        return redirect()->route('admin.users')->with('status', 'Role updated successfully.');
     }
 
     /**
@@ -137,7 +138,7 @@ class AdminUserController extends Controller
         }
 
         $user->delete();
-        return redirect()->route('admin', ['tab' => 'users'])->with('status', 'User deleted.');
+        return redirect()->route('admin.users')->with('status', 'User deleted successfully.');
     }
 
     /**
@@ -153,10 +154,10 @@ class AdminUserController extends Controller
 
         $actor = $request->user();
         if ($actor->id === $user->id) {
-            return redirect()->route('admin', ['tab' => 'users'])->withErrors(['role' => 'You cannot change your own role here.']);
+            return redirect()->route('admin.users')->withErrors(['role' => 'You cannot change your own role here.']);
         }
 
         $user->update(['role' => $validated['role']]);
-        return redirect()->route('admin', ['tab' => 'users'])->with('status', 'Role updated.');
+        return redirect()->route('admin.users')->with('status', 'Role updated successfully.');
     }
 }

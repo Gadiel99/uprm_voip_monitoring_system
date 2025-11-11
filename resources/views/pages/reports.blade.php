@@ -123,7 +123,8 @@
     .btn-success:hover { background:#006f3f; border-color:#006f3f; }
     .btn-outline-secondary:hover { background:#f1f3f4; }
     .reports-wrapper-card { border-radius:14px; }
-    .results-table code { font-size:.85rem; }
+    /* Remove monospace shrinking for code; we'll stop using <code> for MAC/IP to keep uniform font */
+    .results-table code { font-size:inherit; font-family:inherit; }
 </style>
 
 <div class="container-fluid">
@@ -199,8 +200,8 @@
                                             <span class="text-muted">N/A</span>
                                         @endif
                                     </td>
-                                    <td><code>{{ $device->mac_address }}</code></td>
-                                    <td><code>{{ $device->ip_address }}</code></td>
+                                    <td>{{ $device->mac_address }}</td>
+                                    <td>{{ $device->ip_address }}</td>
                                     <td>
                                         @if($device->status == 'online')
                                             <span class="badge bg-success">Online</span>
