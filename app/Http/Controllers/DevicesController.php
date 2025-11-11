@@ -84,10 +84,10 @@ class DevicesController extends Controller
         $networks = DB::table('networks as n')
             ->join('building_networks as bn', 'bn.network_id', '=', 'n.network_id')
             ->where('bn.building_id', $buildingId)
-            ->orderBy('n.network_address')
-            ->select('n.network_address')
+            ->orderBy('n.subnet')
+            ->select('n.subnet')
             ->distinct()
-            ->pluck('network_address');
+            ->pluck('subnet');
 
         // Get devices grouped by network for this building
         $devicesByNetwork = collect();
@@ -96,7 +96,7 @@ class DevicesController extends Controller
                 ->join('networks as n', 'n.network_id', '=', 'd.network_id')
                 ->join('building_networks as bn', 'bn.network_id', '=', 'n.network_id')
                 ->where('bn.building_id', $buildingId)
-                ->where('n.network_address', $network)
+                ->where('n.subnet', $network)
                 ->select('d.device_id', 'd.ip_address', 'd.status')
                 ->get();
             
@@ -131,7 +131,7 @@ class DevicesController extends Controller
             ->join('networks as n', 'n.network_id', '=', 'd.network_id')
             ->join('building_networks as bn', 'bn.network_id', '=', 'n.network_id')
             ->where('bn.building_id', $buildingId)
-            ->where('n.network_address', $network)
+            ->where('n.subnet', $network)
             ->orderBy('d.ip_address')
             ->select('d.device_id', 'd.ip_address', 'd.mac_address', 'd.status', 'd.is_critical', 'd.network_id')
             ->get();
