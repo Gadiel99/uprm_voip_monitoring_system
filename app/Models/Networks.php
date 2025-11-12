@@ -12,7 +12,7 @@ class Networks extends Model
     public function buildings()
     {
         
-        return $this->belongsTo(Buildings::class, 'building_id', 'building_id');
+        return $this->belongsToMany(Buildings::class, 'building_networks', 'network_id', 'building_id');
     
     }
 
