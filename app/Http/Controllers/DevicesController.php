@@ -65,10 +65,16 @@ class DevicesController extends Controller
             ->first();
 
         // Action Required: Networks not assigned to any building
+        // Get only networks that are NOT in building_networks table
+        // First, get all network IDs that ARE assigned to buildings
+        $assignedNetworkIds = DB::table('building_networks')
+            ->pluck('network_id')
+            ->toArray();
+        
+        // Now get networks that are NOT in that list
         $unmappedNetworks = DB::table('networks as n')
-            ->leftJoin('building_networks as bn', 'bn.network_id', '=', 'n.network_id')
             ->leftJoin('devices as d', 'd.network_id', '=', 'n.network_id')
-            ->whereNull('bn.building_id')
+            ->whereNotIn('n.network_id', $assignedNetworkIds) // Exclude assigned networks
             ->groupBy('n.network_id', 'n.subnet')
             ->selectRaw("
                 n.network_id,
@@ -214,10 +220,14 @@ class DevicesController extends Controller
      */
     public function unmapped()
     {
-        // Get all networks not assigned to any building
+        // Get all network IDs that ARE assigned to buildings
+        $assignedNetworkIds = DB::table('building_networks')
+            ->pluck('network_id')
+            ->toArray();
+        
+        // Get all networks NOT in that list (unmapped networks)
         $networks = DB::table('networks as n')
-            ->leftJoin('building_networks as bn', 'bn.network_id', '=', 'n.network_id')
-            ->whereNull('bn.building_id')
+            ->whereNotIn('n.network_id', $assignedNetworkIds)
             ->orderBy('n.subnet')
             ->select('n.network_id', 'n.subnet')
             ->distinct()
