@@ -18,9 +18,56 @@ return Application::configure(basePath: dirname(__DIR__))
         // online/offline status in the Admin -> Users table.
         $middleware->appendToGroup('web', [
             \App\Http\Middleware\MarkUserOnline::class,
-            \App\Http\Middleware\LogPageAccess::class, // Log all page accesses
+            // LogPageAccess removed - only logging important actions now
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        // Log database connection errors
+        $exceptions->report(function (\Illuminate\Database\QueryException $e) {
+            \App\Helpers\SystemLogger::logError(
+                'Database Error: ' . $e->getMessage(),
+                [
+                    'sql' => $e->getSql(),
+                    'bindings' => $e->getBindings(),
+                    'code' => $e->getCode()
+                ]
+            );
+        });
+        
+        // Log authentication errors
+        $exceptions->report(function (\Illuminate\Auth\AuthenticationException $e) {
+            \App\Helpers\SystemLogger::logError(
+                'Authentication Error: ' . $e->getMessage(),
+                ['guards' => $e->guards()]
+            );
+        });
+        
+        // Log validation errors (like wrong password)
+        $exceptions->report(function (\Illuminate\Validation\ValidationException $e) {
+            if (request()->is('login')) {
+                \App\Helpers\SystemLogger::logError(
+                    'Login Validation Failed',
+                    [
+                        'email' => request()->input('email'),
+                        'errors' => $e->errors()
+                    ]
+                );
+            }
+        });
+        
+        // Log general exceptions
+        $exceptions->report(function (\Throwable $e) {
+            // Only log serious errors (not 404s or validation errors already handled)
+            if (!($e instanceof \Symfony\Component\HttpKernel\Exception\NotFoundHttpException) &&
+                !($e instanceof \Illuminate\Validation\ValidationException)) {
+                \App\Helpers\SystemLogger::logError(
+                    'System Error: ' . $e->getMessage(),
+                    [
+                        'file' => $e->getFile(),
+                        'line' => $e->getLine(),
+                        'trace' => $e->getTraceAsString()
+                    ]
+                );
+            }
+        });
     })->create();

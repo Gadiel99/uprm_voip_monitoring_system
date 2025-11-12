@@ -8,6 +8,7 @@ use App\Http\Controllers\AccountController;
 use App\Http\Controllers\ProfileController; // <-- add
 use App\Http\Controllers\ReportsController;
 use App\Http\Controllers\AlertsController;
+use App\Http\Controllers\BuildingController;
 
 /**
  * Controllers overview:
@@ -48,6 +49,7 @@ Route::middleware('auth')->group(function () {
     // Devices: building-level browsing
     Route::get('/devices', [DevicesController::class, 'index'])->name('devices');
     Route::get('/devices/critical', [DevicesController::class, 'criticalDevices'])->name('devices.critical');
+    Route::get('/devices/unmapped', [DevicesController::class, 'unmapped'])->name('devices.unmapped');
     Route::get('/devices/building/{building}', [DevicesController::class, 'byBuilding'])->name('devices.byBuilding');
     Route::get('/devices/building/{building}/network/{network}', [DevicesController::class, 'byNetwork'])->name('devices.byNetwork');
 
@@ -71,6 +73,12 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile/email', fn () => redirect()->route('profile.edit'));
     Route::patch('/profile/username', [ProfileController::class, 'updateUsername'])->name('profile.username');
     Route::patch('/profile/email', [ProfileController::class, 'updateEmail'])->name('profile.email');
+    
+    // Building management (for campus map)
+    Route::get('/buildings', [BuildingController::class, 'index'])->name('buildings.index');
+    Route::post('/buildings', [BuildingController::class, 'store'])->name('buildings.store');
+    Route::put('/buildings/{id}', [BuildingController::class, 'update'])->name('buildings.update');
+    Route::delete('/buildings/{id}', [BuildingController::class, 'destroy'])->name('buildings.destroy');
 });
 
 /*
@@ -97,6 +105,9 @@ Route::middleware(['auth','admin'])->group(function () {
     // Critical devices management (Settings tab)
     Route::post('/admin/critical-devices', [AdminController::class, 'storeCriticalDevice'])->name('admin.critical-devices.store');
     Route::delete('/admin/critical-devices/{device}', [AdminController::class, 'destroyCriticalDevice'])->name('admin.critical-devices.destroy');
+    
+    // API: Get critical devices status (for notifications)
+    Route::get('/api/critical-devices/status', [AdminController::class, 'getCriticalDevicesStatus'])->name('api.critical-devices.status');
 });
 
 /*

@@ -8,28 +8,32 @@ use Illuminate\Support\Facades\Auth;
 /**
  * SystemLogger Helper
  * 
- * Comprehensive logging system for all user actions and system events.
- * Logs are stored both in Laravel logs and can be accessed via localStorage in frontend.
+ * Focused logging system for important actions only:
+ * - LOGIN/LOGOUT: User authentication
+ * - ADD/EDIT/DELETE: Data modifications
+ * - ERROR: System errors
  */
 class SystemLogger
 {
     /**
-     * Log types
+     * Log types - Only important actions
      */
-    const INFO = 'INFO';
-    const SUCCESS = 'SUCCESS';
-    const WARNING = 'WARNING';
+    const LOGIN = 'LOGIN';
+    const LOGOUT = 'LOGOUT';
+    const ADD = 'ADD';
+    const EDIT = 'EDIT';
+    const DELETE = 'DELETE';
     const ERROR = 'ERROR';
 
     /**
      * Add a system log entry
      * 
-     * @param string $type Log type (INFO, SUCCESS, WARNING, ERROR)
-     * @param string $message Log message
+     * @param string $action Action type (LOGIN, LOGOUT, ADD, EDIT, DELETE, ERROR)
+     * @param string $comment Description of the action
      * @param string|null $user User who performed the action
      * @param array $context Additional context data
      */
-    public static function log(string $type, string $message, ?string $user = null, array $context = [])
+    public static function log(string $action, string $comment, ?string $user = null, array $context = [])
     {
         // Get user if not provided
         if (!$user && Auth::check()) {
@@ -41,8 +45,8 @@ class SystemLogger
         // Prepare log entry
         $logEntry = [
             'timestamp' => now()->format('Y-m-d H:i:s'),
-            'type' => $type,
-            'message' => $message,
+            'action' => $action,
+            'comment' => $comment,
             'user' => $user,
             'ip' => request()->ip(),
             'context' => $context
@@ -52,24 +56,17 @@ class SystemLogger
         $logMessage = sprintf(
             '[%s] %s: %s (User: %s, IP: %s)',
             $logEntry['timestamp'],
-            $type,
-            $message,
+            $action,
+            $comment,
             $user,
             $logEntry['ip']
         );
 
-        switch ($type) {
-            case self::ERROR:
-                Log::error($logMessage, $context);
-                break;
-            case self::WARNING:
-                Log::warning($logMessage, $context);
-                break;
-            case self::SUCCESS:
-            case self::INFO:
-            default:
-                Log::info($logMessage, $context);
-                break;
+        // Choose appropriate log level based on action
+        if ($action === self::ERROR) {
+            Log::error($logMessage, $context);
+        } else {
+            Log::info($logMessage, $context);
         }
 
         // Store in session for frontend access
@@ -87,12 +84,14 @@ class SystemLogger
     /**
      * Log user login attempt
      */
-    public static function logLoginAttempt(string $email, bool $success)
+    public static function logLoginAttempt(string $email, bool $success, array $context = [])
     {
         if ($success) {
-            self::log(self::SUCCESS, "User logged in successfully", $email);
+            self::log(self::LOGIN, "User logged in successfully", $email, $context);
         } else {
-            self::log(self::WARNING, "Failed login attempt", $email);
+            // Failed login includes reason if available
+            $reason = $context['reason'] ?? 'Invalid credentials';
+            self::log(self::ERROR, "Failed login attempt: {$reason}", $email, $context);
         }
     }
 
@@ -101,35 +100,43 @@ class SystemLogger
      */
     public static function logLogout(string $email)
     {
-        self::log(self::INFO, "User logged out", $email);
+        self::log(self::LOGOUT, "User logged out", $email);
     }
 
     /**
-     * Log page access
+     * Log data addition
      */
-    public static function logPageAccess(string $page)
+    public static function logAdd(string $entity, $entityId = null, array $context = [])
     {
-        self::log(self::INFO, "Accessed {$page} page");
+        $comment = "Added {$entity}";
+        if ($entityId) {
+            $comment .= " (ID: {$entityId})";
+        }
+        self::log(self::ADD, $comment, null, $context);
     }
 
     /**
      * Log data modification
      */
-    public static function logDataChange(string $action, string $entity, $entityId = null)
+    public static function logEdit(string $entity, $entityId = null, array $context = [])
     {
-        $message = "{$action} {$entity}";
+        $comment = "Edited {$entity}";
         if ($entityId) {
-            $message .= " (ID: {$entityId})";
+            $comment .= " (ID: {$entityId})";
         }
-        self::log(self::INFO, $message);
+        self::log(self::EDIT, $comment, null, $context);
     }
 
     /**
-     * Log admin action
+     * Log data deletion
      */
-    public static function logAdminAction(string $action, array $context = [])
+    public static function logDelete(string $entity, $entityId = null, array $context = [])
     {
-        self::log(self::INFO, "Admin action: {$action}", null, $context);
+        $comment = "Deleted {$entity}";
+        if ($entityId) {
+            $comment .= " (ID: {$entityId})";
+        }
+        self::log(self::DELETE, $comment, null, $context);
     }
 
     /**
@@ -138,34 +145,5 @@ class SystemLogger
     public static function logError(string $message, array $context = [])
     {
         self::log(self::ERROR, $message, null, $context);
-    }
-
-    /**
-     * Log search action
-     */
-    public static function logSearch(string $searchTerm, string $page)
-    {
-        self::log(self::INFO, "Searched for '{$searchTerm}' on {$page} page");
-    }
-
-    /**
-     * Log export action
-     */
-    public static function logExport(string $dataType)
-    {
-        self::log(self::INFO, "Exported {$dataType} data");
-    }
-
-    /**
-     * Log configuration change
-     */
-    public static function logConfigChange(string $setting, $oldValue, $newValue)
-    {
-        self::log(
-            self::WARNING,
-            "Configuration changed: {$setting}",
-            null,
-            ['old_value' => $oldValue, 'new_value' => $newValue]
-        );
     }
 }

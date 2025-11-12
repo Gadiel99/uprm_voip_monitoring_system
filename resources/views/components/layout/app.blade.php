@@ -576,58 +576,57 @@ document.addEventListener('DOMContentLoaded', () => {
     const notifContent = document.getElementById('notif-content');
     const notifBadge = document.getElementById('notif-badge');
 
-    // Function to check critical devices and update notifications
-    function updateCriticalDeviceNotifications() {
-        const notifications = [];
-        
-        // Get critical devices from localStorage (synced from admin panel)
-        const criticalDevices = JSON.parse(localStorage.getItem('criticalDevices') || '[]');
-        
-        // Check each critical device for offline status
-        criticalDevices.forEach(device => {
-            if (device.status === 'Offline') {
-                notifications.push({
-                    title: device.owner || 'Critical Device',
-                    desc: `Device ${device.ip} is offline`,
-                    level: 'critical',
-                    ip: device.ip,
-                    mac: device.mac
-                });
+    // Function to check critical devices and update notifications from DATABASE
+    async function updateCriticalDeviceNotifications() {
+        try {
+            const response = await fetch('/api/critical-devices/status');
+            if (!response.ok) throw new Error('Failed to fetch critical devices');
+            
+            const criticalDevices = await response.json();
+            const notifications = [];
+            
+            // Check each critical device for offline status
+            criticalDevices.forEach(device => {
+                if (device.status === 'Offline') {
+                    notifications.push({
+                        title: device.owner || 'Critical Device',
+                        desc: `Device ${device.ip} is offline`,
+                        level: 'critical',
+                        ip: device.ip,
+                        mac: device.mac
+                    });
+                }
+            });
+
+            // Populate notifications if any
+            if (notifications.length > 0) {
+                notifBadge.classList.remove('d-none');
+                notifBadge.textContent = notifications.length;
+
+                notifContent.innerHTML = notifications.map(n => `
+                    <li class="dropdown-item d-flex align-items-start gap-2 py-2">
+                        <i class="bi bi-exclamation-octagon text-danger fs-5"></i>
+                        <div>
+                            <div class="fw-semibold text-danger">${n.title}</div>
+                            <small class="text-muted">${n.desc}</small>
+                        </div>
+                    </li>
+                `).join('');
+            } else {
+                notifBadge.classList.add('d-none');
+                notifContent.innerHTML = '<li class="text-center text-muted py-3">No new notifications</li>';
             }
-        });
-
-        // Populate notifications if any
-        if (notifications.length > 0) {
-            notifBadge.classList.remove('d-none');
-            notifBadge.textContent = notifications.length;
-
-            notifContent.innerHTML = notifications.map(n => `
-                <li class="dropdown-item d-flex align-items-start gap-2 py-2">
-                    <i class="bi bi-exclamation-octagon text-danger fs-5"></i>
-                    <div>
-                        <div class="fw-semibold text-danger">${n.title}</div>
-                        <small class="text-muted">${n.desc}</small>
-                    </div>
-                </li>
-            `).join('');
-        } else {
-            notifBadge.classList.add('d-none');
-            notifContent.innerHTML = '<li class="text-center text-muted py-3">No new notifications</li>';
+        } catch (error) {
+            console.error('Error updating notifications:', error);
         }
     }
 
     // Initial update
     updateCriticalDeviceNotifications();
 
-    // Update notifications every 15 seconds
+    // Update notifications every 15 seconds from database
     setInterval(updateCriticalDeviceNotifications, 15000);
 
-    // Listen for storage changes (when admin updates critical devices)
-    window.addEventListener('storage', (e) => {
-        if (e.key === 'criticalDevices') {
-            updateCriticalDeviceNotifications();
-        }
-    });
 });
 </script>
 

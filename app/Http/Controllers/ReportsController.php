@@ -166,11 +166,16 @@ class ReportsController extends Controller
             });
         }
         if (!empty($validated['mac'])) {
-            $query->where('d.mac_address', 'like', "%{$validated['mac']}%");
+            // Normalize MAC search: remove colons, dashes, dots, spaces for flexible searching
+            $macTerm = str_replace([':', '-', '.', ' '], '', $validated['mac']);
+            // Search in normalized MAC (without delimiters)
+            $query->where(DB::raw("REPLACE(REPLACE(REPLACE(d.mac_address, ':', ''), '-', ''), '.', '')"), 'like', "%$macTerm%");
         }
         if (!empty($validated['ip'])) {
-            // allow partial ip match
-            $query->where('d.ip_address', 'like', "%{$validated['ip']}%");
+            // Normalize IP search: remove dots and spaces for flexible searching
+            $ipTerm = str_replace(['.', ' '], '', $validated['ip']);
+            // Search in normalized IP (without dots)
+            $query->where(DB::raw("REPLACE(d.ip_address, '.', '')"), 'like', "%$ipTerm%");
         }
         if (!empty($validated['status'])) {
             $query->where('d.status', $validated['status']);

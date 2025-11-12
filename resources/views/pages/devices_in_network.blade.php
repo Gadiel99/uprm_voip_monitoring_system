@@ -21,6 +21,8 @@
         <small class="text-muted">
           <i class="bi bi-building me-1"></i>{{ $building->name }} → {{ $network }}
         </small>
+        <br>
+        <small class="text-muted">Click on any device to view its 30-day activity graph</small>
       </div>
       <a href="{{ route('devices.byBuilding', ['building' => $building->building_id]) }}" class="btn btn-outline-secondary btn-sm">
         <i class="bi bi-arrow-left me-1"></i> Back to Networks

@@ -29,7 +29,6 @@ class AlertsController extends Controller
             ->leftJoin('networks as n', 'n.network_id', '=', 'bn.network_id')
             ->leftJoin('devices as d', 'd.network_id', '=', 'n.network_id')
             ->groupBy('b.building_id', 'b.name')
-            ->orderBy('b.name')
             ->selectRaw("
                 b.building_id,
                 b.name,
@@ -45,8 +44,17 @@ class AlertsController extends Controller
             ->get()
             ->map(function($building) use ($alertSettings) {
                 $building->alert_level = $alertSettings->getAlertLevel($building->offline_percentage);
+                // Add severity order for sorting: red=1, yellow=2, green=3
+                $building->severity_order = $building->alert_level === 'red' ? 1 : 
+                                          ($building->alert_level === 'yellow' ? 2 : 3);
                 return $building;
-            });
+            })
+            // Sort by severity first (Critical → Warning → Normal), then alphabetically
+            ->sortBy([
+                ['severity_order', 'asc'],
+                ['name', 'asc']
+            ])
+            ->values(); // Reset array keys after sorting
 
         // Critical devices summary
         $criticalDevices = DB::table('devices')

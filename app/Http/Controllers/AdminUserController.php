@@ -74,10 +74,15 @@ class AdminUserController extends Controller
         ]);
 
         $role  = $request->input('role', 'user');
+        
+        // Sanitize inputs to remove potentially harmful characters
+        $name = strip_tags($request->name);
+        $name = preg_replace('/[;\'"]/', '', $name); // Remove semicolons and quotes
+        $email = filter_var($request->email, FILTER_SANITIZE_EMAIL);
 
         User::create([
-            'name'     => $request->name,
-            'email'    => $request->email,
+            'name'     => $name,
+            'email'    => $email,
             'password' => Hash::make($request->password),
             'role'     => $role,
         ]);

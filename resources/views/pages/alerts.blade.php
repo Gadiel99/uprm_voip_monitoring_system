@@ -110,7 +110,7 @@
                 </tr>
             </thead>
             <tbody>
-                @forelse($buildings->sortByDesc('offline_percentage') as $building)
+                @forelse($buildings as $building)
                     <tr class="clickable-row" onclick="window.location.href='{{ route('alerts.offlineDevices', $building->building_id) }}'">
                         <td>
                             <i class="bi bi-building me-2 text-{{ $building->alert_level === 'red' ? 'danger' : ($building->alert_level === 'yellow' ? 'warning' : 'success') }}"></i>

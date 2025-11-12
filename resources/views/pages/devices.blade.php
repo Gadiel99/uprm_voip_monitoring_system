@@ -106,6 +106,30 @@
             </table>
         </div>
 
+        {{-- TABLE: ACTION REQUIRED (Unmapped Networks) --}}
+        {{-- Shows networks not assigned to any building that need configuration --}}
+        <div class="card border-0 shadow-sm p-4 mb-4">
+            <h5 class="fw-semibold mb-3">Action Required</h5>
+            <p class="text-muted mb-3">Networks and devices not assigned to any building. Click to view and assign them.</p>
+
+            <table class="table table-bordered table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Building</th>
+                        <th>Total Networks</th>
+                        <th>Total Devices</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr onclick="window.location.href='{{ route('devices.unmapped') }}'" style="cursor: pointer;">
+                        <td><i class="bi bi-exclamation-circle me-2 text-warning"></i> Need Connection</td>
+                        <td>{{ $unmappedStats->total_networks }}</td>
+                        <td>{{ $unmappedStats->total_devices }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
         {{-- TABLE: BUILDINGS OVERVIEW --}}
         {{-- Shows a summary of all buildings and their device counts --}}
         <div class="card border-0 shadow-sm p-4 mb-4">

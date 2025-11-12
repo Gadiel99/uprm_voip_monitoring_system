@@ -137,23 +137,39 @@
             <div class="card border-0 shadow-sm p-4 mb-4">
                 <h5 class="fw-semibold mb-3">System Logs</h5>
                 <div class="d-flex mb-3">
-                    <input type="text" class="form-control bg-light" id="logSearchInput" placeholder="Search logs by message, action, or user...">
+                    <input type="text" class="form-control bg-light" id="logSearchInput" placeholder="Search logs by timestamp, IP, action, or comment...">
                     <button class="btn btn-dark ms-2" onclick="filterLogs()"><i class="bi bi-search me-1"></i>Search</button>
                     <button class="btn btn-outline-secondary ms-2" onclick="clearLogs()"><i class="bi bi-trash me-1"></i>Clear All</button>
                 </div>
                 
                 <div class="mb-3">
-                    <button class="btn btn-sm btn-outline-primary me-2" onclick="filterByType('all')">All</button>
-                    <button class="btn btn-sm btn-outline-info me-2" onclick="filterByType('INFO')">Info</button>
-                    <button class="btn btn-sm btn-outline-success me-2" onclick="filterByType('SUCCESS')">Success</button>
-                    <button class="btn btn-sm btn-outline-warning me-2" onclick="filterByType('WARNING')">Warning</button>
-                    <button class="btn btn-sm btn-outline-danger" onclick="filterByType('ERROR')">Error</button>
+                    <button class="btn btn-sm btn-outline-secondary me-2" onclick="filterByAction('all')">All</button>
+                    <button class="btn btn-sm btn-outline-primary me-2" onclick="filterByAction('LOGIN')">Login</button>
+                    <button class="btn btn-sm btn-outline-secondary me-2" onclick="filterByAction('LOGOUT')">Logout</button>
+                    <button class="btn btn-sm btn-outline-success me-2" onclick="filterByAction('ADD')">Add</button>
+                    <button class="btn btn-sm btn-outline-warning me-2" onclick="filterByAction('EDIT')">Edit</button>
+                    <button class="btn btn-sm btn-outline-danger me-2" onclick="filterByAction('DELETE')">Delete</button>
+                    <button class="btn btn-sm btn-outline-danger" onclick="filterByAction('ERROR')">Error</button>
                 </div>
                 
-                <small class="text-muted d-block mb-3">Showing <span id="logCount">0</span> logs. Logs are automatically recorded for all system actions.</small>
+                <small class="text-muted d-block mb-3">Showing <span id="logCount">0</span> logs. Only important system actions are recorded (add, delete, edit, login, logout, errors).</small>
                 
-                <div class="bg-light rounded p-3" style="max-height: 500px; overflow-y: auto;" id="logsContainer">
-                    <div class="text-center text-muted py-4">No logs available. Actions will be logged here.</div>
+                <div class="table-responsive" style="max-height: 500px; overflow-y: auto;">
+                    <table class="table table-bordered table-hover align-middle mb-0">
+                        <thead class="table-light sticky-top">
+                            <tr>
+                                <th style="width: 160px;">Timestamp</th>
+                                <th style="width: 130px;">IP Address</th>
+                                <th style="width: 100px;">Action</th>
+                                <th>Comment</th>
+                            </tr>
+                        </thead>
+                        <tbody id="logsContainer">
+                            <tr>
+                                <td colspan="4" class="text-center text-muted py-4">No logs available. Actions will be logged here.</td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
@@ -176,6 +192,7 @@
                             <th>IP Address</th>
                             <th>MAC Address</th>
                             <th>Owner</th>
+                            <th>Status</th>
                             <th>Extensions</th>
                             <th style="width:120px;">Actions</th>
                         </tr>
@@ -193,6 +210,13 @@
                             <td class="ip-cell">{{ $device->ip_address }}</td>
                             <td class="mac-cell">{{ $device->mac_address }}</td>
                             <td class="owner-cell">{{ $ownerName ?? 'N/A' }}</td>
+                            <td class="status-cell">
+                                @if($device->status === 'Offline')
+                                    <span class="badge bg-danger">Offline</span>
+                                @else
+                                    <span class="badge bg-success">Online</span>
+                                @endif
+                            </td>
                             <td class="extensions-cell">
                                 @if($exts->isEmpty())
                                     <span class="text-muted">—</span>
@@ -218,7 +242,7 @@
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="5" class="text-center text-muted">No critical devices configured.</td>
+                            <td colspan="6" class="text-center text-muted">No critical devices configured.</td>
                         </tr>
                         @endforelse
                     </tbody>
@@ -289,20 +313,6 @@
                 </form>
 
                 <hr class="my-4">
-
-                {{-- Alert Display Settings (moved into Settings tab) --}}
-                <h6 class="fw-semibold mb-2">Alert Display Settings</h6>
-                <p class="text-muted" style="font-size: 0.9rem;">Choose how alerts are sorted in the Alerts tab</p>
-                <div class="form-check mb-2">
-                    <input class="form-check-input" type="radio" name="sortOrder" id="bySeverity" checked>
-                    <label class="form-check-label fw-semibold" for="bySeverity">By Severity</label>
-                    <p class="text-muted small ms-4 mb-0">Critical alerts first, then warnings, then normal</p>
-                </div>
-                <div class="form-check">
-                    <input class="form-check-input" type="radio" name="sortOrder" id="alphabetical">
-                    <label class="form-check-label fw-semibold" for="alphabetical">Alphabetically</label>
-                    <p class="text-muted small ms-4 mb-0">Sort alerts by building name (A–Z)</p>
-                </div>
 
                 <hr class="my-4">
 
@@ -390,7 +400,7 @@
 
 {{-- Add Critical Device --}}
 <div class="modal fade" id="addCriticalModal" tabindex="-1" aria-labelledby="addCriticalModalLabel" aria-hidden="true">
-  <div class="modal-dialog">
+  <div class="modal-dialog modal-lg">
     <div class="modal-content border-0 shadow-sm">
       <div class="modal-header bg-success text-white">
         <h5 class="modal-title" id="addCriticalModalLabel"><i class="bi bi-ethernet me-2"></i>Add Critical Device</h5>
@@ -399,21 +409,37 @@
       <form method="POST" action="{{ route('admin.critical-devices.store') }}">
         @csrf
         <div class="modal-body">
+            {{-- Search Input --}}
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Search Device</label>
+                <input 
+                    type="text" 
+                    class="form-control" 
+                    id="deviceSearchInput" 
+                    placeholder="Type IP, MAC (e.g. 4aba), or Owner name..."
+                    autocomplete="off"
+                >
+                <small class="text-muted">No need for colons in MAC or dots in IP - just type the numbers/letters</small>
+            </div>
+
+            {{-- Device Select --}}
             <div class="mb-3">
                 <label class="form-label fw-semibold">Select Device</label>
-                <select class="form-select @error('device_id') is-invalid @enderror" name="device_id" id="device_select" required>
+                <select class="form-select @error('device_id') is-invalid @enderror" name="device_id" id="device_select" required size="8" style="font-family: monospace; font-size: 0.9rem;">
                     <option value="">-- Select an existing device --</option>
                     @foreach($availableDevices ?? [] as $device)
-                        <option value="{{ $device->device_id }}" {{ old('device_id') == $device->device_id ? 'selected' : '' }}>
-                            {{ $device->ip_address }} - {{ $device->mac_address }}
-                            @if($device->owner) ({{ $device->owner }}) @endif
+                        <option value="{{ $device->device_id }}" data-searchable="{{ strtolower($device->ip_address . ' ' . $device->mac_address . ' ' . ($device->owner ?? '')) }}" {{ old('device_id') == $device->device_id ? 'selected' : '' }}>
+                            {{ $device->ip_address }} | {{ $device->mac_address }} @if($device->owner) | {{ $device->owner }} @endif
                         </option>
                     @endforeach
                 </select>
                 @error('device_id')
                     <div class="invalid-feedback">{{ $message }}</div>
                 @enderror
-                <small class="text-muted d-block mt-2">Only existing devices that are not already marked as critical can be selected.</small>
+                <small class="text-muted d-block mt-2">
+                    <span id="deviceCount">{{ count($availableDevices ?? []) }}</span> device(s) available. 
+                    Only existing devices that are not already marked as critical can be selected.
+                </small>
             </div>
         </div>
         <div class="modal-footer">
@@ -573,6 +599,67 @@ document.addEventListener('DOMContentLoaded', () => {
         addCriticalModal.show();
     @endif
     
+    // ===== Critical Device Search Functionality =====
+    const deviceSearchInput = document.getElementById('deviceSearchInput');
+    const deviceSelect = document.getElementById('device_select');
+    const deviceCountSpan = document.getElementById('deviceCount');
+    
+    if (deviceSearchInput && deviceSelect) {
+        deviceSearchInput.addEventListener('input', function() {
+            const searchTermRaw = this.value.toLowerCase().trim();
+            // Remove colons, dashes, and spaces from search term for flexible MAC search
+            const searchTerm = searchTermRaw.replace(/[:.\-\s]/g, '');
+            const options = deviceSelect.querySelectorAll('option');
+            let visibleCount = 0;
+            
+            options.forEach(option => {
+                if (option.value === '') {
+                    // Keep the placeholder option visible
+                    option.style.display = '';
+                    return;
+                }
+                
+                const searchableText = option.getAttribute('data-searchable') || '';
+                // Also remove colons, dashes, and spaces from searchable text for comparison
+                const normalizedSearchableText = searchableText.replace(/[:.\-\s]/g, '');
+                
+                // Match either normalized text (for MAC) or original text (for IP/Owner)
+                if (normalizedSearchableText.includes(searchTerm) || searchableText.includes(searchTermRaw)) {
+                    option.style.display = '';
+                    visibleCount++;
+                } else {
+                    option.style.display = 'none';
+                }
+            });
+            
+            // Update count
+            if (deviceCountSpan) {
+                deviceCountSpan.textContent = visibleCount;
+            }
+            
+            // Auto-select first visible option if only one result
+            if (visibleCount === 1 && searchTerm !== '') {
+                const firstVisible = Array.from(options).find(opt => 
+                    opt.value !== '' && opt.style.display !== 'none'
+                );
+                if (firstVisible) {
+                    deviceSelect.value = firstVisible.value;
+                }
+            }
+        });
+        
+        // Clear search when modal closes
+        document.getElementById('addCriticalModal').addEventListener('hidden.bs.modal', function() {
+            deviceSearchInput.value = '';
+            deviceSelect.querySelectorAll('option').forEach(opt => opt.style.display = '');
+            if (deviceCountSpan) {
+                const totalDevices = deviceSelect.querySelectorAll('option[value!=""]').length;
+                deviceCountSpan.textContent = totalDevices;
+            }
+            deviceSelect.value = '';
+        });
+    }
+    
     // ===== Users Tab Functionality =====
     // User table: Edit role functionality
     document.querySelectorAll('.edit-role-btn').forEach(btn => {
@@ -614,23 +701,29 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
     
+    // ===== UTILITY FUNCTIONS =====
+    
+    /**
+     * Sanitize user input to prevent issues with special characters
+     */
+    function sanitizeInput(input) {
+        if (!input) return '';
+        
+        // Remove potentially problematic characters
+        return input
+            .replace(/[<>]/g, '') // Remove HTML tags
+            .replace(/[;'"\\]/g, '') // Remove semicolons, quotes, backslashes
+            .replace(/\r?\n|\r/g, ' ') // Replace newlines with spaces
+            .trim();
+    }
+    
     // ===== Settings Tab - Critical Devices =====
     // Only enable table actions for serverTable (not criticalTable since it uses forms)
     ['serverTable'].forEach(enableTableActions);
     document.getElementById('formAddServer')?.addEventListener('submit', onAddServer);
     
-    syncCriticalDevicesToLocalStorage();
-    const criticalTable = document.querySelector('#criticalTable');
-    if (criticalTable) {
-        const observer = new MutationObserver(() => {
-            syncCriticalDevicesToLocalStorage();
-        });
-        observer.observe(criticalTable, {
-            childList: true,
-            subtree: true,
-            characterData: true
-        });
-    }
+    // Note: Critical devices are now fetched directly from database via API
+    // No need to sync to localStorage anymore
     
     // ===== Logs Tab =====
     const backendLogs = @json($systemLogs ?? []);
@@ -638,8 +731,8 @@ document.addEventListener('DOMContentLoaded', () => {
         let frontendLogs = getLogs();
         const mergedLogs = [...backendLogs, ...frontendLogs];
         const uniqueLogs = mergedLogs.reduce((acc, log) => {
-            const key = `${log.timestamp}-${log.message}`;
-            if (!acc.some(l => `${l.timestamp}-${l.message}` === key)) {
+            const key = `${log.timestamp}-${log.action}-${log.comment}`;
+            if (!acc.some(l => `${l.timestamp}-${l.action}-${l.comment}` === key)) {
                 acc.push(log);
             }
             return acc;
@@ -650,26 +743,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     updateLogsDisplay();
-    const logs = getLogs();
-    if (logs.length === 0) {
-        addLog('INFO', 'System initialized - Logging started', 'System');
-    }
     
     loadAlertDisplaySettings();
-    
-    const tabButtons = document.querySelectorAll('#adminTab button[data-bs-toggle="tab"]');
-    tabButtons.forEach(button => {
-        button.addEventListener('shown.bs.tab', (e) => {
-            const tabName = e.target.textContent.trim();
-            addLog('INFO', `Admin accessed ${tabName} tab`, 'Admin');
-        });
-    });
-    
-    // Alert display settings radio buttons
-    const radioButtons = document.querySelectorAll('input[name="sortOrder"]');
-    radioButtons.forEach(radio => {
-        radio.addEventListener('change', saveAlertDisplaySettings);
-    });
 });
 
 function enableTableActions(tableId) {
@@ -690,7 +765,7 @@ function enableTableActions(tableId) {
                 row.remove();
                 
                 // Log deletion
-                addLog('WARNING', `Entry deleted from ${tableId}: ${firstCell}`);
+                addLog('DELETE', `Entry deleted from ${tableId}: ${firstCell}`);
             }
             return;
         }
@@ -766,15 +841,17 @@ function enableTableActions(tableId) {
                     cell.innerHTML = `<span class="badge ${badgeClass}">${status}</span>`;
                     newValues.push(status);
                 } else if (input) {
-                    cell.textContent = input.value;
-                    newValues.push(input.value);
+                    // Sanitize input value before saving
+                    const sanitizedValue = sanitizeInput(input.value);
+                    cell.textContent = sanitizedValue;
+                    newValues.push(sanitizedValue);
                 } else {
                     newValues.push(cell.textContent.trim());
                 }
             });
             
             // Log the edit
-            addLog('INFO', `Entry updated in ${tableId}: ${newValues[0]} - Changes saved`);
+            addLog('EDIT', `Entry updated in ${tableId}: ${newValues[0]} - Changes saved`);
 
             actionCell.querySelector('.save-btn').outerHTML =
                 '<button class="btn btn-sm btn-outline-secondary edit-btn"><i class="bi bi-pencil"></i></button>';
@@ -786,10 +863,21 @@ function enableTableActions(tableId) {
 /* ADD FUNCTIONS  */
 function onAddServer(ev) {
     ev.preventDefault();
-    const name = document.getElementById('server_name').value.trim();
-    const ip = document.getElementById('server_ip').value.trim();
-    const port = document.getElementById('server_port').value.trim();
+    const nameRaw = document.getElementById('server_name').value.trim();
+    const ipRaw = document.getElementById('server_ip').value.trim();
+    const portRaw = document.getElementById('server_port').value.trim();
     const status = document.getElementById('server_status').value;
+    
+    // Sanitize inputs
+    const name = sanitizeInput(nameRaw);
+    const ip = sanitizeInput(ipRaw);
+    const port = sanitizeInput(portRaw);
+    
+    // Validate
+    if (!name || !ip || !port) {
+        alert('❌ All fields are required');
+        return;
+    }
 
     const tbody = document.querySelector('#serverTable tbody');
     const badge = status === 'Online' ? 'badge-online' : 'badge-offline';
@@ -813,35 +901,6 @@ function onAddServer(ev) {
 //     ...removed, now handled by backend...
 // }
 
-/* SYNC CRITICAL DEVICES TO LOCALSTORAGE FOR NOTIFICATIONS */
-function syncCriticalDevicesToLocalStorage() {
-    const criticalTable = document.querySelector('#criticalTable tbody');
-    if (!criticalTable) return;
-    
-    const devices = [];
-    const rows = criticalTable.querySelectorAll('tr');
-    
-    rows.forEach(row => {
-        const cells = row.querySelectorAll('td');
-        if (cells.length >= 4) {
-            const ip = cells[0].textContent.trim();
-            const mac = cells[1].textContent.trim();
-            const owner = cells[2].textContent.trim();
-            const statusBadge = cells[3].querySelector('.badge');
-            const status = statusBadge ? statusBadge.textContent.trim() : 'Unknown';
-            
-            devices.push({
-                ip: ip,
-                mac: mac,
-                owner: owner,
-                status: status
-            });
-        }
-    });
-    
-    localStorage.setItem('criticalDevices', JSON.stringify(devices));
-}
-
 /* ==================== LOGGING SYSTEM ==================== */
 
 // Get logs from localStorage or initialize
@@ -855,16 +914,17 @@ function saveLogs(logs) {
     updateLogsDisplay();
 }
 
-// Add a new log entry
-window.addLog = function(type, message, user = 'Admin') {
+// Add a new log entry (updated for new format)
+window.addLog = function(action, comment, user = 'Admin') {
     const logs = getLogs();
     const timestamp = new Date().toISOString().replace('T', ' ').substring(0, 19);
     
     const newLog = {
         timestamp: timestamp,
-        type: type, // INFO, SUCCESS, WARNING, ERROR
-        message: message,
+        action: action, // LOGIN, LOGOUT, ADD, EDIT, DELETE, ERROR
+        comment: comment,
         user: user,
+        ip: 'N/A', // Will be populated by backend
         id: Date.now()
     };
     
@@ -878,7 +938,7 @@ window.addLog = function(type, message, user = 'Admin') {
     saveLogs(logs);
 }
 
-// Display logs in the container
+// Display logs in table format
 function updateLogsDisplay(filteredLogs = null) {
     const container = document.getElementById('logsContainer');
     const logs = filteredLogs || getLogs();
@@ -886,24 +946,26 @@ function updateLogsDisplay(filteredLogs = null) {
     document.getElementById('logCount').textContent = logs.length;
     
     if (logs.length === 0) {
-        container.innerHTML = '<div class="text-center text-muted py-4">No logs available. Actions will be logged here.</div>';
+        container.innerHTML = '<tr><td colspan="4" class="text-center text-muted py-4">No logs available. Actions will be logged here.</td></tr>';
         return;
     }
     
-    const logColors = {
-        'INFO': 'text-primary',
-        'SUCCESS': 'text-success',
-        'WARNING': 'text-warning',
-        'ERROR': 'text-danger'
+    const actionColors = {
+        'LOGIN': 'primary',
+        'LOGOUT': 'secondary',
+        'ADD': 'success',
+        'EDIT': 'warning',
+        'DELETE': 'danger',
+        'ERROR': 'danger'
     };
     
     container.innerHTML = logs.map(log => `
-        <div class="log-entry mb-2 pb-2 border-bottom">
-            <code class="${logColors[log.type] || 'text-secondary'}">
-                [${log.timestamp}] <strong>${log.type}</strong>: ${log.message}
-                ${log.user !== 'System' ? `<span class="text-muted">(${log.user})</span>` : ''}
-            </code>
-        </div>
+        <tr>
+            <td class="small">${log.timestamp}</td>
+            <td class="small font-monospace">${log.ip || 'N/A'}</td>
+            <td><span class="badge bg-${actionColors[log.action] || 'secondary'}">${log.action}</span></td>
+            <td class="small">${log.comment}</td>
+        </tr>
     `).join('');
 }
 
@@ -918,24 +980,25 @@ function filterLogs() {
     }
     
     const filtered = logs.filter(log => 
-        log.message.toLowerCase().includes(searchTerm) ||
-        log.type.toLowerCase().includes(searchTerm) ||
-        log.user.toLowerCase().includes(searchTerm)
+        log.comment.toLowerCase().includes(searchTerm) ||
+        log.action.toLowerCase().includes(searchTerm) ||
+        log.timestamp.toLowerCase().includes(searchTerm) ||
+        (log.ip && log.ip.toLowerCase().includes(searchTerm))
     );
     
     updateLogsDisplay(filtered);
 }
 
-// Filter by log type
-function filterByType(type) {
+// Filter by action type
+function filterByAction(action) {
     const logs = getLogs();
     
-    if (type === 'all') {
+    if (action === 'all') {
         updateLogsDisplay();
         return;
     }
     
-    const filtered = logs.filter(log => log.type === type);
+    const filtered = logs.filter(log => log.action === action);
     updateLogsDisplay(filtered);
 }
 
@@ -943,33 +1006,19 @@ function filterByType(type) {
 function clearLogs() {
     if (confirm('Are you sure you want to clear all logs?')) {
         localStorage.removeItem('systemLogs');
-        addLog('WARNING', 'All system logs were cleared by admin', 'Admin');
+        addLog('DELETE', 'All system logs were cleared by admin', 'Admin');
         updateLogsDisplay();
     }
 }
 
 /* ==================== ALERT DISPLAY SETTINGS ==================== */
 
-// Load saved alert display settings from localStorage
+// Alerts are always sorted by severity first (Critical > Warning > Normal), 
+// then alphabetically within each severity level
 function loadAlertDisplaySettings() {
-    const sortOrder = localStorage.getItem('alertSortOrder') || 'bySeverity';
-    
-    // Set the radio button based on saved preference
-    if (sortOrder === 'bySeverity') {
-        document.getElementById('bySeverity').checked = true;
-    } else {
-        document.getElementById('alphabetical').checked = true;
-    }
+    // Set default sort order: severity + alphabetical
+    localStorage.setItem('alertSortOrder', 'bySeverityThenAlpha');
 }
 
-// Save alert display settings to localStorage
-function saveAlertDisplaySettings() {
-    const sortOrder = document.querySelector('input[name="sortOrder"]:checked').id;
-    localStorage.setItem('alertSortOrder', sortOrder);
-    addLog('INFO', `Alert display settings changed to: ${sortOrder === 'bySeverity' ? 'By Severity' : 'Alphabetically'}`, 'Admin');
-    alert('Alert display settings saved successfully!');
-}
-
-// Note: Radio button listeners are attached in the main DOMContentLoaded above
 </script>
 @endsection

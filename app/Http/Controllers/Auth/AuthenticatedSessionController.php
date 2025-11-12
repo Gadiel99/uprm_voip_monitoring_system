@@ -25,20 +25,35 @@ class AuthenticatedSessionController extends Controller
      */
     public function store(LoginRequest $request): RedirectResponse
     {
+        $email = $request->input('email');
+        
         try {
-            $email = $request->input('email');
             $request->authenticate();
             
             $request->session()->regenerate();
             
-            // Log successful login
-            SystemLogger::logLoginAttempt($email, true);
+            // Log successful login with context
+            SystemLogger::logLoginAttempt($email, true, [
+                'user_agent' => $request->userAgent(),
+                'intended_url' => $request->session()->get('url.intended')
+            ]);
             
             return redirect()->intended(route('dashboard', absolute: false));
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            // Log failed login attempt with reason
+            SystemLogger::logLoginAttempt($email, false, [
+                'reason' => 'Invalid credentials (wrong email/password)',
+                'user_agent' => $request->userAgent(),
+                'errors' => $e->errors()
+            ]);
+            throw $e;
         } catch (\Exception $e) {
-            // Log failed login attempt
-            $email = $request->input('email', 'unknown');
-            SystemLogger::logLoginAttempt($email, false);
+            // Log other errors (database, etc)
+            SystemLogger::logLoginAttempt($email, false, [
+                'reason' => 'System error: ' . $e->getMessage(),
+                'user_agent' => $request->userAgent(),
+                'exception' => get_class($e)
+            ]);
             throw $e;
         }
     }

@@ -64,10 +64,30 @@ class DevicesController extends Controller
             ")
             ->first();
 
+        // Action Required: Networks not assigned to any building
+        $unmappedNetworks = DB::table('networks as n')
+            ->leftJoin('building_networks as bn', 'bn.network_id', '=', 'n.network_id')
+            ->leftJoin('devices as d', 'd.network_id', '=', 'n.network_id')
+            ->whereNull('bn.building_id')
+            ->groupBy('n.network_id', 'n.subnet')
+            ->selectRaw("
+                n.network_id,
+                n.subnet,
+                COUNT(DISTINCT d.device_id) as total_devices
+            ")
+            ->get();
+
+        $unmappedStats = (object) [
+            'total_networks' => $unmappedNetworks->count(),
+            'total_devices' => $unmappedNetworks->sum('total_devices')
+        ];
+
         return view('pages.devices', [
             'overview' => $overview,
             'extensionsByBuilding' => $extensionsByBuilding,
             'criticalDevices' => $criticalDevices,
+            'unmappedNetworks' => $unmappedNetworks,
+            'unmappedStats' => $unmappedStats,
         ]);
     }
 
@@ -186,4 +206,45 @@ class DevicesController extends Controller
             'extByDevice' => $extByDevice,
         ]);
     }
+
+    /**
+     * Display unmapped networks (not assigned to any building).
+     *
+     * @return \Illuminate\Contracts\View\View
+     */
+    public function unmapped()
+    {
+        // Get all networks not assigned to any building
+        $networks = DB::table('networks as n')
+            ->leftJoin('building_networks as bn', 'bn.network_id', '=', 'n.network_id')
+            ->whereNull('bn.building_id')
+            ->orderBy('n.subnet')
+            ->select('n.network_id', 'n.subnet')
+            ->distinct()
+            ->get();
+
+        // Get devices grouped by network
+        $devicesByNetwork = collect();
+        foreach ($networks as $network) {
+            $devices = DB::table('devices as d')
+                ->where('d.network_id', $network->network_id)
+                ->select('d.device_id', 'd.ip_address', 'd.status')
+                ->get();
+            
+            $devicesByNetwork->put($network->subnet, $devices);
+        }
+
+        // Create a mock building object
+        $building = (object) [
+            'building_id' => 0,
+            'name' => 'Need Connection'
+        ];
+
+        return view('pages.devices_by_building', [
+            'building'    => $building,
+            'networks'    => $networks->pluck('subnet'),
+            'devicesByNetwork' => $devicesByNetwork,
+        ]);
+    }
 }
+

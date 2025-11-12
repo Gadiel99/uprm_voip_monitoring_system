@@ -128,12 +128,14 @@
                     <div class="mb-3">
                         <label class="form-label fw-semibold">Networks:</label>
                         <div id="networksContainer">
-                            <input 
-                                type="text" 
-                                class="form-control mb-2 network-input" 
-                                placeholder="e.g. 10.100.100.0"
-                                required
-                            >
+                            <div class="input-group mb-2">
+                                <input 
+                                    type="text" 
+                                    class="form-control network-input" 
+                                    placeholder="e.g. 10.100.100.0"
+                                    required
+                                >
+                            </div>
                         </div>
                         <button type="button" class="btn btn-success btn-sm" id="addNetworkBtn">
                             <i class="bi bi-plus-circle me-1"></i> Add Network
@@ -317,6 +319,9 @@
 
 {{-- === INTERACTIVE MAP SCRIPT === --}}
 <script>
+// ===== GLOBAL VARIABLES =====
+window.currentEditIndex = null;
+
 document.addEventListener('DOMContentLoaded', function () {
     
     // ===== BUILDING STATUS DATA (synced with alerts page) =====
@@ -421,15 +426,9 @@ document.addEventListener('DOMContentLoaded', function () {
         { top: 29.3, left: 20, name: "Edificio D" }
     ];
 
-    // Load markers from localStorage if available, otherwise use defaults
-    let markers;
-    const savedMarkers = localStorage.getItem('campusMarkers');
-    if (savedMarkers) {
-        markers = JSON.parse(savedMarkers);
-    } else {
-        markers = [...defaultMarkers]; // Copy default markers
-        saveMarkers(); // Save to localStorage
-    }
+    // Markers will be loaded from database
+    let markers = [];
+    let buildingsData = []; // Store full building data including IDs
 
     // ===== DOM ELEMENTS =====
     const mapContainer = document.getElementById('mapContainer');
@@ -485,6 +484,32 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
+    // ===== UTILITY FUNCTIONS =====
+    
+    /**
+     * Sanitize user input to prevent issues with special characters
+     * Removes or escapes characters that could break JavaScript/HTML/SQL
+     */
+    function sanitizeInput(input) {
+        if (!input) return '';
+        
+        // Remove potentially problematic characters
+        return input
+            .replace(/[<>]/g, '') // Remove HTML tags
+            .replace(/[;'"\\]/g, '') // Remove semicolons, quotes, backslashes
+            .replace(/\r?\n|\r/g, ' ') // Replace newlines with spaces
+            .trim();
+    }
+    
+    /**
+     * Validate network address format (basic check)
+     */
+    function isValidNetwork(network) {
+        // Basic IPv4 network format: XXX.XXX.XXX.XXX
+        const ipPattern = /^(\d{1,3}\.){3}\d{1,3}$/;
+        return ipPattern.test(network);
+    }
+    
     // ===== ADD MARKER FUNCTIONALITY =====
     addMarkerBtn.addEventListener('click', () => {
         addMarkerMode = !addMarkerMode;
@@ -556,31 +581,71 @@ document.addEventListener('DOMContentLoaded', function () {
         renderMarkers();
     });
 
-    function deleteMarker(index) {
-        // Save the marker name BEFORE any modifications
-        const markerName = markers[index].name;
+    async function deleteMarker(index) {
+        const marker = markers[index];
         
-        if (confirm(`Delete marker "${markerName}"?`)) {
-            // Remove marker from array
-            markers.splice(index, 1);
-            
-            // Exit delete mode BEFORE rendering
-            deleteMarkerMode = false;
-            deleteMarkerBtn.classList.remove('active');
-            mapContainer.style.cursor = 'grab';
-            
-            // Save and render
-            saveMarkers();
-            renderMarkers();
-            
-            // Show success message with saved name
-            alert(`✅ Marker "${markerName}" deleted`);
+        if (!marker.id) {
+            alert('❌ Cannot delete this marker (no database ID)');
+            return;
+        }
+        
+        if (confirm(`Delete building "${marker.name}"?`)) {
+            try {
+                const response = await fetch(`/buildings/${marker.id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    }
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    // Exit delete mode
+                    deleteMarkerMode = false;
+                    deleteMarkerBtn.classList.remove('active');
+                    mapContainer.style.cursor = 'grab';
+                    
+                    alert(`✅ Building "${marker.name}" deleted`);
+                    
+                    // Reload buildings from database
+                    await loadBuildingsFromDB();
+                } else {
+                    alert(`❌ Failed to delete building: ${result.message}`);
+                }
+            } catch (error) {
+                console.error('Error deleting building:', error);
+                alert('❌ Failed to delete building from database');
+            }
         }
     }
 
-    // ===== SAVE/LOAD MARKERS =====
-    function saveMarkers() {
-        localStorage.setItem('campusMarkers', JSON.stringify(markers));
+    // ===== LOAD BUILDINGS FROM DATABASE =====
+    async function loadBuildingsFromDB() {
+        try {
+            // Show loading message
+            markersLayer.innerHTML = '<div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:white;padding:20px;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,0.2);"><div class="spinner-border text-primary me-2" role="status"></div><span>Loading buildings...</span></div>';
+            
+            const response = await fetch('/buildings');
+            if (!response.ok) throw new Error('Failed to load buildings');
+            
+            buildingsData = await response.json();
+            
+            // Convert to markers format
+            markers = buildingsData.map(building => ({
+                id: building.building_id,
+                top: building.map_y,
+                left: building.map_x,
+                name: building.name,
+                networks: building.networks ? building.networks.map(n => n.subnet) : []
+            }));
+            
+            renderMarkers();
+            console.log(`✅ Loaded ${markers.length} buildings from database`);
+        } catch (error) {
+            console.error('Error loading buildings:', error);
+            markersLayer.innerHTML = '<div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:#dc3545;color:white;padding:20px;border-radius:8px;">❌ Failed to load buildings</div>';
+        }
     }
 
     // ===== ZOOM FUNCTIONALITY =====
@@ -610,7 +675,8 @@ document.addEventListener('DOMContentLoaded', function () {
     let hasMoved = false;
     
     mapContainer.addEventListener('mousedown', (e) => {
-        if (addMarkerMode || e.target.classList.contains('marker')) return;
+        // Don't allow panning in add or delete mode, or when clicking on markers
+        if (addMarkerMode || deleteMarkerMode || e.target.classList.contains('marker')) return;
         
         isPanning = true;
         hasMoved = false;
@@ -638,11 +704,11 @@ document.addEventListener('DOMContentLoaded', function () {
     mapContainer.addEventListener('mousemove', (e) => {
         if (!isPanning) return;
         
-        // Detect if mouse has moved significantly (more than 10px = it's a drag, not a click)
-        // Increased threshold from 5px to 10px to be less sensitive
+        // Detect if mouse has moved significantly (more than 20px = it's a drag, not a click)
+        // Increased threshold to 20px to be less sensitive and allow easier marker clicks
         const deltaX = Math.abs(e.pageX - clickStartX);
         const deltaY = Math.abs(e.pageY - clickStartY);
-        if (deltaX > 10 || deltaY > 10) {
+        if (deltaX > 20 || deltaY > 20) {
             hasMoved = true;
         }
         
@@ -679,8 +745,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // ===== INITIAL RENDER =====
     updateZoom(0.6); // Apply initial zoom level
-    renderMarkers();
-    console.log(`✅ Loaded ${markers.length} markers`);
+    
+    // Load buildings from database on page load
+    loadBuildingsFromDB();
 });
 </script>
 
@@ -726,59 +793,131 @@ document.addEventListener('DOMContentLoaded', function() {
     // Add Network button
     document.getElementById('addNetworkBtn').addEventListener('click', function() {
         const container = document.getElementById('networksContainer');
+        
+        const inputGroup = document.createElement('div');
+        inputGroup.className = 'input-group mb-2';
+        
         const newInput = document.createElement('input');
         newInput.type = 'text';
-        newInput.className = 'form-control mb-2 network-input';
+        newInput.className = 'form-control network-input';
         newInput.placeholder = 'e.g. 10.100.101.0';
-        container.appendChild(newInput);
+        
+        const deleteBtn = document.createElement('button');
+        deleteBtn.type = 'button';
+        deleteBtn.className = 'btn btn-outline-danger';
+        deleteBtn.innerHTML = '<i class="bi bi-x-lg"></i>';
+        deleteBtn.onclick = function() {
+            if (confirm('Remove this network input?')) {
+                inputGroup.remove();
+            }
+        };
+        
+        inputGroup.appendChild(newInput);
+        inputGroup.appendChild(deleteBtn);
+        container.appendChild(inputGroup);
     });
     
     // Save Building button
-    document.getElementById('saveBuildingBtn').addEventListener('click', function() {
-        const buildingName = document.getElementById('buildingName').value.trim();
+    document.getElementById('saveBuildingBtn').addEventListener('click', async function() {
+        const buildingNameRaw = document.getElementById('buildingName').value.trim();
+        const buildingName = sanitizeInput(buildingNameRaw);
         const networkInputs = document.querySelectorAll('.network-input');
         const networks = [];
+        const invalidNetworks = [];
         
-        // Collect all network values
+        // Collect and validate all network values
         networkInputs.forEach(input => {
-            const value = input.value.trim();
+            const valueRaw = input.value.trim();
+            const value = sanitizeInput(valueRaw);
+            
             if (value) {
-                networks.push(value);
+                // Validate network format
+                if (isValidNetwork(value)) {
+                    networks.push(value);
+                } else {
+                    invalidNetworks.push(value);
+                }
             }
         });
         
-        // Validate
+        // Validate building name
         if (!buildingName) {
             alert('❌ Please enter a building name');
             return;
         }
         
-        if (networks.length === 0) {
+        if (buildingName.length > 50) {
+            alert('❌ Building name is too long (max 50 characters)');
+            return;
+        }
+        
+        // Validate networks
+        if (networks.length === 0 && invalidNetworks.length === 0) {
             alert('❌ Please enter at least one network');
             return;
         }
         
-        // Add marker with building data
+        if (invalidNetworks.length > 0) {
+            alert(`❌ Invalid network format(s): ${invalidNetworks.join(', ')}\n\nPlease use format: XXX.XXX.XXX.XXX`);
+            return;
+        }
+        
+        // Check for duplicate building name
+        const duplicate = markers.find(m => m.name.toLowerCase() === buildingName.toLowerCase());
+        
+        if (duplicate) {
+            if (!confirm(`⚠️ A building named "${buildingName}" already exists. Add anyway?`)) {
+                return;
+            }
+        }
+        
+        // Get position from pending marker
         const position = window.pendingMarkerPosition;
-        const markers = JSON.parse(localStorage.getItem('campusMarkers') || '[]');
         
-        markers.push({
-            top: position.top,
-            left: position.left,
+        // Save to database via API
+        const buildingData = {
             name: buildingName,
+            map_x: position.left,
+            map_y: position.top,
             networks: networks
-        });
+        };
         
-        localStorage.setItem('campusMarkers', JSON.stringify(markers));
-        
-        // Reload markers on page
-        location.reload();
-        
-        // Close modal
+        // Close modal first
         const modal = bootstrap.Modal.getInstance(document.getElementById('createBuildingModal'));
         modal.hide();
         
-        alert(`✅ Building "${buildingName}" added successfully with ${networks.length} network(s)!`);
+        // Show loading
+        const loadingMsg = document.createElement('div');
+        loadingMsg.className = 'alert alert-info position-fixed top-0 start-50 translate-middle-x mt-3';
+        loadingMsg.style.zIndex = '9999';
+        loadingMsg.textContent = '⏳ Saving building...';
+        document.body.appendChild(loadingMsg);
+        
+        try {
+            const response = await fetch('/buildings', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                },
+                body: JSON.stringify(buildingData)
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                alert(`✅ Building "${buildingName}" added successfully with ${networks.length} network(s)!`);
+                // Reload buildings from database
+                await loadBuildingsFromDB();
+            } else {
+                alert(`❌ Failed to save building: ${result.message}`);
+            }
+        } catch (error) {
+            console.error('Error saving building:', error);
+            alert('❌ Failed to save building to database');
+        } finally {
+            document.body.removeChild(loadingMsg);
+        }
     });
     
     // Reset form when modal is closed
@@ -798,3 +937,4 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 
 @endsection
+

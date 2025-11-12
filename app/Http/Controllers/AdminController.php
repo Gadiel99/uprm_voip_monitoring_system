@@ -57,6 +57,7 @@ class AdminController extends Controller
         
         // Get critical devices for Settings tab
         $criticalDevices = Devices::where('is_critical', true)
+            ->select('device_id', 'ip_address', 'mac_address', 'status')
             ->orderBy('ip_address')
             ->get();
         
@@ -323,4 +324,35 @@ class AdminController extends Controller
         
         session()->put('system_logs', $logs);
     }
+
+    /**
+     * Get critical devices with their current status (for notifications API)
+     */
+    public function getCriticalDevicesStatus()
+    {
+        $criticalDevices = Devices::where('is_critical', true)
+            ->select('device_id', 'ip_address', 'mac_address', 'status')
+            ->get();
+
+        // Get owner names from extensions
+        $devices = $criticalDevices->map(function($device) {
+            $extension = DB::table('device_extensions as de')
+                ->join('extensions as e', 'e.extension_id', '=', 'de.extension_id')
+                ->where('de.device_id', $device->device_id)
+                ->select('e.user_first_name', 'e.user_last_name')
+                ->first();
+            
+            return [
+                'ip' => $device->ip_address,
+                'mac' => $device->mac_address,
+                'owner' => $extension 
+                    ? trim($extension->user_first_name . ' ' . $extension->user_last_name)
+                    : 'N/A',
+                'status' => $device->status
+            ];
+        });
+
+        return response()->json($devices);
+    }
 }
+

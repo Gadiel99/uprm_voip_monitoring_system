@@ -142,11 +142,13 @@
                     </div>
                     <div class="col-md-4">
                         <label class="search-label" for="searchMac">MAC Address</label>
-                        <input type="text" id="searchMac" name="mac" class="form-control" placeholder="Search by MAC address..." value="{{ $filters['mac'] ?? '' }}">
+                        <input type="text" id="searchMac" name="mac" class="form-control" placeholder="e.g. 4aba or 4a:ba:0d..." value="{{ $filters['mac'] ?? '' }}">
+                        <small class="text-muted">No need for colons or dashes</small>
                     </div>
                     <div class="col-md-4">
                         <label class="search-label" for="searchIp">IP Address</label>
-                        <input type="text" id="searchIp" name="ip" class="form-control" placeholder="Search by IP address..." value="{{ $filters['ip'] ?? '' }}">
+                        <input type="text" id="searchIp" name="ip" class="form-control" placeholder="e.g. 192168 or 192.168.1..." value="{{ $filters['ip'] ?? '' }}">
+                        <small class="text-muted">No need for dots</small>
                     </div>
                     <div class="col-md-4">
                         <label class="search-label" for="searchStatus">Status</label>
