@@ -74,23 +74,8 @@
         cursor: pointer;
     }
 
-    /* Online badge styling */
-    .badge-online {
-        background-color: #e6f9ed;
-        color: #00844b;
-    }
-
-    /* Offline badge styling */
-    .badge-offline {
-        background-color: #fdeaea;
-        color: #c82333;
-    }
-
-    /* Small hint text for clickable rows */
-    .click-hint {
-        color: #00844b;
-        font-weight: 600;
-    }
+    /* Table value styling to match screenshot */
+    .table td, .table th { font-size: 0.98rem; color: #212529; }
 </style>
 
 <div class="container-fluid">
@@ -107,17 +92,15 @@
                 <thead class="table-light">
                     <tr>
                         <th>Building</th>
+                        <th>Total Networks</th>
                         <th>Total Devices</th>
-                        <th>Online</th>
-                        <th>Offline</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr onclick="window.location.href='{{ route('devices.critical') }}'" style="cursor: pointer;">
                         <td><i class="bi bi-exclamation-triangle me-2 text-danger"></i> Critical Devices</td>
+                        <td>{{ $criticalDevices->total_networks ?? 0 }}</td>
                         <td>{{ $criticalDevices->total_devices ?? 0 }}</td>
-                        <td>{{ $criticalDevices->online_devices ?? 0 }}</td>
-                        <td>{{ $criticalDevices->offline_devices ?? 0 }}</td>
                     </tr>
                 </tbody>
             </table>
@@ -133,25 +116,17 @@
                 <thead class="table-light">
                     <tr>
                         <th>Building</th>
+                        <th>Total Networks</th>
                         <th>Total Devices</th>
-                        <th>Online</th>
-                        <th>Offline</th>
                     </tr>
                 </thead>
                 <tbody>
                     {{-- All buildings from database --}}
                     @foreach($overview as $building)
-                        @php
-                            $statusClass = 'success';
-                            if ($building->offline_devices > 0) {
-                                $statusClass = $building->offline_devices > $building->online_devices ? 'danger' : 'warning';
-                            }
-                        @endphp
                         <tr onclick="window.location.href='{{ route('devices.byBuilding', $building->building_id) }}'">
-                            <td><i class="bi bi-building me-2 text-{{ $statusClass }}"></i> {{ $building->name }}</td>
+                            <td><i class="bi bi-building me-2 text-success"></i> {{ $building->name }}</td>
+                            <td>{{ $building->total_networks }}</td>
                             <td>{{ $building->total_devices }}</td>
-                            <td>{{ $building->online_devices }}</td>
-                            <td>{{ $building->offline_devices }}</td>
                         </tr>
                     @endforeach
                 </tbody>

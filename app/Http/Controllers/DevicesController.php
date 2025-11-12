@@ -24,7 +24,7 @@ class DevicesController extends Controller
      */
     public function index()
     {
-        // Trae TODOS los edificios sin duplicados
+        // Trae TODOS los edificios sin duplicados + total de redes asociadas
         $overview = DB::table('buildings as b')
             ->leftJoin('building_networks as bn', 'bn.building_id', '=', 'b.building_id')
             ->leftJoin('networks as n', 'n.network_id', '=', 'bn.network_id')
@@ -34,6 +34,7 @@ class DevicesController extends Controller
             ->selectRaw("
                 b.building_id,
                 MAX(b.name) as name,
+                COUNT(DISTINCT n.network_id) as total_networks,
                 COUNT(DISTINCT d.device_id) as total_devices,
                 SUM(CASE WHEN d.status = 'online' THEN 1 ELSE 0 END) as online_devices,
                 SUM(CASE WHEN d.status = 'offline' THEN 1 ELSE 0 END) as offline_devices
@@ -51,13 +52,15 @@ class DevicesController extends Controller
             ->get()
             ->groupBy('building_id');
 
-        // Critical devices count
-        $criticalDevices = DB::table('devices')
-            ->where('is_critical', true)
+        // Critical devices count + distinct networks
+        $criticalDevices = DB::table('devices as d')
+            ->leftJoin('networks as n', 'n.network_id', '=', 'd.network_id')
+            ->where('d.is_critical', true)
             ->selectRaw("
+                COUNT(DISTINCT n.network_id) as total_networks,
                 COUNT(*) as total_devices,
-                SUM(CASE WHEN status = 'online' THEN 1 ELSE 0 END) as online_devices,
-                SUM(CASE WHEN status = 'offline' THEN 1 ELSE 0 END) as offline_devices
+                SUM(CASE WHEN d.status = 'online' THEN 1 ELSE 0 END) as online_devices,
+                SUM(CASE WHEN d.status = 'offline' THEN 1 ELSE 0 END) as offline_devices
             ")
             ->first();
 
@@ -178,14 +181,7 @@ class DevicesController extends Controller
                 ->get()
                 ->groupBy('device_id');
 
-        // Create a mock building object for critical devices
-        $building = (object) [
-            'building_id' => 0,
-            'name' => 'Critical Devices'
-        ];
-
-        return view('pages.devices_by_building', [
-            'building'    => $building,
+        return view('pages.critical_devices', [
             'devices'     => $devices,
             'extByDevice' => $extByDevice,
         ]);

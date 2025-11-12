@@ -17,13 +17,13 @@
   <div class="card border-0 shadow-sm p-4 mb-4">
     <div class="d-flex justify-content-between align-items-center mb-3">
       <div>
-        <h5 class="fw-semibold mb-0">Devices in Network: {{ $network }}</h5>
-        <small class="text-muted">
-          <i class="bi bi-building me-1"></i>{{ $building->name }} → {{ $network }}
-        </small>
+        <h5 class="fw-semibold mb-0">
+          <i class="bi bi-exclamation-triangle-fill text-danger me-2"></i>Critical Devices - Offline Only
+        </h5>
+        <small class="text-muted">{{ $devices->count() }} offline critical device(s) requiring attention</small>
       </div>
-      <a href="{{ route('devices.byBuilding', ['building' => $building->building_id]) }}" class="btn btn-outline-secondary btn-sm">
-        <i class="bi bi-arrow-left me-1"></i> Back to Networks
+      <a href="{{ route('alerts') }}" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left me-1"></i> Back to Alerts
       </a>
     </div>
 
@@ -31,6 +31,7 @@
       <table class="table table-bordered table-hover align-middle">
         <thead class="table-light">
           <tr>
+            <th>Subnet</th>
             <th>IP Address</th>
             <th>MAC Address</th>
             <th>Owner</th>
@@ -42,11 +43,14 @@
             @php
               $exts = ($extByDevice ?? collect())->get($d->device_id) ?? collect();
             @endphp
-            <tr onclick="showDeviceGraph('{{ $d->ip_address }}', '{{ $d->device_id }}', '{{ $building->name }}', '{{ $network }}')" style="cursor: pointer;">
+            <tr onclick="showDeviceGraph('{{ $d->ip_address }}', '{{ $d->device_id }}', 'Critical Devices', '{{ $d->subnet ?? 'N/A' }}')" style="cursor: pointer;">
+              <td class="fw-semibold">{{ $d->subnet ?? 'N/A' }}</td>
               <td class="fw-semibold">{{ $d->ip_address }}</td>
               <td>{{ $d->mac_address ?? 'N/A' }}</td>
               <td>
-                @if($exts->isNotEmpty())
+                @if($d->owner)
+                  {{ $d->owner }}
+                @elseif($exts->isNotEmpty())
                   {{ $exts->first()->user_first_name }} {{ $exts->first()->user_last_name }}
                 @else
                   <span class="text-muted">N/A</span>
@@ -68,7 +72,9 @@
             </tr>
           @empty
             <tr>
-              <td colspan="4" class="text-center text-muted">No devices found in this network.</td>
+              <td colspan="5" class="text-center text-success">
+                <i class="bi bi-check-circle me-2"></i>All critical devices are currently online!
+              </td>
             </tr>
           @endforelse
         </tbody>
@@ -101,7 +107,7 @@ let activityChart = null;
 // Show device activity graph in modal
 function showDeviceGraph(ip, deviceId, building, network) {
     // Set modal title
-    document.getElementById('modalDeviceId').textContent = `${deviceId} (${ip}) - ${building} → ${network}`;
+    document.getElementById('modalDeviceId').textContent = `${deviceId} (${ip}) - ${building}`;
     
     // Generate random 30-day activity data (0 or 1)
     const days = Array.from({length: 30}, (_, i) => i + 1);

@@ -7,6 +7,7 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AccountController;
 use App\Http\Controllers\ProfileController; // <-- add
 use App\Http\Controllers\ReportsController;
+use App\Http\Controllers\AlertsController;
 
 /**
  * Controllers overview:
@@ -40,7 +41,9 @@ use App\Http\Controllers\ReportsController;
 Route::middleware('auth')->group(function () {
     // Dashboard and tabs (server-rendered pages)
     Route::view('/', 'pages.home')->name('dashboard');
-    Route::view('/alerts', 'pages.alerts')->name('alerts');
+    Route::get('/alerts', [AlertsController::class, 'index'])->name('alerts');
+    Route::get('/alerts/building/{building}/offline', [AlertsController::class, 'offlineDevices'])->name('alerts.offlineDevices');
+    Route::get('/alerts/critical/offline', [AlertsController::class, 'criticalOffline'])->name('alerts.criticalOffline');
 
     // Devices: building-level browsing
     Route::get('/devices', [DevicesController::class, 'index'])->name('devices');
@@ -87,6 +90,13 @@ Route::middleware(['auth','admin'])->group(function () {
     Route::patch('/admin/users/{user}', [AdminUserController::class, 'update'])->name('admin.users.update');
     Route::patch('/admin/users/{user}/role', [AdminUserController::class, 'updateRole'])->name('admin.users.role');
     Route::delete('/admin/users/{user}', [AdminUserController::class, 'destroy'])->name('admin.users.destroy');
+    
+    // Alert settings (Settings tab)
+    Route::post('/admin/alert-settings', [AdminController::class, 'updateAlertSettings'])->name('admin.alert-settings.update');
+    
+    // Critical devices management (Settings tab)
+    Route::post('/admin/critical-devices', [AdminController::class, 'storeCriticalDevice'])->name('admin.critical-devices.store');
+    Route::delete('/admin/critical-devices/{device}', [AdminController::class, 'destroyCriticalDevice'])->name('admin.critical-devices.destroy');
 });
 
 /*

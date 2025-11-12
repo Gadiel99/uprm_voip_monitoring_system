@@ -11,16 +11,6 @@
         background-color: #f1f3f4;
         cursor: pointer;
     }
-
-    .badge-online {
-        background-color: #e6f9ed;
-        color: #00844b;
-    }
-
-    .badge-offline {
-        background-color: #fdeaea;
-        color: #c82333;
-    }
 </style>
 
 <div class="container-fluid py-4">
@@ -41,28 +31,13 @@
           <tr>
             <th>Network</th>
             <th>Total Devices</th>
-            <th>Online</th>
-            <th>Offline</th>
-            <th>Status</th>
           </tr>
         </thead>
         <tbody>
           @forelse($networks as $network)
             @php
               $networkDevices = $devicesByNetwork[$network] ?? collect();
-              $onlineDevices = $networkDevices->where('status', 'online')->count();
               $totalDevices = $networkDevices->count();
-              $offlineDevices = $totalDevices - $onlineDevices;
-              
-              $badgeClass = 'badge-online';
-              $statusText = 'All Online';
-              if ($offlineDevices > $onlineDevices) {
-                  $badgeClass = 'badge-offline';
-                  $statusText = 'Critical';
-              } elseif ($offlineDevices > 0) {
-                  $badgeClass = 'badge bg-warning text-dark';
-                  $statusText = 'Warning';
-              }
             @endphp
             <tr onclick="window.location.href='{{ route('devices.byNetwork', ['building' => $building->building_id, 'network' => urlencode($network)]) }}'" style="cursor: pointer;">
               <td class="fw-semibold">
@@ -70,15 +45,10 @@
                 {{ $network }}
               </td>
               <td>{{ $totalDevices }}</td>
-              <td>{{ $onlineDevices }}</td>
-              <td>{{ $offlineDevices }}</td>
-              <td>
-                <span class="badge {{ $badgeClass }}">{{ $statusText }}</span>
-              </td>
             </tr>
           @empty
             <tr>
-              <td colspan="5" class="text-center text-muted">No networks configured for this building.</td>
+              <td colspan="2" class="text-center text-muted">No networks configured for this building.</td>
             </tr>
           @endforelse
         </tbody>

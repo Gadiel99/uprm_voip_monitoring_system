@@ -5,10 +5,13 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\DB;
 use App\Models\User;
 use App\Models\Buildings;
 use App\Models\Networks;
 use App\Models\Devices;
+use App\Models\AlertSettings;
 
 /**
  * Controlador del panel de administración (dashboard).
@@ -49,6 +52,30 @@ class AdminController extends Controller
         // Get system logs from session
         $systemLogs = session()->get('system_logs', []);
         
+        // Get alert settings for Settings tab
+        $alertSettings = AlertSettings::current();
+        
+        // Get critical devices for Settings tab
+        $criticalDevices = Devices::where('is_critical', true)
+            ->orderBy('ip_address')
+            ->get();
+        
+        // Get extensions for critical devices to show owner names
+        $criticalDeviceIds = $criticalDevices->pluck('device_id');
+        $extensionsByCriticalDevice = $criticalDeviceIds->isEmpty()
+            ? collect()
+            : DB::table('device_extensions as de')
+                ->join('extensions as e', 'e.extension_id', '=', 'de.extension_id')
+                ->whereIn('de.device_id', $criticalDeviceIds)
+                ->select('de.device_id', 'e.extension_number', 'e.user_first_name', 'e.user_last_name')
+                ->get()
+                ->groupBy('device_id');
+        
+        // Get available devices (not already critical) for dropdown
+        $availableDevices = Devices::where('is_critical', false)
+            ->orderBy('ip_address')
+            ->get();
+        
         // Flag to let Blade know if we should show server-driven Users section
         $isUsersServer = true;
 
@@ -58,10 +85,125 @@ class AdminController extends Controller
             'buildings'     => $buildings,
             'logLines'      => $logLines,
             'systemLogs'    => $systemLogs,
+            'alertSettings' => $alertSettings,
+            'criticalDevices' => $criticalDevices,
+            'extensionsByCriticalDevice' => $extensionsByCriticalDevice,
+            'availableDevices' => $availableDevices,
             'isUsersServer' => $isUsersServer,
             'users'         => $recentUsers, // fallback for now; AdminUserController overrides
             'activeTab'     => $request->get('tab') // optional active tab switching
         ]);
+    }
+
+    /**
+     * Update alert threshold settings.
+     *
+     * @param  Request  $request
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function updateAlertSettings(Request $request)
+    {
+        // Use manual validator so we can control redirect target and tab persistence
+    $validator = Validator::make($request->all(), AlertSettings::rules(), [
+            'upper_threshold.gt' => 'Upper threshold must be greater than lower threshold.',
+        ]);
+
+        if ($validator->fails()) {
+            $this->addSystemLog('ERROR', 'Failed to update alert thresholds: ' . $validator->errors()->first());
+            // Always return to Admin page with Settings tab active and inline errors
+            return redirect()
+                ->route('admin', ['tab' => 'settings'])
+                ->withErrors($validator)
+                ->withInput();
+        }
+
+        $validated = $validator->validated();
+
+        $settings = AlertSettings::current();
+        $oldLower = $settings->lower_threshold;
+        $oldUpper = $settings->upper_threshold;
+        $oldActive = $settings->is_active;
+        
+        $settings->update([
+            'lower_threshold' => $validated['lower_threshold'],
+            'upper_threshold' => $validated['upper_threshold'],
+            'is_active' => $request->boolean('is_active'),
+        ]);
+        
+        // Log the changes
+        $changes = [];
+        if ($oldLower != $validated['lower_threshold']) {
+            $changes[] = "Lower threshold: {$oldLower}% → {$validated['lower_threshold']}%";
+        }
+        if ($oldUpper != $validated['upper_threshold']) {
+            $changes[] = "Upper threshold: {$oldUpper}% → {$validated['upper_threshold']}%";
+        }
+        if ($oldActive != $request->boolean('is_active')) {
+            $status = $request->boolean('is_active') ? 'enabled' : 'disabled';
+            $changes[] = "Alerts {$status}";
+        }
+        
+        if (!empty($changes)) {
+            $this->addSystemLog('SUCCESS', 'Alert thresholds updated: ' . implode(', ', $changes));
+        }
+
+        return redirect()->route('admin', ['tab' => 'settings'])
+            ->with('status', 'Alert settings updated successfully.');
+    }
+
+    /**
+     * Mark an existing device as critical.
+     *
+     * @param  Request  $request
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function storeCriticalDevice(Request $request)
+    {
+        $validated = $request->validate([
+            'device_id' => 'required|exists:devices,device_id',
+        ]);
+
+        $device = Devices::findOrFail($validated['device_id']);
+        
+        // Check if already critical
+        if ($device->is_critical) {
+            $this->addSystemLog('WARNING', "Attempted to add device {$device->ip_address} to critical list, but it's already marked as critical");
+            return redirect()->route('admin', ['tab' => 'settings'])
+                ->with('error', 'Device is already marked as critical.');
+        }
+
+        $device->update(['is_critical' => true]);
+        
+        $this->addSystemLog('SUCCESS', "Device added to critical list: {$device->ip_address} ({$device->mac_address})");
+
+        return redirect()->route('admin', ['tab' => 'settings'])
+            ->with('status', 'Device added to critical list successfully.');
+    }
+
+    /**
+     * Remove a device from critical list (set is_critical to false).
+     *
+     * @param  int  $deviceId
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function destroyCriticalDevice($deviceId)
+    {
+        $device = Devices::findOrFail($deviceId);
+        
+        // Only allow removal if device is currently critical
+        if (!$device->is_critical) {
+            $this->addSystemLog('WARNING', "Attempted to remove device {$device->ip_address} from critical list, but it's not marked as critical");
+            return redirect()->route('admin', ['tab' => 'settings'])
+                ->with('error', 'Device is not marked as critical.');
+        }
+
+        // Set is_critical to false instead of deleting
+        $device->update(['is_critical' => false]);
+        
+        $this->addSystemLog('INFO', "Device removed from critical list: {$device->ip_address} ({$device->mac_address})");
+
+        return redirect()->route('admin', ['tab' => 'settings'])
+            ->with('status', 'Device removed from critical list successfully.');
     }
 
     /**
@@ -150,5 +292,35 @@ class AdminController extends Controller
 
         $arr = explode("\n", trim($data));
         return array_slice($arr, -$lines);
+    }
+
+    /**
+     * Add a log entry to the system logs (stored in session/localStorage).
+     *
+     * @param  string $type (INFO, SUCCESS, WARNING, ERROR)
+     * @param  string $message
+     * @param  string $user
+     * @return void
+     */
+    private function addSystemLog(string $type, string $message, string $user = 'Admin'): void
+    {
+        $logs = session()->get('system_logs', []);
+        
+        $newLog = [
+            'timestamp' => now()->format('Y-m-d H:i:s'),
+            'type' => $type,
+            'message' => $message,
+            'user' => $user,
+            'id' => time() . rand(1000, 9999)
+        ];
+        
+        array_unshift($logs, $newLog); // Add to beginning
+        
+        // Keep only last 500 logs
+        if (count($logs) > 500) {
+            array_pop($logs);
+        }
+        
+        session()->put('system_logs', $logs);
     }
 }

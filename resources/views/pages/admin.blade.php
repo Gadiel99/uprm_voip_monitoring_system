@@ -176,50 +176,117 @@
                             <th>IP Address</th>
                             <th>MAC Address</th>
                             <th>Owner</th>
-                            <th>Status</th>
+                            <th>Extensions</th>
                             <th style="width:120px;">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <tr class="critical-device-row" style="cursor: pointer;">
-                            <td>192.168.1.10</td>
-                            <td>00:1B:44:11:AA:00</td>
-                            <td>Emergency Services</td>
-                            <td><span class="badge badge-online">Online</span></td>
+                        @forelse($criticalDevices ?? [] as $device)
+                        @php
+                            $exts = ($extensionsByCriticalDevice ?? collect())->get($device->device_id) ?? collect();
+                            $ownerName = $device->owner;
+                            if (!$ownerName && $exts->isNotEmpty()) {
+                                $ownerName = trim($exts->first()->user_first_name . ' ' . $exts->first()->user_last_name);
+                            }
+                        @endphp
+                        <tr class="critical-device-row" data-device-id="{{ $device->device_id }}">
+                            <td class="ip-cell">{{ $device->ip_address }}</td>
+                            <td class="mac-cell">{{ $device->mac_address }}</td>
+                            <td class="owner-cell">{{ $ownerName ?? 'N/A' }}</td>
+                            <td class="extensions-cell">
+                                @if($exts->isEmpty())
+                                    <span class="text-muted">—</span>
+                                @else
+                                    <div class="d-flex flex-wrap gap-1">
+                                        @foreach($exts as $e)
+                                            <span class="badge bg-light text-dark border">
+                                                {{ $e->extension_number }}
+                                            </span>
+                                        @endforeach
+                                    </div>
+                                @endif
+                            </td>
                             <td>
-                                <button class="btn btn-sm btn-outline-secondary edit-btn"><i class="bi bi-pencil"></i></button>
-                                <button class="btn btn-sm btn-danger delete-btn"><i class="bi bi-trash"></i></button>
+                                <form action="{{ route('admin.critical-devices.destroy', $device->device_id) }}" method="POST" style="display:inline-block;">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button class="btn btn-sm btn-danger" onclick="return confirm('Remove this device from critical list?')">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
                             </td>
                         </tr>
-                        <tr class="critical-device-row" style="cursor: pointer;">
-                            <td>192.168.1.11</td>
-                            <td>00:1B:44:11:AA:01</td>
-                            <td>Security Office</td>
-                            <td><span class="badge badge-offline">Offline</span></td>
-                            <td>
-                                <button class="btn btn-sm btn-outline-secondary edit-btn"><i class="bi bi-pencil"></i></button>
-                                <button class="btn btn-sm btn-danger delete-btn"><i class="bi bi-trash"></i></button>
-                            </td>
+                        @empty
+                        <tr>
+                            <td colspan="5" class="text-center text-muted">No critical devices configured.</td>
                         </tr>
+                        @endforelse
                     </tbody>
                 </table>
 
                 <hr class="my-4">
 
-                {{-- Alert Thresholds (only Yellow range, as requested) --}}
+                {{-- Alert Thresholds Configuration --}}
                 <h6 class="fw-semibold">Alert Thresholds</h6>
-                <p class="text-muted small mb-3">Set the percentage range that defines warning conditions.</p>
-                <div class="row g-4 mt-2">
-                    <div class="col-md-6">
-                        <label class="form-label fw-semibold">Yellow Warning Status (Between)</label>
-                        <div class="input-group">
-                            <input type="number" class="form-control" value="10">
-                            <span class="input-group-text">%</span>
-                            <input type="number" class="form-control" value="25">
-                            <span class="input-group-text">%</span>
+                <p class="text-muted small mb-3">Configure offline device percentage thresholds for building alerts.</p>
+                
+                @if(session('status') && request()->get('tab') === 'settings')
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        {{ session('status') }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                @endif
+
+                <form method="POST" action="{{ route('admin.alert-settings.update') }}">
+                    @csrf
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold">Lower Threshold (%)</label>
+                            <input type="number" class="form-control @error('lower_threshold') is-invalid @enderror" 
+                                   name="lower_threshold" min="0" max="100" 
+                                   value="{{ old('lower_threshold', $alertSettings->lower_threshold ?? 30) }}">
+                            <small class="text-muted d-block mt-1">Below this is <span class="badge bg-success">Normal</span></small>
+                            @error('lower_threshold')
+                                <div class="text-danger small mt-1">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold">Upper Threshold (%)</label>
+                            <input type="number" class="form-control @error('upper_threshold') is-invalid @enderror" 
+                                   name="upper_threshold" min="0" max="100" 
+                                   value="{{ old('upper_threshold', $alertSettings->upper_threshold ?? 70) }}">
+                            <small class="text-muted d-block mt-1">Above this is <span class="badge bg-danger">Critical</span></small>
+                            @error('upper_threshold')
+                                <div class="text-danger small mt-1">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold">Alerts Active</label>
+                            <div class="form-check form-switch mt-2">
+                                <input class="form-check-input" type="checkbox" id="alertsActive" name="is_active" value="1"
+                                       {{ old('is_active', $alertSettings->is_active ?? true) ? 'checked' : '' }}>
+                                <label class="form-check-label" for="alertsActive">
+                                    Enable alert monitoring
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold d-block">&nbsp;</label>
+                            <button type="submit" class="btn btn-success w-100">
+                                <i class="bi bi-check-circle me-2"></i>Save Thresholds
+                            </button>
                         </div>
                     </div>
-                </div>
+                    <div class="mt-3">
+                        <div class="alert alert-info mb-0">
+                            <i class="bi bi-info-circle me-2"></i>
+                            <strong>How it works:</strong> Buildings with offline device percentage 
+                            &lt; {{ old('lower_threshold', $alertSettings->lower_threshold ?? 30) }}% are <span class="badge bg-success">Normal</span>, 
+                            between {{ old('lower_threshold', $alertSettings->lower_threshold ?? 30) }}% - {{ old('upper_threshold', $alertSettings->upper_threshold ?? 70) }}% are <span class="badge bg-warning text-dark">Warning</span>, 
+                            and &gt; {{ old('upper_threshold', $alertSettings->upper_threshold ?? 70) }}% are <span class="badge bg-danger">Critical</span>.
+                        </div>
+                    </div>
+                </form>
 
                 <hr class="my-4">
 
@@ -329,31 +396,29 @@
         <h5 class="modal-title" id="addCriticalModalLabel"><i class="bi bi-ethernet me-2"></i>Add Critical Device</h5>
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
       </div>
-      <form id="formAddCritical">
+      <form method="POST" action="{{ route('admin.critical-devices.store') }}">
+        @csrf
         <div class="modal-body">
             <div class="mb-3">
-                <label class="form-label fw-semibold">IP Address</label>
-                <input type="text" class="form-control" id="critical_ip" placeholder="192.168.x.x" required>
-            </div>
-            <div class="mb-3">
-                <label class="form-label fw-semibold">MAC Address</label>
-                <input type="text" class="form-control" id="critical_mac" placeholder="00:1B:44:11:AA:XX" required>
-            </div>
-            <div class="mb-3">
-                <label class="form-label fw-semibold">Owner</label>
-                <input type="text" class="form-control" id="critical_owner" placeholder="Emergency Services" required>
-            </div>
-            <div class="mb-3">
-                <label class="form-label fw-semibold">Status</label>
-                <select class="form-select" id="critical_status">
-                    <option value="Online">Online</option>
-                    <option value="Offline" selected>Offline</option>
+                <label class="form-label fw-semibold">Select Device</label>
+                <select class="form-select @error('device_id') is-invalid @enderror" name="device_id" id="device_select" required>
+                    <option value="">-- Select an existing device --</option>
+                    @foreach($availableDevices ?? [] as $device)
+                        <option value="{{ $device->device_id }}" {{ old('device_id') == $device->device_id ? 'selected' : '' }}>
+                            {{ $device->ip_address }} - {{ $device->mac_address }}
+                            @if($device->owner) ({{ $device->owner }}) @endif
+                        </option>
+                    @endforeach
                 </select>
+                @error('device_id')
+                    <div class="invalid-feedback">{{ $message }}</div>
+                @enderror
+                <small class="text-muted d-block mt-2">Only existing devices that are not already marked as critical can be selected.</small>
             </div>
         </div>
         <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-            <button type="submit" class="btn btn-success">Save</button>
+            <button type="submit" class="btn btn-success">Add to Critical List</button>
         </div>
       </form>
     </div>
@@ -487,7 +552,7 @@
 <script>
 document.addEventListener('DOMContentLoaded', () => {
     // ===== Tab Activation =====
-    const activeTab = @json($activeTab ?? null);
+    const activeTab = @json($activeTab ?? request()->get('tab') ?? (($errors->has('lower_threshold') || $errors->has('upper_threshold')) ? 'settings' : null));
     if (activeTab) {
         const tabTrigger = document.querySelector(`[data-bs-target="#${activeTab}"]`);
         if (tabTrigger) {
@@ -496,10 +561,16 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     
-    // ===== Reopen Add User Modal if validation errors exist =====
-    @if($errors->any() && old('_token'))
+    // ===== Reopen Add User Modal only if user form has validation errors =====
+    @if(old('_token') && ($errors->has('name') || $errors->has('email') || $errors->has('password') || $errors->has('role')))
         const addUserModal = new bootstrap.Modal(document.getElementById('addUserModal'));
         addUserModal.show();
+    @endif
+    
+    // ===== Reopen Add Critical Device Modal if validation errors =====
+    @if($errors->has('device_id'))
+        const addCriticalModal = new bootstrap.Modal(document.getElementById('addCriticalModal'));
+        addCriticalModal.show();
     @endif
     
     // ===== Users Tab Functionality =====
@@ -544,8 +615,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     // ===== Settings Tab - Critical Devices =====
-    ['criticalTable','serverTable'].forEach(enableTableActions);
-    document.getElementById('formAddCritical')?.addEventListener('submit', onAddCritical);
+    // Only enable table actions for serverTable (not criticalTable since it uses forms)
+    ['serverTable'].forEach(enableTableActions);
     document.getElementById('formAddServer')?.addEventListener('submit', onAddServer);
     
     syncCriticalDevicesToLocalStorage();
@@ -560,18 +631,6 @@ document.addEventListener('DOMContentLoaded', () => {
             characterData: true
         });
     }
-    
-    // Handle clicks on critical device rows
-    document.addEventListener('click', (e) => {
-        const row = e.target.closest('.critical-device-row');
-        if (!row) return;
-        if (e.target.closest('td:last-child')) return;
-        if (e.target.closest('.edit-btn') || e.target.closest('.delete-btn')) return;
-        
-        const cells = row.querySelectorAll('td');
-        const deviceIP = cells[0].textContent.trim();
-        window.location.href = `/devices?ip=${encodeURIComponent(deviceIP)}&building=Critical+Devices`;
-    });
     
     // ===== Logs Tab =====
     const backendLogs = @json($systemLogs ?? []);
@@ -725,35 +784,6 @@ function enableTableActions(tableId) {
 }
 
 /* ADD FUNCTIONS  */
-function onAddCritical(ev) {
-    ev.preventDefault();
-    const ip = document.getElementById('critical_ip').value.trim();
-    const mac = document.getElementById('critical_mac').value.trim();
-    const owner = document.getElementById('critical_owner').value.trim();
-    const status = document.getElementById('critical_status').value;
-
-    const tbody = document.querySelector('#criticalTable tbody');
-    const badge = status === 'Online' ? 'badge-online' : 'badge-offline';
-    tbody.insertAdjacentHTML('beforeend', `
-        <tr class="critical-device-row" style="cursor: pointer;">
-            <td>${ip}</td>
-            <td>${mac}</td>
-            <td>${owner}</td>
-            <td><span class="badge ${badge}">${status}</span></td>
-            <td>
-                <button class="btn btn-sm btn-outline-secondary edit-btn"><i class="bi bi-pencil"></i></button>
-                <button class="btn btn-sm btn-danger delete-btn"><i class="bi bi-trash"></i></button>
-            </td>
-        </tr>
-    `);
-    
-    // Log the action
-    addLog('SUCCESS', `Critical device added: ${owner} (${ip}) - Status: ${status}`);
-    
-    bootstrap.Modal.getInstance(document.getElementById('addCriticalModal')).hide();
-    ev.target.reset();
-}
-
 function onAddServer(ev) {
     ev.preventDefault();
     const name = document.getElementById('server_name').value.trim();
