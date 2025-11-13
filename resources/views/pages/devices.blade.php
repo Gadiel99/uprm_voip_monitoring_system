@@ -91,9 +91,9 @@
             <table class="table table-bordered table-hover align-middle mb-0">
                 <thead class="table-light">
                     <tr>
-                        <th>Building</th>
-                        <th>Total Networks</th>
-                        <th>Total Devices</th>
+                        <th style="width: 50%;">Important Devices</th>
+                        <th style="width: 25%;">Total Networks</th>
+                        <th style="width: 25%;">Total Devices</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -115,9 +115,9 @@
             <table class="table table-bordered table-hover align-middle mb-0">
                 <thead class="table-light">
                     <tr>
-                        <th>Building</th>
-                        <th>Total Networks</th>
-                        <th>Total Devices</th>
+                        <th style="width: 50%;">Connection</th>
+                        <th style="width: 25%;">Total Networks</th>
+                        <th style="width: 25%;">Total Devices</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -139,9 +139,9 @@
             <table class="table table-bordered table-hover align-middle mb-0">
                 <thead class="table-light">
                     <tr>
-                        <th>Building</th>
-                        <th>Total Networks</th>
-                        <th>Total Devices</th>
+                        <th style="width: 50%;">Building</th>
+                        <th style="width: 25%;">Total Networks</th>
+                        <th style="width: 25%;">Total Devices</th>
                     </tr>
                 </thead>
                 <tbody>

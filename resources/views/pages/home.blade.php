@@ -323,15 +323,15 @@
     white-space: nowrap;
 }
 
-/* Zoom controls - FIXED position */
+/* Zoom controls - ABSOLUTE position within map container */
 .zoom-controls {
-    position: fixed;
-    top: 180px;
-    right: 20px;
+    position: absolute;
+    top: 10px;
+    left: 10px;
     display: flex;
     flex-direction: column;
     gap: 5px;
-    z-index: 9999;
+    z-index: 1000;
 }
 
 .zoom-controls button {
