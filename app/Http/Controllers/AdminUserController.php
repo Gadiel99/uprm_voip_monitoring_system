@@ -6,6 +6,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rules\Password;
 use Illuminate\Support\Facades\Hash;
+use App\Helpers\SystemLogger;
 
 /**
  * Controlador de Administración de Usuarios.
@@ -42,13 +43,16 @@ class AdminUserController extends Controller
             ->get();
 
         $adminsCount = $users->where('role', 'admin')->count();
+        
+        // Get system logs from session
+        $systemLogs = session()->get('system_logs', []);
 
         return view('pages.admin', [
             'activeTab' => 'users',
             'isUsersServer' => true,
             'users' => $users,
             'adminsCount' => $adminsCount,
-            'systemLogs' => [],
+            'systemLogs' => $systemLogs,
         ]);
     }
 
@@ -80,14 +84,23 @@ class AdminUserController extends Controller
         $name = preg_replace('/[;\'"]/', '', $name); // Remove semicolons and quotes
         $email = filter_var($request->email, FILTER_SANITIZE_EMAIL);
 
-        User::create([
+        $newUser = User::create([
             'name'     => $name,
             'email'    => $email,
             'password' => Hash::make($request->password),
             'role'     => $role,
         ]);
 
-        return redirect()->route('admin.users')->with('status', 'User created successfully.')->with('showAddModal', false);
+        // Log user creation
+        SystemLogger::log(
+            SystemLogger::ADD,
+            "Created user: {$newUser->name} ({$newUser->email}) with role '{$role}'",
+            $request->user()->email
+        );
+
+        return redirect()->route('admin.users', ['tab' => 'users'])
+            ->with('status', 'User created successfully.')
+            ->with('showAddModal', false);
     }
 
     /**
@@ -111,19 +124,28 @@ class AdminUserController extends Controller
 
         // Evitar que alguien se quite privilegios a sí mismo accidentalmente
         if ($actor->id === $user->id) {
-            return back()->withErrors(['role' => 'You cannot change your own role here.']);
+            return redirect()->route('admin.users', ['tab' => 'users'])
+                ->withErrors(['role' => 'You cannot change your own role here.']);
         }
 
+        $oldRole = $user->role;
         $user->update(['role' => $request->role]);
-        return redirect()->route('admin.users')->with('status', 'Role updated successfully.');
+        
+        // Log role change
+        SystemLogger::log(
+            SystemLogger::EDIT,
+            "Changed role for user {$user->name} ({$user->email}) from '{$oldRole}' to '{$request->role}'",
+            $request->user()->email
+        );
+        
+        return redirect()->route('admin.users', ['tab' => 'users'])
+            ->with('status', 'Role updated successfully.');
     }
 
     /**
      * Elimina un usuario con políticas de seguridad.
      *
      * Reglas:
-     * - No se puede borrar al super_admin.
-     * - Un admin no puede borrar a otro admin.
      * - Un usuario no puede borrarse a sí mismo.
      *
      * @param  Request $request
@@ -133,17 +155,29 @@ class AdminUserController extends Controller
     public function destroy(Request $request, User $user)
     {
         $actor = $request->user();
-        // Admin no puede eliminar Admin
-        if ($actor->role === 'admin' && $user->role === 'admin') {
-            return back()->withErrors(['delete' => 'Admins cannot delete other admins.']);
-        }
+        
         // Evitar borrarse a sí mismo
         if ($actor->id === $user->id) {
-            return back()->withErrors(['delete' => 'You cannot delete yourself.']);
+            return redirect()->route('admin.users', ['tab' => 'users'])
+                ->withErrors(['delete' => 'You cannot delete yourself.']);
         }
 
+        // Store user info before deletion for logging
+        $userName = $user->name;
+        $userEmail = $user->email;
+        $userRole = $user->role;
+        
         $user->delete();
-        return redirect()->route('admin.users')->with('status', 'User deleted successfully.');
+        
+        // Log user deletion
+        SystemLogger::log(
+            SystemLogger::DELETE,
+            "Deleted user: {$userName} ({$userEmail}) with role '{$userRole}'",
+            $request->user()->email
+        );
+        
+        return redirect()->route('admin.users', ['tab' => 'users'])
+            ->with('status', 'User deleted successfully.');
     }
 
     /**
@@ -159,10 +193,21 @@ class AdminUserController extends Controller
 
         $actor = $request->user();
         if ($actor->id === $user->id) {
-            return redirect()->route('admin.users')->withErrors(['role' => 'You cannot change your own role here.']);
+            return redirect()->route('admin.users', ['tab' => 'users'])
+                ->withErrors(['role' => 'You cannot change your own role here.']);
         }
 
+        $oldRole = $user->role;
         $user->update(['role' => $validated['role']]);
-        return redirect()->route('admin.users')->with('status', 'Role updated successfully.');
+        
+        // Log role change
+        SystemLogger::log(
+            SystemLogger::EDIT,
+            "Changed role for user {$user->name} ({$user->email}) from '{$oldRole}' to '{$validated['role']}'",
+            $request->user()->email
+        );
+        
+        return redirect()->route('admin.users', ['tab' => 'users'])
+            ->with('status', 'Role updated successfully.');
     }
 }
