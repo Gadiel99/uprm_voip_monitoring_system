@@ -314,8 +314,6 @@
 
                 <hr class="my-4">
 
-                <hr class="my-4">
-
                 {{-- Notification Settings (also inside Settings tab) --}}
                 <h6 class="fw-semibold mb-3">Notification Settings</h6>
                 <div class="form-check form-switch mb-2">
