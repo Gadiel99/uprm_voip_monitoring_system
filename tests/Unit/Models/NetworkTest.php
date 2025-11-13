@@ -1,17 +1,17 @@
 <?php
 
-use App\Models\Networks;
-use App\Models\Buildings;
+use App\Models\Network;
+use App\Models\Building;
 use App\Models\Devices;
 
 test('network can be created with valid data', function () {
-    $network = Networks::create([
+    $network = Network::create([
         'subnet' => '172.16.0.0/24',
         'offline_devices' => 5,
         'total_devices' => 20,
     ]);
 
-    expect($network)->toBeInstanceOf(Networks::class)
+    expect($network)->toBeInstanceOf(Network::class)
         ->and($network->subnet)->toBe('172.16.0.0/24')
         ->and($network->offline_devices)->toBe(5)
         ->and($network->total_devices)->toBe(20)
@@ -19,7 +19,7 @@ test('network can be created with valid data', function () {
 });
 
 test('network has many devices relationship', function () {
-    $network = Networks::create([
+    $network = Network::create([
         'subnet' => '10.50.0.0/24',
         'offline_devices' => 0,
         'total_devices' => 0,
@@ -42,7 +42,7 @@ test('network has many devices relationship', function () {
 });
 
 test('network can update device counts', function () {
-    $network = Networks::create([
+    $network = Network::create([
         'subnet' => '10.60.0.0/24',
         'offline_devices' => 0,
         'total_devices' => 0,
@@ -73,14 +73,14 @@ test('network can update device counts', function () {
 });
 
 test('network subnet should be unique', function () {
-    $network1 = Networks::create([
+    $network1 = Network::create([
         'subnet' => '192.168.100.0/24',
         'offline_devices' => 0,
         'total_devices' => 0,
     ]);
 
     // Try to create another network with same subnet using firstOrCreate
-    $network2 = Networks::firstOrCreate(
+    $network2 = Network::firstOrCreate(
         ['subnet' => '192.168.100.0/24'],
         ['offline_devices' => 5, 'total_devices' => 10]
     );
@@ -90,7 +90,7 @@ test('network subnet should be unique', function () {
 });
 
 test('network can be updated', function () {
-    $network = Networks::create([
+    $network = Network::create([
         'subnet' => '10.70.0.0/24',
         'offline_devices' => 0,
         'total_devices' => 0,
@@ -106,7 +106,7 @@ test('network can be updated', function () {
 });
 
 test('network counts only offline devices correctly', function () {
-    $network = Networks::create([
+    $network = Network::create([
         'subnet' => '10.80.0.0/24',
         'offline_devices' => 0,
         'total_devices' => 0,
@@ -126,7 +126,7 @@ test('network counts only offline devices correctly', function () {
 });
 
 test('network can be deleted', function () {
-    $network = Networks::create([
+    $network = Network::create([
         'subnet' => '10.90.0.0/24',
         'offline_devices' => 0,
         'total_devices' => 0,
@@ -135,13 +135,13 @@ test('network can be deleted', function () {
     $networkId = $network->network_id;
     $network->delete();
 
-    expect(Networks::find($networkId))->toBeNull();
+    expect(Network::find($networkId))->toBeNull();
 });
 
 test('multiple networks can exist', function () {
-    Networks::create(['subnet' => '10.10.0.0/24', 'offline_devices' => 0, 'total_devices' => 0]);
-    Networks::create(['subnet' => '10.20.0.0/24', 'offline_devices' => 0, 'total_devices' => 0]);
-    Networks::create(['subnet' => '10.30.0.0/24', 'offline_devices' => 0, 'total_devices' => 0]);
+    Network::create(['subnet' => '10.10.0.0/24', 'offline_devices' => 0, 'total_devices' => 0]);
+    Network::create(['subnet' => '10.20.0.0/24', 'offline_devices' => 0, 'total_devices' => 0]);
+    Network::create(['subnet' => '10.30.0.0/24', 'offline_devices' => 0, 'total_devices' => 0]);
 
-    expect(Networks::count())->toBe(3);
+    expect(Network::count())->toBe(3);
 });

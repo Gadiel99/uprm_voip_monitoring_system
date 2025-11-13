@@ -1,28 +1,28 @@
 <?php
 
-use App\Models\Buildings;
-use App\Models\Networks;
+use App\Models\Building;
+use App\Models\Network;
 
 test('building can be created with valid data', function () {
-    $building = Buildings::create([
+    $building = Building::create([
         'name' => 'Test Building',
     ]);
 
-    expect($building)->toBeInstanceOf(Buildings::class)
+    expect($building)->toBeInstanceOf(Building::class)
         ->and($building->name)->toBe('Test Building')
         ->and($building->building_id)->not->toBeNull();
 });
 
 test('building has many networks relationship', function () {
-    $building = Buildings::create(['name' => 'CTI']);
+    $building = Building::create(['name' => 'CTI']);
     
-    $network1 = Networks::create([
+    $network1 = Network::create([
         'subnet' => '10.100.0.0/24',
         'offline_devices' => 0,
         'total_devices' => 0,
     ]);
     
-    $network2 = Networks::create([
+    $network2 = Network::create([
         'subnet' => '10.100.147.0/24',
         'offline_devices' => 0,
         'total_devices' => 0,
@@ -31,13 +31,13 @@ test('building has many networks relationship', function () {
     $building->networks()->attach([$network1->network_id, $network2->network_id]);
 
     expect($building->networks)->toHaveCount(2)
-        ->and($building->networks->first())->toBeInstanceOf(Networks::class);
+        ->and($building->networks->first())->toBeInstanceOf(Network::class);
 });
 
 test('building can retrieve its networks', function () {
-    $building = Buildings::create(['name' => 'Library']);
+    $building = Building::create(['name' => 'Library']);
     
-    $network = Networks::create([
+    $network = Network::create([
         'subnet' => '192.168.1.0/24',
         'offline_devices' => 0,
         'total_devices' => 10,
@@ -54,19 +54,19 @@ test('building can retrieve its networks', function () {
 test('building name is required', function () {
     $this->expectException(\Illuminate\Database\QueryException::class);
     
-    Buildings::create([]);
+    Building::create([]);
 });
 
 test('multiple buildings can exist', function () {
-    Buildings::create(['name' => 'Building A']);
-    Buildings::create(['name' => 'Building B']);
-    Buildings::create(['name' => 'Building C']);
+    Building::create(['name' => 'Building A']);
+    Building::create(['name' => 'Building B']);
+    Building::create(['name' => 'Building C']);
 
-    expect(Buildings::count())->toBe(3);
+    expect(Building::count())->toBe(3);
 });
 
 test('building can be updated', function () {
-    $building = Buildings::create(['name' => 'Old Name']);
+    $building = Building::create(['name' => 'Old Name']);
     
     $building->update(['name' => 'New Name']);
 
@@ -74,10 +74,10 @@ test('building can be updated', function () {
 });
 
 test('building can be deleted', function () {
-    $building = Buildings::create(['name' => 'To Delete']);
+    $building = Building::create(['name' => 'To Delete']);
     $buildingId = $building->building_id;
     
     $building->delete();
 
-    expect(Buildings::find($buildingId))->toBeNull();
+    expect(Building::find($buildingId))->toBeNull();
 });

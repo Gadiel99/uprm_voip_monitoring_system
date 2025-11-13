@@ -2,7 +2,7 @@
 
 use App\Models\Extensions;
 use App\Models\Devices;
-use App\Models\Networks;
+use App\Models\Network;
 
 test('extension can be created with valid data', function () {
     $extension = Extensions::create([
@@ -19,7 +19,7 @@ test('extension can be created with valid data', function () {
 });
 
 test('extension has many devices relationship', function () {
-    $network = Networks::create([
+    $network = Network::create([
         'subnet' => '10.100.0.0/24',
         'offline_devices' => 0,
         'total_devices' => 0,

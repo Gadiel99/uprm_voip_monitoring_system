@@ -1,11 +1,11 @@
 <?php
 
 use App\Models\Devices;
-use App\Models\Networks;
+use App\Models\Network;
 use App\Models\Extensions;
 
 test('device can be created with valid data', function () {
-    $network = Networks::create([
+    $network = Network::create([
         'subnet' => '10.100.0.0/24',
         'offline_devices' => 0,
         'total_devices' => 0,
@@ -24,7 +24,7 @@ test('device can be created with valid data', function () {
 });
 
 test('device belongs to a network', function () {
-    $network = Networks::create([
+    $network = Network::create([
         'subnet' => '192.168.1.0/24',
         'offline_devices' => 0,
         'total_devices' => 5,
@@ -36,12 +36,12 @@ test('device belongs to a network', function () {
         'status' => 'online',
     ]);
 
-    expect($device->network)->toBeInstanceOf(Networks::class)
+    expect($device->network)->toBeInstanceOf(Network::class)
         ->and($device->network->subnet)->toBe('192.168.1.0/24');
 });
 
 test('device has many extensions relationship', function () {
-    $network = Networks::create([
+    $network = Network::create([
         'subnet' => '10.100.0.0/24',
         'offline_devices' => 0,
         'total_devices' => 0,
@@ -72,7 +72,7 @@ test('device has many extensions relationship', function () {
 });
 
 test('device status can be online or offline', function () {
-    $network = Networks::create([
+    $network = Network::create([
         'subnet' => '10.100.0.0/24',
         'offline_devices' => 0,
         'total_devices' => 0,
@@ -95,7 +95,7 @@ test('device status can be online or offline', function () {
 });
 
 test('device can be updated', function () {
-    $network = Networks::create([
+    $network = Network::create([
         'subnet' => '10.100.0.0/24',
         'offline_devices' => 0,
         'total_devices' => 0,
@@ -113,7 +113,7 @@ test('device can be updated', function () {
 });
 
 test('device ip address is unique', function () {
-    $network = Networks::create([
+    $network = Network::create([
         'subnet' => '10.100.0.0/24',
         'offline_devices' => 0,
         'total_devices' => 0,
@@ -135,7 +135,7 @@ test('device ip address is unique', function () {
 });
 
 test('device can be deleted', function () {
-    $network = Networks::create([
+    $network = Network::create([
         'subnet' => '10.100.0.0/24',
         'offline_devices' => 0,
         'total_devices' => 0,
