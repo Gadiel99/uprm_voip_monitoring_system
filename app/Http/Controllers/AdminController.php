@@ -8,8 +8,8 @@ use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
 use App\Models\User;
-use App\Models\Buildings;
-use App\Models\Networks;
+use App\Models\Building;
+use App\Models\Network;
 use App\Models\Devices;
 use App\Models\AlertSettings;
 
@@ -35,8 +35,8 @@ class AdminController extends Controller
         // Simple, resilient counts (if a table doesn't exist yet, catch and set 0)
         $stats = [
             'users' => $this->safeCount(User::class),
-            'buildings' => $this->safeCount(Buildings::class),
-            'networks' => $this->safeCount(Networks::class),
+            'buildings' => $this->safeCount(Building::class),
+            'networks' => $this->safeCount(Network::class),
             'devices' => $this->safeCount(Devices::class),
         ];
 
@@ -44,7 +44,7 @@ class AdminController extends Controller
         $recentUsers = $this->safeLatest(User::class, 8);
 
         // Buildings with network/device summaries (best-effort)
-        $buildings = $this->safeAll(Buildings::class, ['building_id','name','code','created_at']);
+        $buildings = $this->safeAll(Building::class, ['building_id','name','code','created_at']);
 
         // Try to read last ~100 lines of the laravel.log for the "Logs" tab
         $logLines = $this->tailLaravelLog(100);
