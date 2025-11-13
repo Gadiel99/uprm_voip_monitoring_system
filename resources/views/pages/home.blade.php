@@ -63,8 +63,14 @@
     <button id="addMarkerBtn" class="btn btn-primary">
         <i class="bi bi-plus-circle me-1"></i> Add Marker
     </button>
+    <button id="editMarkerBtn" class="btn btn-warning">
+        <i class="bi bi-pencil me-1"></i> Edit Marker
+    </button>
     <button id="deleteMarkerBtn" class="btn btn-danger">
         <i class="bi bi-trash me-1"></i> Delete Marker
+    </button>
+    <button id="cancelDeleteBtn" class="btn btn-secondary" style="display: none;">
+        <i class="bi bi-x-circle me-1"></i> Cancel
     </button>
     
     <button id="resetZoomBtn" class="btn btn-secondary">
@@ -98,6 +104,63 @@
             <button id="zoomOutBtn" class="btn btn-sm btn-light" title="Zoom Out">
                 <i class="bi bi-dash-lg"></i>
             </button>
+        </div>
+    </div>
+</div>
+
+{{-- MODAL: EDIT BUILDING --}}
+<div class="modal fade" id="editBuildingModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title">Edit Building</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editBuildingForm">
+                    <input type="hidden" id="editBuildingId">
+                    
+                    {{-- Building Name --}}
+                    <div class="mb-3">
+                        <label for="editBuildingName" class="form-label fw-semibold">Name:</label>
+                        <input 
+                            type="text" 
+                            class="form-control" 
+                            id="editBuildingName" 
+                            placeholder="e.g. Stefani"
+                            required
+                        >
+                    </div>
+
+                    {{-- Position (optional to move marker) --}}
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="moveMarkerCheck">
+                            <label class="form-check-label" for="moveMarkerCheck">
+                                Move marker to a new position
+                            </label>
+                        </div>
+                        <small class="text-muted">Check this box, then click on the map to select a new position</small>
+                    </div>
+
+                    {{-- Networks Container --}}
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Networks:</label>
+                        <div id="editNetworksContainer">
+                            {{-- Networks will be loaded dynamically --}}
+                        </div>
+                        <button type="button" class="btn btn-warning btn-sm" id="addEditNetworkBtn">
+                            <i class="bi bi-plus-circle me-1"></i> Add Network
+                        </button>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-warning" id="updateBuildingBtn">
+                    <i class="bi bi-check-circle me-1"></i> Update Building
+                </button>
+            </div>
         </div>
     </div>
 </div>
@@ -384,47 +447,6 @@ document.addEventListener('DOMContentLoaded', function () {
             default: return "#198754";
         }
     }
-    
-    // ===== DEFAULT MARKERS DATA =====
-    const defaultMarkers = [
-        { top: 71.3, left: 78.3, name: "Celis" },
-        { top: 56.5, left: 82.5, name: "Stefani" },
-        { top: 18.5, left: 72, name: "Biologia" },
-        { top: 78, left: 76.7, name: "DeDiego" },
-        { top: 70, left: 86.4, name: "Luchetti" },
-        { top: 63.5, left: 85.4, name: "ROTC" },
-        { top: 13, left: 33, name: "Adm.Empresas" },
-        { top: 78.5, left: 67, name: "Musa" },
-        { top: 58.3, left: 75.9, name: "Chardon" },
-        { top: 75.8, left: 72.5, name: "Monzon" },
-        { top: 46.5, left: 70.1, name: "Sanchez Hidalgo" },
-        { top: 41, left: 76, name: "Fisica" },
-        { top: 40, left: 78, name: "Geologia" },
-        { top: 39, left: 80, name: "Ciencias Marinas" },
-        { top: 40, left: 63, name: "Quimica" },
-        { top: 85, left: 60.5, name: "Piñero" },
-        { top: 51.5, left: 59, name: "Enfermeria" },
-        { top: 48, left: 53, name: "Vagones" },
-        { top: 32.6, left: 30.5, name: "Natatorio" },
-        { top: 18.2, left: 86.5, name: "Centro Nuclear" },
-        { top: 64, left: 46, name: "Coliseo" },
-        { top: 66.7, left: 54.1, name: "Gimnacio" },
-        { top: 71, left: 67, name: "Servicios Medicos" },
-        { top: 79, left: 80.5, name: "Decanato de Estudiantes" },
-        { top: 49.7, left: 66, name: "Oficina de Facultad" },
-        { top: 62, left: 8, name: "Adm.Finca Alzamora" },
-        { top: 62.5, left: 65.8, name: "Biblioteca" },
-        { top: 64.8, left: 72.6, name: "Centro de Estudiantes" },
-        { top: 48, left: 81, name: "Terrats" },
-        { top: 7.1, left: 59.8, name: "Ing.Civil" },
-        { top: 49, left: 78, name: "Ing.Industrial" },
-        { top: 17.7, left: 55.7, name: "Ing.Quimica" },
-        { top: 38.1, left: 50.9, name: "Ing.Agricola" },
-        { top: 26.9, left: 18.2, name: "Edificio A (Hotel Colegial)" },
-        { top: 33, left: 17.6, name: "Edificio B (Adm.Peq.Negocios y Oficina Adm)" },
-        { top: 26.8, left: 21.8, name: "Edificio C (Oficina de Extension Agricola)" },
-        { top: 29.3, left: 20, name: "Edificio D" }
-    ];
 
     // Markers will be loaded from database
     let markers = [];
@@ -435,7 +457,9 @@ document.addEventListener('DOMContentLoaded', function () {
     const mapWrapper = document.getElementById('mapWrapper');
     const markersLayer = document.getElementById('markersLayer');
     const addMarkerBtn = document.getElementById('addMarkerBtn');
+    const editMarkerBtn = document.getElementById('editMarkerBtn');
     const deleteMarkerBtn = document.getElementById('deleteMarkerBtn');
+    const cancelDeleteBtn = document.getElementById('cancelDeleteBtn');
     const resetZoomBtn = document.getElementById('resetZoomBtn');
     const zoomInBtn = document.getElementById('zoomInBtn');
     const zoomOutBtn = document.getElementById('zoomOutBtn');
@@ -443,9 +467,13 @@ document.addEventListener('DOMContentLoaded', function () {
     // ===== STATE VARIABLES =====
     let scale = 0.6; // Start with less zoom (was 1)
     let addMarkerMode = false;
+    let editMarkerMode = false;
+    let moveMarkerMode = false;
     let deleteMarkerMode = false;
     let isPanning = false;
     let startX, startY, scrollLeft, scrollTop;
+    let editingMarkerId = null;
+    let pendingEditPosition = null;
 
     // ===== RENDER MARKERS =====
     function renderMarkers() {
@@ -464,14 +492,20 @@ document.addEventListener('DOMContentLoaded', function () {
 
             if (deleteMarkerMode) {
                 marker.classList.add('delete-mode');
+            } else if (editMarkerMode) {
+                marker.style.backgroundColor = '#ffc107'; // Yellow for edit mode
             }
 
             // Click handler
             marker.addEventListener('click', (e) => {
                 e.stopPropagation();
                 
+                console.log('Marker clicked! Index:', index, 'Delete mode:', deleteMarkerMode, 'Edit mode:', editMarkerMode);
+                
                 if (deleteMarkerMode) {
                     deleteMarker(index);
+                } else if (editMarkerMode) {
+                    editMarker(index);
                 } else {
                     window.location.href = `/alerts?building=${encodeURIComponent(markerData.name)}`;
                 }
@@ -528,56 +562,301 @@ document.addEventListener('DOMContentLoaded', function () {
         renderMarkers();
     });
 
-    // Click on map to add marker
+    // Click on map to add marker OR move marker during edit
     mapWrapper.addEventListener('click', (e) => {
-        if (!addMarkerMode) return;
-        
-        // Ignore if this was a drag operation
-        if (hasMoved) {
-            hasMoved = false;
+        // Handle add marker mode
+        if (addMarkerMode) {
+            // Ignore if this was a drag operation
+            if (hasMoved) {
+                hasMoved = false;
+                return;
+            }
+
+            const rect = mapWrapper.getBoundingClientRect();
+            
+            // Calculate position relative to the map image at current scale
+            const x = (e.clientX - rect.left) / scale;
+            const y = (e.clientY - rect.top) / scale;
+            
+            const topPercent = (y / 1199) * 100;
+            const leftPercent = (x / 2202) * 100;
+
+            // Store the position temporarily
+            window.pendingMarkerPosition = {
+                top: parseFloat(topPercent.toFixed(1)),
+                left: parseFloat(leftPercent.toFixed(1))
+            };
+
+            // Open the modal
+            const modal = new bootstrap.Modal(document.getElementById('createBuildingModal'));
+            modal.show();
+
+            // Exit add mode (will be reactivated if cancelled)
+            addMarkerMode = false;
+            addMarkerBtn.classList.remove('active');
+            mapContainer.style.cursor = 'grab';
             return;
         }
-
-        const rect = mapWrapper.getBoundingClientRect();
         
-        // Calculate position relative to the map image at current scale
-        const x = (e.clientX - rect.left) / scale;
-        const y = (e.clientY - rect.top) / scale;
-        
-        const topPercent = (y / 1199) * 100;
-        const leftPercent = (x / 2202) * 100;
+        // Handle move marker during edit mode
+        if (moveMarkerMode && editingMarkerId) {
+            // Ignore if this was a drag operation
+            if (hasMoved) {
+                hasMoved = false;
+                return;
+            }
 
-        // Store the position temporarily
-        window.pendingMarkerPosition = {
-            top: parseFloat(topPercent.toFixed(1)),
-            left: parseFloat(leftPercent.toFixed(1))
-        };
+            const rect = mapWrapper.getBoundingClientRect();
+            
+            // Calculate position relative to the map image at current scale
+            const x = (e.clientX - rect.left) / scale;
+            const y = (e.clientY - rect.top) / scale;
+            
+            const topPercent = (y / 1199) * 100;
+            const leftPercent = (x / 2202) * 100;
 
-        // Open the modal
-        const modal = new bootstrap.Modal(document.getElementById('createBuildingModal'));
-        modal.show();
+            // Store the new position for the marker being edited
+            pendingEditPosition = {
+                top: parseFloat(topPercent.toFixed(1)),
+                left: parseFloat(leftPercent.toFixed(1))
+            };
 
-        // Exit add mode (will be reactivated if cancelled)
+            alert('✅ New position set! Click "Update Building" to save changes.');
+            
+            // Re-open the modal after position is selected
+            const modal = new bootstrap.Modal(document.getElementById('editBuildingModal'));
+            modal.show();
+            
+            return;
+        }
+    });
+
+    // ===== EDIT MARKER FUNCTIONALITY =====
+    editMarkerBtn.addEventListener('click', () => {
+        editMarkerMode = !editMarkerMode;
         addMarkerMode = false;
-        addMarkerBtn.classList.remove('active');
-        mapContainer.style.cursor = 'grab';
+        deleteMarkerMode = false;
+        
+        if (editMarkerMode) {
+            editMarkerBtn.classList.add('active');
+            addMarkerBtn.classList.remove('active');
+            deleteMarkerBtn.classList.remove('active');
+            cancelDeleteBtn.style.display = 'none';
+            mapContainer.style.cursor = 'pointer';
+            alert('✏️ Click on any marker to edit it');
+        } else {
+            editMarkerBtn.classList.remove('active');
+            mapContainer.style.cursor = 'grab';
+            moveMarkerMode = false;
+            editingMarkerId = null;
+            pendingEditPosition = null;
+        }
+        
+        renderMarkers();
+    });
+
+    async function editMarker(index) {
+        const marker = markers[index];
+        
+        if (!marker.id) {
+            alert('❌ Cannot edit this marker (no database ID)');
+            return;
+        }
+        
+        editingMarkerId = marker.id;
+        
+        // Populate form with existing data
+        document.getElementById('editBuildingId').value = marker.id;
+        document.getElementById('editBuildingName').value = marker.name;
+        
+        // Clear and populate networks
+        const networksContainer = document.getElementById('editNetworksContainer');
+        networksContainer.innerHTML = '';
+        
+        if (marker.networks && marker.networks.length > 0) {
+            marker.networks.forEach(network => {
+                addEditNetworkField(network.subnet || '');
+            });
+        } else {
+            addEditNetworkField();
+        }
+        
+        // Reset move marker mode
+        moveMarkerMode = false;
+        pendingEditPosition = null;
+        document.getElementById('moveMarkerCheck').checked = false;
+        
+        // Show modal
+        const modal = new bootstrap.Modal(document.getElementById('editBuildingModal'));
+        modal.show();
+    }
+
+    function addEditNetworkField(networkValue = '') {
+        const container = document.getElementById('editNetworksContainer');
+        const networkGroup = document.createElement('div');
+        networkGroup.className = 'input-group mb-2';
+        
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.className = 'form-control edit-network-input';
+        input.placeholder = 'e.g. 10.100.100.0';
+        input.value = networkValue;
+        input.required = true;
+        
+        const removeBtn = document.createElement('button');
+        removeBtn.type = 'button';
+        removeBtn.className = 'btn btn-danger';
+        removeBtn.textContent = 'Remove';
+        removeBtn.onclick = () => networkGroup.remove();
+        
+        networkGroup.appendChild(input);
+        networkGroup.appendChild(removeBtn);
+        container.appendChild(networkGroup);
+    }
+
+    document.getElementById('addEditNetworkBtn').addEventListener('click', () => {
+        addEditNetworkField();
+    });
+
+    document.getElementById('moveMarkerCheck').addEventListener('change', (e) => {
+        moveMarkerMode = e.target.checked;
+        
+        if (moveMarkerMode) {
+            mapContainer.style.cursor = 'crosshair';
+            alert('📍 Click on the map to select a new position for this marker');
+        } else {
+            mapContainer.style.cursor = 'pointer';
+            pendingEditPosition = null;
+        }
+    });
+
+    document.getElementById('updateBuildingBtn').addEventListener('click', async () => {
+        const buildingId = document.getElementById('editBuildingId').value;
+        const buildingNameRaw = document.getElementById('editBuildingName').value.trim();
+        const buildingName = sanitizeInput(buildingNameRaw);
+        
+        if (!buildingName) {
+            alert('❌ Please enter a building name');
+            return;
+        }
+        
+        if (buildingName.length > 50) {
+            alert('❌ Building name is too long (max 50 characters)');
+            return;
+        }
+        
+        // Collect network values from text inputs
+        const networkInputs = document.querySelectorAll('#editNetworksContainer .edit-network-input');
+        const networks = [];
+        const invalidNetworks = [];
+        
+        networkInputs.forEach(input => {
+            const valueRaw = input.value.trim();
+            const value = sanitizeInput(valueRaw);
+            
+            if (value) {
+                if (isValidNetwork(value)) {
+                    networks.push(value);
+                } else {
+                    invalidNetworks.push(value);
+                }
+            }
+        });
+        
+        if (networks.length === 0 && invalidNetworks.length === 0) {
+            alert('❌ Please enter at least one network');
+            return;
+        }
+        
+        if (invalidNetworks.length > 0) {
+            alert(`❌ Invalid network format(s): ${invalidNetworks.join(', ')}\n\nPlease use format: XXX.XXX.XXX.XXX`);
+            return;
+        }
+        
+        // Determine position - use pending position if marker was moved, otherwise keep current
+        let position;
+        if (pendingEditPosition) {
+            position = pendingEditPosition;
+        } else {
+            // Find current marker position
+            const currentMarker = markers.find(m => m.id == buildingId);
+            if (currentMarker) {
+                position = { top: currentMarker.top, left: currentMarker.left };
+            } else {
+                alert('❌ Could not find current marker position');
+                return;
+            }
+        }
+        
+        try {
+            const response = await fetch(`/buildings/${buildingId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                },
+                body: JSON.stringify({
+                    name: buildingName,
+                    map_x: parseFloat(position.left),
+                    map_y: parseFloat(position.top),
+                    networks: networks
+                })
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                // Close modal
+                const modal = bootstrap.Modal.getInstance(document.getElementById('editBuildingModal'));
+                modal.hide();
+                
+                // Exit edit mode
+                editMarkerMode = false;
+                moveMarkerMode = false;
+                editingMarkerId = null;
+                pendingEditPosition = null;
+                editMarkerBtn.classList.remove('active');
+                mapContainer.style.cursor = 'grab';
+                
+                // Reload markers
+                await loadBuildingsFromDB();
+                alert('✅ Building updated successfully!');
+            } else {
+                alert('❌ Error: ' + (result.message || 'Failed to update building'));
+            }
+        } catch (error) {
+            console.error('Update error:', error);
+            alert('❌ Failed to update building');
+        }
     });
 
     // ===== DELETE MARKER FUNCTIONALITY =====
     deleteMarkerBtn.addEventListener('click', () => {
         deleteMarkerMode = !deleteMarkerMode;
         addMarkerMode = false;
+        editMarkerMode = false;
         
         if (deleteMarkerMode) {
             deleteMarkerBtn.classList.add('active');
             addMarkerBtn.classList.remove('active');
+            editMarkerBtn.classList.remove('active');
+            cancelDeleteBtn.style.display = 'inline-block';
             mapContainer.style.cursor = 'pointer';
             alert('🗑️ Click on any marker to delete it');
         } else {
             deleteMarkerBtn.classList.remove('active');
+            cancelDeleteBtn.style.display = 'none';
             mapContainer.style.cursor = 'grab';
         }
         
+        renderMarkers();
+    });
+
+    cancelDeleteBtn.addEventListener('click', () => {
+        deleteMarkerMode = false;
+        deleteMarkerBtn.classList.remove('active');
+        cancelDeleteBtn.style.display = 'none';
+        mapContainer.style.cursor = 'grab';
         renderMarkers();
     });
 
@@ -637,7 +916,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 top: building.map_y,
                 left: building.map_x,
                 name: building.name,
-                networks: building.networks ? building.networks.map(n => n.subnet) : []
+                networks: building.networks || []
             }));
             
             renderMarkers();
@@ -675,8 +954,8 @@ document.addEventListener('DOMContentLoaded', function () {
     let hasMoved = false;
     
     mapContainer.addEventListener('mousedown', (e) => {
-        // Don't allow panning in add or delete mode, or when clicking on markers
-        if (addMarkerMode || deleteMarkerMode || e.target.classList.contains('marker')) return;
+        // Don't allow panning in add, edit, or delete mode, or when clicking on markers
+        if (addMarkerMode || editMarkerMode || deleteMarkerMode || e.target.classList.contains('marker')) return;
         
         isPanning = true;
         hasMoved = false;
@@ -692,13 +971,13 @@ document.addEventListener('DOMContentLoaded', function () {
     mapContainer.addEventListener('mouseleave', () => {
         isPanning = false;
         hasMoved = false; // Reset on mouse leave
-        if (!addMarkerMode) mapContainer.style.cursor = 'grab';
+        if (!addMarkerMode && !editMarkerMode && !deleteMarkerMode) mapContainer.style.cursor = 'grab';
     });
 
     mapContainer.addEventListener('mouseup', () => {
         isPanning = false;
         // Don't reset hasMoved here - let the click handler check it first
-        if (!addMarkerMode) mapContainer.style.cursor = 'grab';
+        if (!addMarkerMode && !editMarkerMode && !deleteMarkerMode) mapContainer.style.cursor = 'grab';
     });
 
     mapContainer.addEventListener('mousemove', (e) => {
@@ -765,8 +1044,8 @@ document.addEventListener('DOMContentLoaded', function () {
     coordBox.style.background = 'rgba(0, 0, 0, 0.8)';
     coordBox.style.color = '#fff';
     coordBox.style.padding = '8px 12px';
-    coordBox.style.borderRadius = '8px';
-    coordBox.style.fontFamily = 'monospace';
+    coordBox.style.borderRadiu
+onospace';
     coordBox.style.fontSize = '0.9rem';
     coordBox.style.zIndex = '9999';
     coordBox.textContent = 'Move cursor over map...';
@@ -787,7 +1066,7 @@ document.addEventListener('DOMContentLoaded', function () {
 </script>
 --}}
 
-
+// ===== CREATE BUILDING MODAL HANDLERS =====
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     // Add Network button
