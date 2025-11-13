@@ -48,7 +48,9 @@
             </tr>
           @empty
             <tr>
-              <td colspan="2" class="text-center text-muted">No networks configured for this building.</td>
+              <td colspan="2" class="text-center text-success">
+                <i class="bi bi-check-circle me-2"></i>All networks and devices are configured.
+              </td>
             </tr>
           @endforelse
         </tbody>

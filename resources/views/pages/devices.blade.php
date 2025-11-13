@@ -112,17 +112,6 @@
             <h5 class="fw-semibold mb-3">Action Required</h5>
             <p class="text-muted mb-3">Networks and devices not assigned to any building. Click to view and assign them.</p>
 
-            {{-- DEBUG INFO --}}
-            <div class="alert alert-info mb-3">
-                <strong>DEBUG:</strong><br>
-                Total unmapped networks: {{ $unmappedStats->total_networks }}<br>
-                Total unmapped devices: {{ $unmappedStats->total_devices }}<br>
-                <details>
-                    <summary>View unmapped networks details</summary>
-                    <pre>{{ json_encode($unmappedNetworks->toArray(), JSON_PRETTY_PRINT) }}</pre>
-                </details>
-            </div>
-
             <table class="table table-bordered table-hover align-middle mb-0">
                 <thead class="table-light">
                     <tr>

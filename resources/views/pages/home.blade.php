@@ -787,7 +787,7 @@ document.addEventListener('DOMContentLoaded', function () {
 </script>
 --}}
 
-// ===== CREATE BUILDING MODAL HANDLERS =====
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     // Add Network button
