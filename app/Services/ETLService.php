@@ -95,13 +95,14 @@ class ETLService
             // Step 1: Create ALL extensions from users CSV
             Log::info('Creating extensions from users');
             foreach ($users as $user) {
+                /** @var object $user */
                 $extensionExists = Extensions::where('extension_number', $user->user_name)->exists();
                 
                 Extensions::updateOrCreate(
-                    ['extension_number' => $user->user_name],
+                    ['extension_number' => (string)$user->user_name],
                     [
-                        'user_first_name' => $user->first_name,
-                        'user_last_name' => $user->last_name,
+                        'user_first_name' => (string)$user->first_name,
+                        'user_last_name' => (string)$user->last_name,
                         'devices_registered' => 0, // Will be updated when processing devices
                     ]
                 );
@@ -182,15 +183,12 @@ class ETLService
                 return strtolower(trim($h));
             }, $headers);
             
-            // Find column indices
+            // Find column indices - we only need phone_id and serial_number
             $phoneIdIdx = array_search('phone_id', $headers);
             $serialNumberIdx = array_search('serial_number', $headers);
-            $descriptionIdx = array_search('description', $headers);
-            $modelIdIdx = array_search('model_id', $headers);
-            $beanIdIdx = array_search('bean_id', $headers);
             
             if ($serialNumberIdx === false) {
-                throw new Exception("Required column 'serial_number' not found in phone.csv");
+                throw new Exception("Required column 'serial_number' not found in phone.csv. Found columns: " . implode(', ', $headers));
             }
             
             // Read data rows
@@ -205,17 +203,11 @@ class ETLService
                 }
                 
                 $serialNumber = trim($row[$serialNumberIdx]);
-                $description = isset($row[$descriptionIdx]) ? trim($row[$descriptionIdx]) : null;
                 $phoneId = isset($row[$phoneIdIdx]) ? trim($row[$phoneIdIdx]) : null;
-                $modelId = isset($row[$modelIdIdx]) ? trim($row[$modelIdIdx]) : null;
-                $beanId = isset($row[$beanIdIdx]) ? trim($row[$beanIdIdx]) : null;
                 
                 $phones[] = (object)[
                     'phone_id' => $phoneId,
                     'serial_number' => $serialNumber,
-                    'description' => $description,
-                    'model_id' => $modelId,
-                    'bean_id' => $beanId,
                 ];
             }
             
@@ -321,8 +313,16 @@ class ETLService
             $lastNameIdx = array_search('last_name', $headers);
             $userNameIdx = array_search('user_name', $headers);
             
-            if ($firstNameIdx === false || $lastNameIdx === false || $userNameIdx === false) {
-                throw new Exception("Required columns not found in users.csv. Expected: first_name, last_name, user_name");
+            if ($userNameIdx === false) {
+                throw new Exception("Required column 'user_name' not found in users.csv. Found columns: " . implode(', ', $headers));
+            }
+            
+            if ($firstNameIdx === false) {
+                Log::warning("Column 'first_name' not found in users.csv");
+            }
+            
+            if ($lastNameIdx === false) {
+                Log::warning("Column 'last_name' not found in users.csv");
             }
             
             // Read data rows
@@ -330,15 +330,15 @@ class ETLService
             while (($row = fgetcsv($handle)) !== false) {
                 $rowNum++;
                 
-                // Skip rows with missing required data
-                if (!isset($row[$firstNameIdx]) || !isset($row[$lastNameIdx]) || !isset($row[$userNameIdx])) {
-                    Log::warning("Skipping incomplete row in users.csv", ['row' => $rowNum]);
+                // Skip rows with missing user_name (required)
+                if (!isset($row[$userNameIdx]) || empty(trim($row[$userNameIdx]))) {
+                    Log::warning("Skipping row with missing user_name in users.csv", ['row' => $rowNum]);
                     continue;
                 }
                 
-                $firstName = trim($row[$firstNameIdx]);
-                $lastName = trim($row[$lastNameIdx]);
                 $userName = trim($row[$userNameIdx]);
+                $firstName = ($firstNameIdx !== false && isset($row[$firstNameIdx])) ? trim($row[$firstNameIdx]) : '';
+                $lastName = ($lastNameIdx !== false && isset($row[$lastNameIdx])) ? trim($row[$lastNameIdx]) : '';
                 
                 // Skip superadmin users or rows with no user_name
                 if (strtolower($userName) === 'superadmin' || empty($userName)) {
@@ -549,8 +549,8 @@ class ETLService
         // Process each phone from the phone table
         foreach ($phones as $phone) {
             try {
-                $serialNumber = $phone->serial_number;
-                $description = $phone->description;
+                /** @var object $phone */
+                $serialNumber = (string)$phone->serial_number;
                 
                 // Normalize MAC address
                 $normalizedMac = strtolower(preg_replace('/[^a-f0-9]/', '', $serialNumber));
