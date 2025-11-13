@@ -9,6 +9,7 @@ use App\Http\Controllers\ProfileController; // <-- add
 use App\Http\Controllers\ReportsController;
 use App\Http\Controllers\AlertsController;
 use App\Http\Controllers\BuildingController;
+use App\Http\Controllers\HomeController;
 
 /**
  * Controllers overview:
@@ -41,7 +42,7 @@ use App\Http\Controllers\BuildingController;
 */
 Route::middleware('auth')->group(function () {
     // Dashboard and tabs (server-rendered pages)
-    Route::view('/', 'pages.home')->name('dashboard');
+    Route::get('/', [HomeController::class, 'index'])->name('dashboard');
     Route::get('/alerts', [AlertsController::class, 'index'])->name('alerts');
     Route::get('/alerts/building/{building}/offline', [AlertsController::class, 'offlineDevices'])->name('alerts.offlineDevices');
     Route::get('/alerts/critical/offline', [AlertsController::class, 'criticalOffline'])->name('alerts.criticalOffline');
@@ -76,9 +77,14 @@ Route::middleware('auth')->group(function () {
     
     // Building management (for campus map)
     Route::get('/buildings', [BuildingController::class, 'index'])->name('buildings.index');
-    Route::post('/buildings', [BuildingController::class, 'store'])->name('buildings.store');
-    Route::put('/buildings/{id}', [BuildingController::class, 'update'])->name('buildings.update');
-    Route::delete('/buildings/{id}', [BuildingController::class, 'destroy'])->name('buildings.destroy');
+    Route::get('/networks/unassigned', [BuildingController::class, 'getUnassignedNetworks'])->name('networks.unassigned');
+    
+    // Admin-only building operations
+    Route::middleware('admin')->group(function () {
+        Route::post('/buildings', [BuildingController::class, 'store'])->name('buildings.store');
+        Route::put('/buildings/{id}', [BuildingController::class, 'update'])->name('buildings.update');
+        Route::delete('/buildings/{id}', [BuildingController::class, 'destroy'])->name('buildings.destroy');
+    });
 });
 
 /*

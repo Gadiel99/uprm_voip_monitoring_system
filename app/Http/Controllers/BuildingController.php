@@ -21,6 +21,25 @@ class BuildingController extends Controller
     }
 
     /**
+     * Get networks that are not assigned to any building (Action Required)
+     */
+    public function getUnassignedNetworks()
+    {
+        // Get all network IDs that are assigned to buildings
+        $assignedNetworkIds = DB::table('building_networks')
+            ->pluck('network_id')
+            ->toArray();
+
+        // Get networks that are NOT in the assigned list
+        $unassignedNetworks = DB::table('networks')
+            ->whereNotIn('network_id', $assignedNetworkIds)
+            ->orderBy('subnet')
+            ->get();
+
+        return response()->json($unassignedNetworks);
+    }
+
+    /**
      * Store a new building
      */
     public function store(Request $request)

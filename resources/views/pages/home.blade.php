@@ -59,7 +59,12 @@
         <span class="text-danger ms-2">● Critical</span>
     </div>
     
-    {{-- Admin buttons for marker management --}}
+    @php
+        $isAdmin = strtolower(str_replace('_', '', auth()->user()->role ?? '')) === 'admin';
+    @endphp
+    
+    {{-- Admin-only buttons for marker management --}}
+    @if($isAdmin)
     <button id="addMarkerBtn" class="btn btn-primary">
         <i class="bi bi-plus-circle me-1"></i> Add Marker
     </button>
@@ -72,6 +77,7 @@
     <button id="cancelDeleteBtn" class="btn btn-secondary" style="display: none;">
         <i class="bi bi-x-circle me-1"></i> Cancel
     </button>
+    @endif
     
     <button id="resetZoomBtn" class="btn btn-secondary">
         <i class="bi bi-arrow-counterclockwise me-1"></i> Reset View
@@ -145,9 +151,17 @@
 
                     {{-- Networks Container --}}
                     <div class="mb-3">
-                        <label class="form-label fw-semibold">Networks:</label>
+                        <label class="form-label fw-semibold">Current Networks:</label>
                         <div id="editNetworksContainer">
                             {{-- Networks will be loaded dynamically --}}
+                        </div>
+                        <small class="text-muted d-block mb-2">Click "Remove" to return a network to Action Required list</small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Add Networks (Action Required):</label>
+                        <div id="editNewNetworksContainer">
+                            {{-- New networks to add --}}
                         </div>
                         <button type="button" class="btn btn-warning btn-sm" id="addEditNetworkBtn">
                             <i class="bi bi-plus-circle me-1"></i> Add Network
@@ -189,15 +203,15 @@
 
                     {{-- Networks Container --}}
                     <div class="mb-3">
-                        <label class="form-label fw-semibold">Networks:</label>
+                        <label class="form-label fw-semibold">Networks (Action Required):</label>
                         <div id="networksContainer">
                             <div class="input-group mb-2">
-                                <input 
-                                    type="text" 
-                                    class="form-control network-input" 
-                                    placeholder="e.g. 10.100.100.0"
-                                    required
-                                >
+                                <select class="form-select network-select" required>
+                                    <option value="">Select a network...</option>
+                                </select>
+                                <button type="button" class="btn btn-outline-danger remove-network-btn">
+                                    <i class="bi bi-x-lg"></i>
+                                </button>
                             </div>
                         </div>
                         <button type="button" class="btn btn-success btn-sm" id="addNetworkBtn">
@@ -387,63 +401,18 @@ window.currentEditIndex = null;
 
 document.addEventListener('DOMContentLoaded', function () {
     
-    // ===== BUILDING STATUS DATA (synced with alerts page) =====
-    const buildingStatuses = {
-        "Stefani": "critical",
-        "Biblioteca": "warning",
-        "General Library": "warning",
-        "Centro de Estudiantes": "normal",
-        "Student Center": "normal",
-        "Celis": "normal",
-        "Biologia": "normal",
-        "DeDiego": "normal",
-        "Luchetti": "normal",
-        "ROTC": "normal",
-        "Adm.Empresas": "normal",
-        "Musa": "normal",
-        "Chardon": "normal",
-        "Monzon": "normal",
-        "Sanchez Hidalgo": "normal",
-        "Fisica": "normal",
-        "Geologia": "normal",
-        "Ciencias Marinas": "normal",
-        "Quimica": "normal",
-        "Piñero": "normal",
-        "Enfermeria": "normal",
-        "Vagones": "normal",
-        "Natatorio": "normal",
-        "Centro Nuclear": "normal",
-        "Coliseo": "normal",
-        "Gimnacio": "normal",
-        "Servicios Medicos": "normal",
-        "Decanato de Estudiantes": "normal",
-        "Oficina de Facultad": "normal",
-        "Adm.Finca Alzamora": "normal",
-        "Centro de Estudiantes": "normal",
-        "Terrats": "normal",
-        "Ing.Civil": "normal",
-        "Ing.Industrial": "normal",
-        "Ing.Quimica": "normal",
-        "Ing.Agricola": "normal",
-        "Edificio A (Hotel Colegial)": "normal",
-        "Edificio B (Adm.Peq.Negocios y Oficina Adm)": "normal",
-        "Edificio C (Oficina de Extension Agricola)": "normal",
-        "Edificio D": "normal"
-    };
-
-    // Load statuses from localStorage if available
-    const savedStatuses = localStorage.getItem('buildingStatuses');
-    if (savedStatuses) {
-        Object.assign(buildingStatuses, JSON.parse(savedStatuses));
-    }
+    // ===== BUILDING STATUS DATA (from controller - synced with alerts page) =====
+    const buildingStatuses = {!! json_encode($buildings->pluck('alert_level', 'name')->toArray()) !!};
+    
+    console.log('Building statuses loaded from controller:', buildingStatuses);
 
     // Function to get marker color based on status
     function getMarkerColor(buildingName) {
-        const status = buildingStatuses[buildingName] || "normal";
+        const status = buildingStatuses[buildingName] || "green";
         switch(status) {
-            case "critical": return "#dc3545"; // Red
-            case "warning": return "#ffc107";  // Yellow
-            case "normal": return "#198754";   // Green
+            case "red": return "#dc3545";    // Red - Critical
+            case "yellow": return "#ffc107"; // Yellow - Warning
+            case "green": return "#198754";  // Green - Normal
             default: return "#198754";
         }
     }
@@ -451,6 +420,9 @@ document.addEventListener('DOMContentLoaded', function () {
     // Markers will be loaded from database
     let markers = [];
     let buildingsData = []; // Store full building data including IDs
+    let unassignedNetworks = []; // Store available networks for dropdowns
+    window.unassignedNetworks = unassignedNetworks; // Make globally accessible
+    const isAdmin = {{ $isAdmin ? 'true' : 'false' }};
 
     // ===== DOM ELEMENTS =====
     const mapContainer = document.getElementById('mapContainer');
@@ -502,9 +474,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 
                 console.log('Marker clicked! Index:', index, 'Delete mode:', deleteMarkerMode, 'Edit mode:', editMarkerMode);
                 
-                if (deleteMarkerMode) {
+                if (isAdmin && deleteMarkerMode) {
                     deleteMarker(index);
-                } else if (editMarkerMode) {
+                } else if (isAdmin && editMarkerMode) {
                     editMarker(index);
                 } else {
                     window.location.href = `/alerts?building=${encodeURIComponent(markerData.name)}`;
@@ -545,25 +517,32 @@ document.addEventListener('DOMContentLoaded', function () {
     }
     
     // ===== ADD MARKER FUNCTIONALITY =====
-    addMarkerBtn.addEventListener('click', () => {
-        addMarkerMode = !addMarkerMode;
-        deleteMarkerMode = false;
-        
-        if (addMarkerMode) {
-            addMarkerBtn.classList.add('active');
-            deleteMarkerBtn.classList.remove('active');
-            mapContainer.style.cursor = 'crosshair';
-            alert('✅ Click on the map to place a new marker');
-        } else {
-            addMarkerBtn.classList.remove('active');
-            mapContainer.style.cursor = 'grab';
-        }
-        
-        renderMarkers();
-    });
+    if (isAdmin && addMarkerBtn) {
+        addMarkerBtn.addEventListener('click', async () => {
+            addMarkerMode = !addMarkerMode;
+            deleteMarkerMode = false;
+            
+            if (addMarkerMode) {
+                // Load unassigned networks
+                await loadUnassignedNetworks();
+                
+                addMarkerBtn.classList.add('active');
+                if (deleteMarkerBtn) deleteMarkerBtn.classList.remove('active');
+                mapContainer.style.cursor = 'crosshair';
+                alert('✅ Click on the map to place a new marker');
+            } else {
+                addMarkerBtn.classList.remove('active');
+                mapContainer.style.cursor = 'grab';
+            }
+            
+            renderMarkers();
+        });
+    }
 
     // Click on map to add marker OR move marker during edit
     mapWrapper.addEventListener('click', (e) => {
+        console.log('🗺️ Map clicked! moveMarkerMode:', moveMarkerMode, 'editingMarkerId:', editingMarkerId, 'hasMoved:', hasMoved);
+        
         // Handle add marker mode
         if (addMarkerMode) {
             // Ignore if this was a drag operation
@@ -587,21 +566,35 @@ document.addEventListener('DOMContentLoaded', function () {
                 left: parseFloat(leftPercent.toFixed(1))
             };
 
+            // Populate the first network dropdown
+            const firstSelect = document.querySelector('#networksContainer .network-select');
+            if (firstSelect) {
+                populateNetworkSelect(firstSelect, []);
+            }
+            
+            // Update Add Network button state
+            if (window.updateAddNetworkButtonState) {
+                setTimeout(() => window.updateAddNetworkButtonState(), 100);
+            }
+
             // Open the modal
             const modal = new bootstrap.Modal(document.getElementById('createBuildingModal'));
             modal.show();
 
             // Exit add mode (will be reactivated if cancelled)
             addMarkerMode = false;
-            addMarkerBtn.classList.remove('active');
+            if (addMarkerBtn) addMarkerBtn.classList.remove('active');
             mapContainer.style.cursor = 'grab';
             return;
         }
         
         // Handle move marker during edit mode
         if (moveMarkerMode && editingMarkerId) {
+            console.log('✅ Move marker mode active - processing click');
+            
             // Ignore if this was a drag operation
             if (hasMoved) {
+                console.log('⚠️ Ignoring click - was a drag operation');
                 hasMoved = false;
                 return;
             }
@@ -612,16 +605,48 @@ document.addEventListener('DOMContentLoaded', function () {
             const x = (e.clientX - rect.left) / scale;
             const y = (e.clientY - rect.top) / scale;
             
+            console.log('📍 Click coordinates - clientX:', e.clientX, 'clientY:', e.clientY);
+            console.log('📍 Rect - left:', rect.left, 'top:', rect.top);
+            console.log('📍 Scale:', scale);
+            console.log('📍 Calculated - x:', x, 'y:', y);
+            
             const topPercent = (y / 1199) * 100;
             const leftPercent = (x / 2202) * 100;
+            
+            console.log('📍 Percentages - top:', topPercent, 'left:', leftPercent);
 
             // Store the new position for the marker being edited
             pendingEditPosition = {
-                top: parseFloat(topPercent.toFixed(1)),
-                left: parseFloat(leftPercent.toFixed(1))
+                top: parseFloat(topPercent.toFixed(2)),
+                left: parseFloat(leftPercent.toFixed(2))
             };
+            
+            console.log('✅ New marker position set:', pendingEditPosition);
 
-            alert('✅ New position set! Click "Update Building" to save changes.');
+            // Disable move marker mode
+            moveMarkerMode = false;
+            document.getElementById('moveMarkerCheck').checked = false;
+            
+            // Show temporary marker preview (optional)
+            const previewMarker = document.createElement('div');
+            previewMarker.id = 'previewMarker';
+            previewMarker.className = 'marker';
+            previewMarker.style.top = `${pendingEditPosition.top}%`;
+            previewMarker.style.left = `${pendingEditPosition.left}%`;
+            previewMarker.style.backgroundColor = '#ffc107';
+            previewMarker.style.border = '3px solid #ff0000';
+            previewMarker.style.zIndex = '999';
+            
+            // Remove any existing preview
+            const existingPreview = document.getElementById('previewMarker');
+            if (existingPreview) {
+                existingPreview.remove();
+            }
+            
+            markersLayer.appendChild(previewMarker);
+            console.log('✅ Preview marker created at:', previewMarker.style.top, previewMarker.style.left);
+            
+            alert('✅ New position selected!\n\nYou can see a preview marker in yellow/red.\nClick "Update Building" to save the new position.');
             
             // Re-open the modal after position is selected
             const modal = new bootstrap.Modal(document.getElementById('editBuildingModal'));
@@ -629,34 +654,42 @@ document.addEventListener('DOMContentLoaded', function () {
             
             return;
         }
+        
+        console.log('ℹ️ Click not processed - not in move marker mode');
     });
 
     // ===== EDIT MARKER FUNCTIONALITY =====
-    editMarkerBtn.addEventListener('click', () => {
-        editMarkerMode = !editMarkerMode;
-        addMarkerMode = false;
-        deleteMarkerMode = false;
-        
-        if (editMarkerMode) {
-            editMarkerBtn.classList.add('active');
-            addMarkerBtn.classList.remove('active');
-            deleteMarkerBtn.classList.remove('active');
-            cancelDeleteBtn.style.display = 'none';
-            mapContainer.style.cursor = 'pointer';
-            alert('✏️ Click on any marker to edit it');
-        } else {
-            editMarkerBtn.classList.remove('active');
-            mapContainer.style.cursor = 'grab';
-            moveMarkerMode = false;
-            editingMarkerId = null;
-            pendingEditPosition = null;
-        }
-        
-        renderMarkers();
-    });
+    if (isAdmin && editMarkerBtn) {
+        editMarkerBtn.addEventListener('click', () => {
+            editMarkerMode = !editMarkerMode;
+            addMarkerMode = false;
+            deleteMarkerMode = false;
+            moveMarkerMode = false; // Reset move mode
+            pendingEditPosition = null; // Reset pending position
+            
+            if (editMarkerMode) {
+                editMarkerBtn.classList.add('active');
+                if (addMarkerBtn) addMarkerBtn.classList.remove('active');
+                if (deleteMarkerBtn) deleteMarkerBtn.classList.remove('active');
+                if (cancelDeleteBtn) cancelDeleteBtn.style.display = 'none';
+                mapContainer.style.cursor = 'crosshair'; // Changed from 'pointer' to 'crosshair'
+                alert('✏️ Click on any marker to edit it');
+            } else {
+                editMarkerBtn.classList.remove('active');
+                mapContainer.style.cursor = 'grab';
+                moveMarkerMode = false;
+                editingMarkerId = null;
+                pendingEditPosition = null;
+            }
+            
+            renderMarkers();
+        });
+    }
 
     async function editMarker(index) {
         const marker = markers[index];
+        
+        console.log('📝 editMarker called - index:', index, 'marker:', marker);
         
         if (!marker.id) {
             alert('❌ Cannot edit this marker (no database ID)');
@@ -664,73 +697,141 @@ document.addEventListener('DOMContentLoaded', function () {
         }
         
         editingMarkerId = marker.id;
+        console.log('✅ editingMarkerId set to:', editingMarkerId);
         
-        // Populate form with existing data
+        // Populate form with existing data FIRST (show modal immediately)
         document.getElementById('editBuildingId').value = marker.id;
         document.getElementById('editBuildingName').value = marker.name;
         
-        // Clear and populate networks
+        // Show current networks (with remove buttons)
         const networksContainer = document.getElementById('editNetworksContainer');
         networksContainer.innerHTML = '';
         
         if (marker.networks && marker.networks.length > 0) {
             marker.networks.forEach(network => {
-                addEditNetworkField(network.subnet || '');
+                const networkDiv = document.createElement('div');
+                networkDiv.className = 'alert alert-info d-flex justify-content-between align-items-center mb-2';
+                
+                // Only show remove button if there's more than one network
+                const removeButtonHtml = marker.networks.length > 1 
+                    ? `<button type="button" class="btn btn-sm btn-danger remove-current-network" data-subnet="${network.subnet}">
+                        <i class="bi bi-x-lg"></i> Remove
+                    </button>`
+                    : `<span class="badge bg-secondary">Last network - cannot remove</span>`;
+                
+                networkDiv.innerHTML = `
+                    <span><i class="bi bi-hdd-network me-2"></i>${network.subnet}</span>
+                    ${removeButtonHtml}
+                `;
+                networksContainer.appendChild(networkDiv);
             });
         } else {
-            addEditNetworkField();
+            networksContainer.innerHTML = '<p class="text-muted">No networks assigned</p>';
         }
+        
+        // Clear new networks container
+        const newNetworksContainer = document.getElementById('editNewNetworksContainer');
+        newNetworksContainer.innerHTML = '';
         
         // Reset move marker mode
         moveMarkerMode = false;
         pendingEditPosition = null;
         document.getElementById('moveMarkerCheck').checked = false;
         
-        // Show modal
+        // Show modal IMMEDIATELY (don't wait for network loading)
         const modal = new bootstrap.Modal(document.getElementById('editBuildingModal'));
         modal.show();
+        
+        // Load unassigned networks in background (for Add Network button)
+        loadUnassignedNetworks().catch(err => {
+            console.error('Failed to load unassigned networks:', err);
+        });
     }
 
-    function addEditNetworkField(networkValue = '') {
-        const container = document.getElementById('editNetworksContainer');
+    function addEditNetworkField() {
+        const container = document.getElementById('editNewNetworksContainer');
         const networkGroup = document.createElement('div');
         networkGroup.className = 'input-group mb-2';
         
-        const input = document.createElement('input');
-        input.type = 'text';
-        input.className = 'form-control edit-network-input';
-        input.placeholder = 'e.g. 10.100.100.0';
-        input.value = networkValue;
-        input.required = true;
+        const select = document.createElement('select');
+        select.className = 'form-select edit-network-select';
+        select.required = true;
+        
+        // Get currently selected networks to exclude them
+        const selectedNetworks = Array.from(container.querySelectorAll('.edit-network-select'))
+            .map(s => s.value)
+            .filter(v => v);
+        
+        populateNetworkSelect(select, selectedNetworks);
         
         const removeBtn = document.createElement('button');
         removeBtn.type = 'button';
         removeBtn.className = 'btn btn-danger';
-        removeBtn.textContent = 'Remove';
-        removeBtn.onclick = () => networkGroup.remove();
+        removeBtn.innerHTML = '<i class="bi bi-x-lg"></i>';
+        removeBtn.onclick = () => {
+            networkGroup.remove();
+            // Refresh other dropdowns
+            refreshEditNetworkDropdowns();
+        };
         
-        networkGroup.appendChild(input);
+        // When a network is selected, refresh other dropdowns
+        select.addEventListener('change', refreshEditNetworkDropdowns);
+        
+        networkGroup.appendChild(select);
         networkGroup.appendChild(removeBtn);
         container.appendChild(networkGroup);
     }
-
-    document.getElementById('addEditNetworkBtn').addEventListener('click', () => {
-        addEditNetworkField();
-    });
-
-    document.getElementById('moveMarkerCheck').addEventListener('change', (e) => {
-        moveMarkerMode = e.target.checked;
+    
+    function refreshEditNetworkDropdowns() {
+        const container = document.getElementById('editNewNetworksContainer');
+        const allSelects = container.querySelectorAll('.edit-network-select');
+        const selectedValues = Array.from(allSelects).map(s => s.value).filter(v => v);
         
-        if (moveMarkerMode) {
-            mapContainer.style.cursor = 'crosshair';
-            alert('📍 Click on the map to select a new position for this marker');
-        } else {
-            mapContainer.style.cursor = 'pointer';
-            pendingEditPosition = null;
+        allSelects.forEach(select => {
+            const currentValue = select.value;
+            populateNetworkSelect(select, selectedValues.filter(v => v !== currentValue));
+            select.value = currentValue; // Restore selection
+        });
+    }
+
+    if (document.getElementById('addEditNetworkBtn')) {
+        document.getElementById('addEditNetworkBtn').addEventListener('click', () => {
+            addEditNetworkField();
+        });
+    }
+
+    // Use event delegation for dynamically loaded checkbox
+    document.body.addEventListener('change', (e) => {
+        if (e.target && e.target.id === 'moveMarkerCheck') {
+            moveMarkerMode = e.target.checked;
+            console.log('🔄 Move marker checkbox changed - moveMarkerMode:', moveMarkerMode, 'editingMarkerId:', editingMarkerId);
+            
+            if (moveMarkerMode) {
+                console.log('📍 Attempting to enable move marker mode...');
+                
+                // Close the modal so user can click on map
+                const modal = bootstrap.Modal.getInstance(document.getElementById('editBuildingModal'));
+                if (modal) {
+                    console.log('✅ Closing modal...');
+                    modal.hide();
+                } else {
+                    console.log('⚠️ No modal instance found');
+                }
+                
+                mapContainer.style.cursor = 'crosshair';
+                console.log('✅ Move marker mode enabled - cursor set to crosshair, modal closed');
+                console.log('📌 Current state - moveMarkerMode:', moveMarkerMode, 'editingMarkerId:', editingMarkerId);
+                alert('📍 Click on the map to select a new position for this marker.\n\nThe modal will reopen after you select the position.');
+            } else {
+                mapContainer.style.cursor = 'crosshair'; // Keep crosshair for edit mode
+                pendingEditPosition = null;
+                console.log('❌ Move marker mode disabled');
+            }
         }
     });
 
     document.getElementById('updateBuildingBtn').addEventListener('click', async () => {
+        const updateBtn = document.getElementById('updateBuildingBtn');
         const buildingId = document.getElementById('editBuildingId').value;
         const buildingNameRaw = document.getElementById('editBuildingName').value.trim();
         const buildingName = sanitizeInput(buildingNameRaw);
@@ -745,31 +846,33 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
         
-        // Collect network values from text inputs
-        const networkInputs = document.querySelectorAll('#editNetworksContainer .edit-network-input');
-        const networks = [];
-        const invalidNetworks = [];
-        
-        networkInputs.forEach(input => {
-            const valueRaw = input.value.trim();
-            const value = sanitizeInput(valueRaw);
-            
-            if (value) {
-                if (isValidNetwork(value)) {
-                    networks.push(value);
-                } else {
-                    invalidNetworks.push(value);
-                }
+        // Collect remaining current networks (ones not removed)
+        const currentNetworkElements = document.querySelectorAll('#editNetworksContainer .alert');
+        const currentNetworks = Array.from(currentNetworkElements).map(el => {
+            const btn = el.querySelector('.remove-current-network');
+            const badge = el.querySelector('.badge');
+            // Get subnet from either button or badge (for last network case)
+            if (btn) {
+                return btn.dataset.subnet;
+            } else if (badge) {
+                // Extract subnet from the text content (before the badge)
+                const textContent = el.querySelector('span:first-child').textContent;
+                return textContent.trim();
             }
-        });
+            return null;
+        }).filter(n => n);
         
-        if (networks.length === 0 && invalidNetworks.length === 0) {
-            alert('❌ Please enter at least one network');
-            return;
-        }
+        // Collect newly added networks from dropdowns
+        const newNetworkSelects = document.querySelectorAll('#editNewNetworksContainer .edit-network-select');
+        const newNetworks = Array.from(newNetworkSelects)
+            .map(select => select.value)
+            .filter(v => v);
         
-        if (invalidNetworks.length > 0) {
-            alert(`❌ Invalid network format(s): ${invalidNetworks.join(', ')}\n\nPlease use format: XXX.XXX.XXX.XXX`);
+        // Combine both lists (keeping existing + adding new)
+        const networks = [...currentNetworks, ...newNetworks];
+        
+        if (networks.length === 0) {
+            alert('❌ Building must have at least one network');
             return;
         }
         
@@ -777,88 +880,159 @@ document.addEventListener('DOMContentLoaded', function () {
         let position;
         if (pendingEditPosition) {
             position = pendingEditPosition;
+            console.log('Using new position:', position);
         } else {
             // Find current marker position
             const currentMarker = markers.find(m => m.id == buildingId);
             if (currentMarker) {
                 position = { top: currentMarker.top, left: currentMarker.left };
+                console.log('Using current position:', position);
             } else {
                 alert('❌ Could not find current marker position');
                 return;
             }
         }
         
+        // Disable button to prevent double-clicks
+        updateBtn.disabled = true;
+        updateBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Updating...';
+        
         try {
+            const payload = {
+                name: buildingName,
+                map_x: parseFloat(position.left),
+                map_y: parseFloat(position.top),
+                networks: networks
+            };
+            
+            console.log('Sending update request:', payload);
+            
             const response = await fetch(`/buildings/${buildingId}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
                 },
-                body: JSON.stringify({
-                    name: buildingName,
-                    map_x: parseFloat(position.left),
-                    map_y: parseFloat(position.top),
-                    networks: networks
-                })
+                body: JSON.stringify(payload)
             });
             
+            console.log('Response status:', response.status);
             const result = await response.json();
+            console.log('Response data:', result);
             
             if (result.success) {
-                // Close modal
+                // Remove preview marker if exists
+                const previewMarker = document.getElementById('previewMarker');
+                if (previewMarker) {
+                    previewMarker.remove();
+                }
+                
+                // Close modal immediately
                 const modal = bootstrap.Modal.getInstance(document.getElementById('editBuildingModal'));
-                modal.hide();
+                if (modal) {
+                    modal.hide();
+                }
                 
                 // Exit edit mode
                 editMarkerMode = false;
                 moveMarkerMode = false;
                 editingMarkerId = null;
                 pendingEditPosition = null;
-                editMarkerBtn.classList.remove('active');
+                if (editMarkerBtn) editMarkerBtn.classList.remove('active');
                 mapContainer.style.cursor = 'grab';
                 
-                // Reload markers
-                await loadBuildingsFromDB();
+                // Show success message immediately
                 alert('✅ Building updated successfully!');
+                
+                // Force reload data to get updated positions
+                await loadBuildingsFromDB();
+                if (isAdmin) {
+                    await loadUnassignedNetworks();
+                }
+                
+                // Force re-render markers
+                renderMarkers();
             } else {
                 alert('❌ Error: ' + (result.message || 'Failed to update building'));
             }
         } catch (error) {
             console.error('Update error:', error);
             alert('❌ Failed to update building');
+        } finally {
+            // Re-enable button
+            updateBtn.disabled = false;
+            updateBtn.innerHTML = '<i class="bi bi-check-circle me-1"></i> Update Building';
+        }
+    });
+    
+    // Handle remove current network button clicks (event delegation)
+    document.getElementById('editNetworksContainer').addEventListener('click', (e) => {
+        if (e.target.classList.contains('remove-current-network') || e.target.closest('.remove-current-network')) {
+            const btn = e.target.classList.contains('remove-current-network') ? e.target : e.target.closest('.remove-current-network');
+            const subnet = btn.dataset.subnet;
+            
+            // Check how many networks remain BEFORE removing
+            const currentNetworkCount = document.querySelectorAll('#editNetworksContainer .alert').length;
+            
+            // Don't allow removal if it's the last network
+            if (currentNetworkCount <= 1) {
+                alert('❌ Cannot remove the last network!\n\nA building must have at least one network assigned.');
+                return;
+            }
+            
+            if (confirm(`Remove network ${subnet} from this building?\n\nIt will be returned to the Action Required list.`)) {
+                btn.closest('.alert').remove();
+                
+                // Check if only one network remains after removal
+                const remainingNetworks = document.querySelectorAll('#editNetworksContainer .alert');
+                
+                if (remainingNetworks.length === 1) {
+                    // Replace the remove button with a badge on the last remaining network
+                    const lastNetworkAlert = remainingNetworks[0];
+                    const removeBtn = lastNetworkAlert.querySelector('.remove-current-network');
+                    if (removeBtn) {
+                        removeBtn.outerHTML = '<span class="badge bg-secondary">Last network - cannot remove</span>';
+                    }
+                } else if (remainingNetworks.length === 0) {
+                    document.getElementById('editNetworksContainer').innerHTML = '<p class="text-muted">No networks assigned</p>';
+                }
+            }
         }
     });
 
     // ===== DELETE MARKER FUNCTIONALITY =====
-    deleteMarkerBtn.addEventListener('click', () => {
-        deleteMarkerMode = !deleteMarkerMode;
-        addMarkerMode = false;
-        editMarkerMode = false;
-        
-        if (deleteMarkerMode) {
-            deleteMarkerBtn.classList.add('active');
-            addMarkerBtn.classList.remove('active');
-            editMarkerBtn.classList.remove('active');
-            cancelDeleteBtn.style.display = 'inline-block';
-            mapContainer.style.cursor = 'pointer';
-            alert('🗑️ Click on any marker to delete it');
-        } else {
-            deleteMarkerBtn.classList.remove('active');
-            cancelDeleteBtn.style.display = 'none';
-            mapContainer.style.cursor = 'grab';
-        }
-        
-        renderMarkers();
-    });
+    if (isAdmin && deleteMarkerBtn) {
+        deleteMarkerBtn.addEventListener('click', () => {
+            deleteMarkerMode = !deleteMarkerMode;
+            addMarkerMode = false;
+            editMarkerMode = false;
+            
+            if (deleteMarkerMode) {
+                deleteMarkerBtn.classList.add('active');
+                if (addMarkerBtn) addMarkerBtn.classList.remove('active');
+                if (editMarkerBtn) editMarkerBtn.classList.remove('active');
+                if (cancelDeleteBtn) cancelDeleteBtn.style.display = 'inline-block';
+                mapContainer.style.cursor = 'pointer';
+                alert('🗑️ Click on any marker to delete it. This will remove the building and all its networks from the database.');
+            } else {
+                deleteMarkerBtn.classList.remove('active');
+                if (cancelDeleteBtn) cancelDeleteBtn.style.display = 'none';
+                mapContainer.style.cursor = 'grab';
+            }
+            
+            renderMarkers();
+        });
 
-    cancelDeleteBtn.addEventListener('click', () => {
-        deleteMarkerMode = false;
-        deleteMarkerBtn.classList.remove('active');
-        cancelDeleteBtn.style.display = 'none';
-        mapContainer.style.cursor = 'grab';
-        renderMarkers();
-    });
+        if (cancelDeleteBtn) {
+            cancelDeleteBtn.addEventListener('click', () => {
+                deleteMarkerMode = false;
+                deleteMarkerBtn.classList.remove('active');
+                cancelDeleteBtn.style.display = 'none';
+                mapContainer.style.cursor = 'grab';
+                renderMarkers();
+            });
+        }
+    }
 
     async function deleteMarker(index) {
         const marker = markers[index];
@@ -868,7 +1042,10 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
         
-        if (confirm(`Delete building "${marker.name}"?`)) {
+        const networkCount = marker.networks?.length || 0;
+        const confirmMsg = `⚠️ Delete building "${marker.name}"?\n\nThis will:\n- Remove the building from the map\n- Delete ${networkCount} network association(s)\n- Return networks to "Action Required" list\n\nThis action cannot be undone.`;
+        
+        if (confirm(confirmMsg)) {
             try {
                 const response = await fetch(`/buildings/${marker.id}`, {
                     method: 'DELETE',
@@ -882,13 +1059,15 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (result.success) {
                     // Exit delete mode
                     deleteMarkerMode = false;
-                    deleteMarkerBtn.classList.remove('active');
+                    if (deleteMarkerBtn) deleteMarkerBtn.classList.remove('active');
+                    if (cancelDeleteBtn) cancelDeleteBtn.style.display = 'none';
                     mapContainer.style.cursor = 'grab';
                     
-                    alert(`✅ Building "${marker.name}" deleted`);
+                    alert(`✅ Building "${marker.name}" deleted successfully\n\n${networkCount} network(s) returned to Action Required list`);
                     
-                    // Reload buildings from database
+                    // Reload buildings and unassigned networks
                     await loadBuildingsFromDB();
+                    await loadUnassignedNetworks();
                 } else {
                     alert(`❌ Failed to delete building: ${result.message}`);
                 }
@@ -898,6 +1077,45 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }
     }
+
+    // ===== LOAD UNASSIGNED NETWORKS =====
+    async function loadUnassignedNetworks() {
+        try {
+            const response = await fetch('/networks/unassigned');
+            if (!response.ok) throw new Error('Failed to load unassigned networks');
+            
+            unassignedNetworks = await response.json();
+            window.unassignedNetworks = unassignedNetworks; // Update global reference
+            console.log(`✅ Loaded ${unassignedNetworks.length} unassigned networks`);
+        } catch (error) {
+            console.error('Error loading unassigned networks:', error);
+            unassignedNetworks = [];
+            window.unassignedNetworks = [];
+        }
+    }
+    
+    // ===== POPULATE NETWORK SELECT DROPDOWN (GLOBAL) =====
+    window.populateNetworkSelect = function(selectElement, excludeNetworkIds = []) {
+        selectElement.innerHTML = '<option value="">Select a network...</option>';
+        
+        const availableNetworks = unassignedNetworks.filter(net => 
+            !excludeNetworkIds.includes(net.network_id)
+        );
+        
+        if (availableNetworks.length === 0) {
+            selectElement.innerHTML = '<option value="">No networks available</option>';
+            selectElement.disabled = true;
+            return;
+        }
+        
+        selectElement.disabled = false;
+        availableNetworks.forEach(network => {
+            const option = document.createElement('option');
+            option.value = network.subnet;
+            option.textContent = `${network.subnet} (${network.total_devices || 0} devices)`;
+            selectElement.appendChild(option);
+        });
+    };
 
     // ===== LOAD BUILDINGS FROM DATABASE =====
     async function loadBuildingsFromDB() {
@@ -910,14 +1128,18 @@ document.addEventListener('DOMContentLoaded', function () {
             
             buildingsData = await response.json();
             
+            console.log('Raw buildings data from API:', buildingsData);
+            
             // Convert to markers format
             markers = buildingsData.map(building => ({
                 id: building.building_id,
-                top: building.map_y,
-                left: building.map_x,
+                top: parseFloat(building.map_y) || 0,
+                left: parseFloat(building.map_x) || 0,
                 name: building.name,
                 networks: building.networks || []
             }));
+            
+            console.log('Converted markers:', markers);
             
             renderMarkers();
             console.log(`✅ Loaded ${markers.length} buildings from database`);
@@ -1022,11 +1244,151 @@ document.addEventListener('DOMContentLoaded', function () {
         mapContainer.scrollTop = touchStartY - y;
     });
 
+    // ===== EDIT MODAL CLEANUP =====
+    const editBuildingModal = document.getElementById('editBuildingModal');
+    if (editBuildingModal) {
+        editBuildingModal.addEventListener('hidden.bs.modal', function() {
+            console.log('🚪 Modal hidden event - moveMarkerMode:', moveMarkerMode);
+            
+            // DON'T reset moveMarkerMode if we're in the middle of selecting a position
+            // (modal was closed to allow map click, not by user canceling)
+            if (!moveMarkerMode) {
+                console.log('✅ Modal closed normally - cleaning up');
+                
+                // Remove preview marker when modal closes
+                const previewMarker = document.getElementById('previewMarker');
+                if (previewMarker) {
+                    previewMarker.remove();
+                }
+                
+                // Reset pending position only if not in move mode
+                pendingEditPosition = null;
+                const moveCheck = document.getElementById('moveMarkerCheck');
+                if (moveCheck) {
+                    moveCheck.checked = false;
+                }
+            } else {
+                console.log('⏳ Modal closed for position selection - keeping moveMarkerMode active');
+            }
+            
+            // Restore cursor if in edit mode
+            if (editMarkerMode) {
+                mapContainer.style.cursor = 'crosshair';
+            }
+        });
+    }
+    
+    // ===== SAVE BUILDING BUTTON =====
+    const saveBuildingBtn = document.getElementById('saveBuildingBtn');
+    if (saveBuildingBtn) {
+        saveBuildingBtn.addEventListener('click', async function() {
+            const buildingNameRaw = document.getElementById('buildingName').value.trim();
+            const buildingName = sanitizeInput(buildingNameRaw);
+            const networkSelects = document.querySelectorAll('#networksContainer .network-select');
+            const networks = [];
+            
+            // Collect all selected network values
+            networkSelects.forEach(select => {
+                const value = select.value.trim();
+                if (value) {
+                    networks.push(value);
+                }
+            });
+            
+            // Validate building name
+            if (!buildingName) {
+                alert('❌ Please enter a building name');
+                return;
+            }
+            
+            if (buildingName.length > 50) {
+                alert('❌ Building name is too long (max 50 characters)');
+                return;
+            }
+            
+            // Validate networks
+            if (networks.length === 0) {
+                alert('❌ Please select at least one network from Action Required list');
+                return;
+            }
+            
+            // Check for duplicate building name
+            const duplicate = markers.find(m => m.name.toLowerCase() === buildingName.toLowerCase());
+            
+            if (duplicate) {
+                if (!confirm(`⚠️ A building named "${buildingName}" already exists. Add anyway?`)) {
+                    return;
+                }
+            }
+            
+            // Get position from pending marker
+            const position = window.pendingMarkerPosition;
+            
+            if (!position) {
+                alert('❌ No map position selected. Please click on the map first.');
+                return;
+            }
+            
+            // Save to database via API
+            const buildingData = {
+                name: buildingName,
+                map_x: position.left,
+                map_y: position.top,
+                networks: networks
+            };
+            
+            // Close modal first
+            const modal = bootstrap.Modal.getInstance(document.getElementById('createBuildingModal'));
+            modal.hide();
+            
+            // Show loading
+            const loadingMsg = document.createElement('div');
+            loadingMsg.className = 'alert alert-info position-fixed top-0 start-50 translate-middle-x mt-3';
+            loadingMsg.style.zIndex = '9999';
+            loadingMsg.textContent = '⏳ Saving building...';
+            document.body.appendChild(loadingMsg);
+            
+            try {
+                const response = await fetch('/buildings', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    },
+                    body: JSON.stringify(buildingData)
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert(`✅ Building "${buildingName}" added successfully with ${networks.length} network(s)!`);
+                    // Reload buildings and unassigned networks
+                    await loadBuildingsFromDB();
+                    if (isAdmin) {
+                        await loadUnassignedNetworks();
+                    }
+                } else {
+                    alert(`❌ Failed to save building: ${result.message}`);
+                }
+            } catch (error) {
+                console.error('Error saving building:', error);
+                alert('❌ Failed to save building to database');
+            } finally {
+                if (document.body.contains(loadingMsg)) {
+                    document.body.removeChild(loadingMsg);
+                }
+            }
+        });
+    }
+
     // ===== INITIAL RENDER =====
     updateZoom(0.6); // Apply initial zoom level
     
-    // Load buildings from database on page load
+    // Load buildings and unassigned networks from database on page load
     loadBuildingsFromDB();
+    if (isAdmin) {
+        loadUnassignedNetworks();
+    }
 });
 </script>
 
@@ -1072,145 +1434,153 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('addNetworkBtn').addEventListener('click', function() {
         const container = document.getElementById('networksContainer');
         
+        // Get currently selected networks to exclude them
+        const selectedNetworks = Array.from(container.querySelectorAll('.network-select'))
+            .map(s => s.value)
+            .filter(v => v);
+        
+        // Check if there are available networks left
+        const unassignedNetworks = window.unassignedNetworks || [];
+        const availableCount = unassignedNetworks.length - selectedNetworks.length;
+        
+        if (availableCount <= 0) {
+            alert('❌ No more networks available in Action Required list');
+            return;
+        }
+        
         const inputGroup = document.createElement('div');
         inputGroup.className = 'input-group mb-2';
         
-        const newInput = document.createElement('input');
-        newInput.type = 'text';
-        newInput.className = 'form-control network-input';
-        newInput.placeholder = 'e.g. 10.100.101.0';
+        const newSelect = document.createElement('select');
+        newSelect.className = 'form-select network-select';
+        newSelect.required = true;
+        
+        if (window.populateNetworkSelect) {
+            window.populateNetworkSelect(newSelect, selectedNetworks);
+        }
         
         const deleteBtn = document.createElement('button');
         deleteBtn.type = 'button';
-        deleteBtn.className = 'btn btn-outline-danger';
+        deleteBtn.className = 'btn btn-outline-danger remove-network-btn';
         deleteBtn.innerHTML = '<i class="bi bi-x-lg"></i>';
         deleteBtn.onclick = function() {
-            if (confirm('Remove this network input?')) {
-                inputGroup.remove();
-            }
+            inputGroup.remove();
+            refreshCreateNetworkDropdowns();
+            updateAddNetworkButtonState();
         };
         
-        inputGroup.appendChild(newInput);
+        // When a network is selected, refresh other dropdowns
+        newSelect.addEventListener('change', function() {
+            refreshCreateNetworkDropdowns();
+            updateAddNetworkButtonState();
+        });
+        
+        inputGroup.appendChild(newSelect);
         inputGroup.appendChild(deleteBtn);
         container.appendChild(inputGroup);
+        
+        // Update button state
+        updateAddNetworkButtonState();
     });
     
-    // Save Building button
-    document.getElementById('saveBuildingBtn').addEventListener('click', async function() {
-        const buildingNameRaw = document.getElementById('buildingName').value.trim();
-        const buildingName = sanitizeInput(buildingNameRaw);
-        const networkInputs = document.querySelectorAll('.network-input');
-        const networks = [];
-        const invalidNetworks = [];
+    window.updateAddNetworkButtonState = function() {
+        const container = document.getElementById('networksContainer');
+        const addBtn = document.getElementById('addNetworkBtn');
+        if (!container || !addBtn) return;
         
-        // Collect and validate all network values
-        networkInputs.forEach(input => {
-            const valueRaw = input.value.trim();
-            const value = sanitizeInput(valueRaw);
-            
-            if (value) {
-                // Validate network format
-                if (isValidNetwork(value)) {
-                    networks.push(value);
-                } else {
-                    invalidNetworks.push(value);
-                }
+        const selectedNetworks = Array.from(container.querySelectorAll('.network-select'))
+            .map(s => s.value)
+            .filter(v => v);
+        
+        const unassignedNetworks = window.unassignedNetworks || [];
+        const availableCount = unassignedNetworks.length - selectedNetworks.length;
+        
+        if (availableCount <= 0) {
+            addBtn.disabled = true;
+            addBtn.title = 'No more networks available';
+        } else {
+            addBtn.disabled = false;
+            addBtn.title = `${availableCount} network(s) available`;
+        }
+    };
+    
+    function refreshCreateNetworkDropdowns() {
+        const container = document.getElementById('networksContainer');
+        const allSelects = container.querySelectorAll('.network-select');
+        const selectedValues = Array.from(allSelects).map(s => s.value).filter(v => v);
+        
+        allSelects.forEach(select => {
+            const currentValue = select.value;
+            if (window.populateNetworkSelect) {
+                window.populateNetworkSelect(select, selectedValues.filter(v => v !== currentValue));
+                select.value = currentValue; // Restore selection
             }
         });
         
-        // Validate building name
-        if (!buildingName) {
-            alert('❌ Please enter a building name');
-            return;
+        // Update Add Network button state
+        if (typeof updateAddNetworkButtonState === 'function') {
+            updateAddNetworkButtonState();
         }
-        
-        if (buildingName.length > 50) {
-            alert('❌ Building name is too long (max 50 characters)');
-            return;
-        }
-        
-        // Validate networks
-        if (networks.length === 0 && invalidNetworks.length === 0) {
-            alert('❌ Please enter at least one network');
-            return;
-        }
-        
-        if (invalidNetworks.length > 0) {
-            alert(`❌ Invalid network format(s): ${invalidNetworks.join(', ')}\n\nPlease use format: XXX.XXX.XXX.XXX`);
-            return;
-        }
-        
-        // Check for duplicate building name
-        const duplicate = markers.find(m => m.name.toLowerCase() === buildingName.toLowerCase());
-        
-        if (duplicate) {
-            if (!confirm(`⚠️ A building named "${buildingName}" already exists. Add anyway?`)) {
-                return;
-            }
-        }
-        
-        // Get position from pending marker
-        const position = window.pendingMarkerPosition;
-        
-        // Save to database via API
-        const buildingData = {
-            name: buildingName,
-            map_x: position.left,
-            map_y: position.top,
-            networks: networks
-        };
-        
-        // Close modal first
-        const modal = bootstrap.Modal.getInstance(document.getElementById('createBuildingModal'));
-        modal.hide();
-        
-        // Show loading
-        const loadingMsg = document.createElement('div');
-        loadingMsg.className = 'alert alert-info position-fixed top-0 start-50 translate-middle-x mt-3';
-        loadingMsg.style.zIndex = '9999';
-        loadingMsg.textContent = '⏳ Saving building...';
-        document.body.appendChild(loadingMsg);
-        
-        try {
-            const response = await fetch('/buildings', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                },
-                body: JSON.stringify(buildingData)
-            });
-            
-            const result = await response.json();
-            
-            if (result.success) {
-                alert(`✅ Building "${buildingName}" added successfully with ${networks.length} network(s)!`);
-                // Reload buildings from database
-                await loadBuildingsFromDB();
-            } else {
-                alert(`❌ Failed to save building: ${result.message}`);
-            }
-        } catch (error) {
-            console.error('Error saving building:', error);
-            alert('❌ Failed to save building to database');
-        } finally {
-            document.body.removeChild(loadingMsg);
-        }
-    });
+    }
     
     // Reset form when modal is closed
     document.getElementById('createBuildingModal').addEventListener('hidden.bs.modal', function() {
         document.getElementById('createBuildingForm').reset();
         const container = document.getElementById('networksContainer');
         container.innerHTML = `
-            <input 
-                type="text" 
-                class="form-control mb-2 network-input" 
-                placeholder="e.g. 10.100.100.0"
-                required
-            >
+            <div class="input-group mb-2">
+                <select class="form-select network-select" required>
+                    <option value="">Select a network...</option>
+                </select>
+                <button type="button" class="btn btn-outline-danger remove-network-btn">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
         `;
+        
+        // Re-populate the first dropdown
+        const firstSelect = container.querySelector('.network-select');
+        if (firstSelect && window.populateNetworkSelect) {
+            window.populateNetworkSelect(firstSelect, []);
+        }
+        
+        // Re-attach event listeners
+        const removeBtn = container.querySelector('.remove-network-btn');
+        if (removeBtn) {
+            removeBtn.onclick = function() {
+                // Can't remove the last network input
+                const allInputs = container.querySelectorAll('.network-select');
+                if (allInputs.length > 1) {
+                    removeBtn.closest('.input-group').remove();
+                    refreshCreateNetworkDropdowns();
+                }
+            };
+        }
+        
+        // Update dropdown change listener
+        if (firstSelect) {
+            firstSelect.addEventListener('change', function() {
+                refreshCreateNetworkDropdowns();
+            });
+        }
+        
+        // Update Add Network button state
+        if (window.updateAddNetworkButtonState) {
+            window.updateAddNetworkButtonState();
+        }
     });
+    
+    function refreshCreateNetworkDropdowns() {
+        const container = document.getElementById('networksContainer');
+        const allSelects = container.querySelectorAll('.network-select');
+        const selectedValues = Array.from(allSelects).map(s => s.value).filter(v => v);
+        
+        allSelects.forEach(select => {
+            const currentValue = select.value;
+            populateNetworkSelect(select, selectedValues.filter(v => v !== currentValue));
+            select.value = currentValue; // Restore selection
+        });
+    }
 });
 </script>
 
