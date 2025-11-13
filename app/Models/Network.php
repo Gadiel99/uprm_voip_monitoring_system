@@ -9,7 +9,14 @@ class Network extends Model
     protected $primaryKey = 'network_id';
     
     protected $fillable = [
-        'subnet'
+        'subnet',
+        'offline_devices',
+        'total_devices'
+    ];
+
+    protected $casts = [
+        'offline_devices' => 'integer',
+        'total_devices' => 'integer'
     ];
 
     public function buildings()
@@ -20,5 +27,17 @@ class Network extends Model
             'network_id',
             'building_id'
         );
+    }
+
+    public function devices()
+    {
+        return $this->hasMany(Devices::class, 'network_id', 'network_id');
+    }
+
+    public function updateDeviceCounts()
+    {
+        $this->total_devices = $this->devices()->count();
+        $this->offline_devices = $this->devices()->where('status', 'offline')->count();
+        $this->save();
     }
 }
