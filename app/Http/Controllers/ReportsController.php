@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use App\Models\Buildings;
+use App\Models\Building;
 use App\Models\Devices;
 use App\Models\Extensions;
 
@@ -24,7 +24,7 @@ class ReportsController extends Controller
     public function index(Request $request)
     {
         // Always load dropdown data + stats
-        $buildings = Buildings::orderBy('name')->get(['building_id', 'name']);
+        $buildings = Building::orderBy('name')->get(['building_id', 'name']);
         $stats = $this->getSystemStats();
 
         // If any filter present, perform search logic (delegate to shared builder)
@@ -48,7 +48,7 @@ class ReportsController extends Controller
      * Handle device search with filters.
      *
      * @param  Request  $request
-     * @return \Illuminate\Contracts\View\View
+     * @return \Illuminate\Http\RedirectResponse
      */
     public function search(Request $request)
     {
@@ -66,7 +66,7 @@ class ReportsController extends Controller
         $totalDevices = Devices::count();
         $activeDevices = Devices::where('status', 'online')->count();
         $inactiveDevices = Devices::where('status', 'offline')->count();
-        $totalBuildings = Buildings::count();
+        $totalBuildings = Building::count();
         
         return [
             'total_devices' => $totalDevices,
@@ -88,33 +88,35 @@ class ReportsController extends Controller
         $deviceMap = [];
         
         foreach ($devices as $device) {
+            // Cast to object to ensure type safety
+            $device = (object) $device;
             $deviceId = $device->device_id;
             
             // If device already exists in map, append extension info
             if (isset($deviceMap[$deviceId])) {
-                if ($device->user_name) {
+                if (!empty($device->user_name)) {
                     $deviceMap[$deviceId]->extensions[] = [
                         'name' => $device->user_name,
-                        'number' => $device->extension_number,
+                        'number' => $device->extension_number ?? null,
                     ];
                 }
             } else {
                 // Create new device entry
                 $deviceEntry = (object)[
-                    'device_id' => $device->device_id,
-                    'mac_address' => $device->mac_address,
-                    'ip_address' => $device->ip_address,
-                    'status' => $device->status,
-                    'is_critical' => $device->is_critical,
+                    'device_id' => $device->device_id ?? null,
+                    'mac_address' => $device->mac_address ?? null,
+                    'ip_address' => $device->ip_address ?? null,
+                    'status' => $device->status ?? 'unknown',
+                    'is_critical' => $device->is_critical ?? false,
                     'building_name' => $device->building_name ?? 'Unassigned',
-                    'building_id' => $device->building_id,
+                    'building_id' => $device->building_id ?? null,
                     'extensions' => [],
                 ];
                 
-                if ($device->user_name) {
+                if (!empty($device->user_name)) {
                     $deviceEntry->extensions[] = [
                         'name' => $device->user_name,
-                        'number' => $device->extension_number,
+                        'number' => $device->extension_number ?? null,
                     ];
                 }
                 
