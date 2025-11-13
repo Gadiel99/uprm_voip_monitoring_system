@@ -108,7 +108,7 @@ Both routes require authentication (`auth` middleware).
 Devices::count()                    // Total
 Devices::where('status', 'online')  // Active
 Devices::where('status', 'offline') // Inactive
-Buildings::count()                   // Buildings
+Building::count()                    // Buildings
 ```
 
 ### Search Query Logic:
