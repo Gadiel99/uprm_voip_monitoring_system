@@ -3,7 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use App\Models\Networks;
+use App\Models\Network;
 
 class Devices extends Model
 {
@@ -13,7 +13,7 @@ class Devices extends Model
     public function network()
     {
 
-        return $this->belongsTo(Networks::class, 'network_id', 'network_id');
+        return $this->belongsTo(Network::class, 'network_id', 'network_id');
     
     }
 
