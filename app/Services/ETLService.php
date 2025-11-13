@@ -13,7 +13,7 @@ namespace App\Services;
 
 use App\Models\Devices;
 use App\Models\Extensions;
-use App\Models\Networks;
+use App\Models\Network;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
@@ -452,12 +452,12 @@ class ETLService
      * @details Determines /24 subnet from IP and creates network if needed
      * 
      * @param string $ipAddress Device IP address
-     * @return Networks|null Network model or null if IP invalid
+     * @return Network|null Network model or null if IP invalid
      * 
      * @author UPRM VoIP Monitoring System Team
      * @date November 6, 2025
      */
-    private function findOrCreateNetwork(string $ipAddress): ?Networks
+    private function findOrCreateNetwork(string $ipAddress): ?Network
     {
         $ipParts = explode('.', $ipAddress);
         
@@ -468,7 +468,7 @@ class ETLService
         // Match format from building_networks.csv (without /24)
         $subnet = "{$ipParts[0]}.{$ipParts[1]}.{$ipParts[2]}.0";
         
-        return Networks::firstOrCreate(
+        return Network::firstOrCreate(
             ['subnet' => $subnet],
             [
                 'total_devices' => 0,
@@ -486,7 +486,7 @@ class ETLService
      */
     private function updateNetworkCounts(): void
     {
-        $networks = Networks::all();
+        $networks = Network::all();
         
         foreach ($networks as $network) {
             $network->updateDeviceCounts();
