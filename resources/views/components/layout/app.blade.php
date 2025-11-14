@@ -114,6 +114,11 @@
             background-color: #fff;
         }
 
+        /* Default tab color */
+        .nav-tabs .nav-link {
+            color: #333;
+        }
+
         /* Active tab indicator with UPRM green underline */
         .nav-tabs .nav-link.active {
             border-bottom: 3px solid #00844b;
