@@ -128,7 +128,7 @@ class AdminController extends Controller
         $settings->update([
             'lower_threshold' => $validated['lower_threshold'],
             'upper_threshold' => $validated['upper_threshold'],
-            'is_active' => $request->boolean('is_active'),
+            'is_active' => true, // Always active since toggle was removed
         ]);
         
         // Log the changes
