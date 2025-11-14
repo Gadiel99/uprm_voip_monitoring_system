@@ -37,14 +37,14 @@
                     </div>
                     <div>
                         @if($systemSummary)
-                            <span class="badge badge-{{ $systemSummary->alert_level }} me-2">
+                            <span class="badge bg-primary me-2">
                                 {{ $systemSummary->total_devices }} Total
                             </span>
                             <span class="badge bg-success me-2">
                                 {{ $systemSummary->online_devices }} Online
                             </span>
                             <span class="badge bg-danger">
-                                {{ $systemSummary->offline_devices }} Offline ({{ $systemSummary->offline_percentage }}%)
+                                {{ $systemSummary->offline_devices }} Offline
                             </span>
                         @endif
                     </div>
@@ -55,27 +55,15 @@
 
     @if($criticalDevices && $criticalDevices->total_devices > 0)
         <div class="card border-0 shadow-sm p-4 mb-4 alert-{{ $criticalDevices->alert_level }}">
-            <h6 class="fw-semibold mb-3">
-                <i class="bi bi-exclamation-triangle me-2"></i>Critical Devices
-            </h6>
-            <div class="row">
-                <div class="col-md-3">
-                    <strong>Total:</strong> {{ $criticalDevices->total_devices }}
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <h6 class="fw-semibold mb-2">
+                        <i class="bi bi-exclamation-triangle me-2"></i>Critical Devices
+                    </h6>
+                    <div>
+                        <strong>Offline:</strong> <span class="text-danger">{{ $criticalDevices->offline_devices }}</span>
+                    </div>
                 </div>
-                <div class="col-md-3">
-                    <strong>Online:</strong> <span class="text-success">{{ $criticalDevices->online_devices }}</span>
-                </div>
-                <div class="col-md-3">
-                    <strong>Offline:</strong> <span class="text-danger">{{ $criticalDevices->offline_devices }}</span>
-                </div>
-                <div class="col-md-3">
-                    <strong>Status:</strong> 
-                    <span class="badge badge-{{ $criticalDevices->alert_level }}">
-                        {{ ucfirst($criticalDevices->alert_level) }} ({{ $criticalDevices->offline_percentage }}%)
-                    </span>
-                </div>
-            </div>
-            <div class="mt-3">
                 <a href="{{ route('alerts.criticalOffline') }}" class="btn btn-sm btn-outline-dark">
                     <i class="bi bi-arrow-right me-1"></i>View Critical Devices (Offline Only)
                 </a>
