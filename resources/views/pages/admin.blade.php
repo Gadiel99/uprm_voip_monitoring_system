@@ -138,7 +138,7 @@
                 <h5 class="fw-semibold mb-3">System Logs</h5>
                 <div class="d-flex mb-3">
                     <input type="text" class="form-control bg-light" id="logSearchInput" placeholder="Search logs by timestamp, IP, action, or comment...">
-                    <button class="btn btn-dark ms-2" onclick="filterLogs()"><i class="bi bi-search me-1"></i>Search</button>
+                    <button class="btn btn-success ms-2" onclick="filterLogs()"><i class="bi bi-search me-1"></i>Search</button>
                     <button class="btn btn-outline-secondary ms-2" onclick="clearLogs()"><i class="bi bi-trash me-1"></i>Clear All</button>
                 </div>
                 
@@ -154,22 +154,8 @@
                 
                 <small class="text-muted d-block mb-3">Showing <span id="logCount">0</span> logs. Only important system actions are recorded (add, delete, edit, login, logout, errors).</small>
                 
-                <div class="table-responsive" style="max-height: 500px; overflow-y: auto;">
-                    <table class="table table-bordered table-hover align-middle mb-0">
-                        <thead class="table-light sticky-top">
-                            <tr>
-                                <th style="width: 160px;">Timestamp</th>
-                                <th style="width: 130px;">IP Address</th>
-                                <th style="width: 100px;">Action</th>
-                                <th>Comment</th>
-                            </tr>
-                        </thead>
-                        <tbody id="logsContainer">
-                            <tr>
-                                <td colspan="4" class="text-center text-muted py-4">No logs available. Actions will be logged here.</td>
-                            </tr>
-                        </tbody>
-                    </table>
+                <div id="logsContainer" class="border rounded bg-white" style="max-height: 500px; overflow-y: auto;">
+                    <div class="text-center text-muted py-4">No logs available. Actions will be logged here.</div>
                 </div>
             </div>
         </div>
@@ -285,18 +271,8 @@
                             @enderror
                         </div>
                         <div class="col-md-3">
-                            <label class="form-label fw-semibold">Alerts Active</label>
-                            <div class="form-check form-switch mt-2">
-                                <input class="form-check-input" type="checkbox" id="alertsActive" name="is_active" value="1"
-                                       {{ old('is_active', $alertSettings->is_active ?? true) ? 'checked' : '' }}>
-                                <label class="form-check-label" for="alertsActive">
-                                    Enable alert monitoring
-                                </label>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
                             <label class="form-label fw-semibold d-block">&nbsp;</label>
-                            <button type="submit" class="btn btn-success w-100">
+                            <button type="submit" class="btn btn-success">
                                 <i class="bi bi-check-circle me-2"></i>Save Thresholds
                             </button>
                         </div>
@@ -936,7 +912,7 @@ window.addLog = function(action, comment, user = 'Admin') {
     saveLogs(logs);
 }
 
-// Display logs in table format
+// Display logs in string format
 function updateLogsDisplay(filteredLogs = null) {
     const container = document.getElementById('logsContainer');
     const logs = filteredLogs || getLogs();
@@ -944,27 +920,29 @@ function updateLogsDisplay(filteredLogs = null) {
     document.getElementById('logCount').textContent = logs.length;
     
     if (logs.length === 0) {
-        container.innerHTML = '<tr><td colspan="4" class="text-center text-muted py-4">No logs available. Actions will be logged here.</td></tr>';
+        container.innerHTML = '<div class="text-center text-muted py-4">No logs available. Actions will be logged here.</div>';
         return;
     }
     
     const actionColors = {
-        'LOGIN': 'primary',
-        'LOGOUT': 'secondary',
-        'ADD': 'success',
-        'EDIT': 'warning',
-        'DELETE': 'danger',
-        'ERROR': 'danger'
+        'LOGIN': '#0d6efd',      // Blue
+        'LOGOUT': '#6c757d',     // Gray
+        'ADD': '#198754',        // Green
+        'EDIT': '#ffc107',       // Yellow/Orange
+        'DELETE': '#dc3545',     // Red
+        'ERROR': '#dc3545'       // Red
     };
     
-    container.innerHTML = logs.map(log => `
-        <tr>
-            <td class="small">${log.timestamp}</td>
-            <td class="small font-monospace">${log.ip || 'N/A'}</td>
-            <td><span class="badge bg-${actionColors[log.action] || 'secondary'}">${log.action}</span></td>
-            <td class="small">${log.comment}</td>
-        </tr>
-    `).join('');
+    container.innerHTML = logs.map(log => {
+        const color = actionColors[log.action] || '#6c757d';
+        return `
+            <div class="log-entry border-bottom py-2" style="display: grid; grid-template-columns: 160px 90px 120px 1fr; gap: 12px; align-items: center; color: ${color};">
+                <span class="small">${log.timestamp}</span>
+                <span class="small fw-semibold">${log.action}</span>
+                <span class="small font-monospace">${log.ip || 'N/A'}</span>
+                <span class="small">${log.comment}</span>
+            </div>`;
+    }).join('');
 }
 
 // Filter logs by search term
