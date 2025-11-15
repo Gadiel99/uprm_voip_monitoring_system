@@ -37,14 +37,14 @@
                     </div>
                     <div>
                         @if($systemSummary)
-                            <span class="badge bg-primary me-2">
-                                {{ $systemSummary->total_devices }} Total
+                            <span class="me-3">
+                                <strong class="text-primary">{{ $systemSummary->total_devices }}</strong> <span class="text-muted">Total</span>
                             </span>
-                            <span class="badge bg-success me-2">
-                                {{ $systemSummary->online_devices }} Online
+                            <span class="me-3">
+                                <strong class="text-success">{{ $systemSummary->online_devices }}</strong> <span class="text-muted">Online</span>
                             </span>
-                            <span class="badge bg-danger">
-                                {{ $systemSummary->offline_devices }} Offline
+                            <span>
+                                <strong class="text-danger">{{ $systemSummary->offline_devices }}</strong> <span class="text-muted">Offline</span>
                             </span>
                         @endif
                     </div>
@@ -53,7 +53,7 @@
         </div>
     </div>
 
-    @if($criticalDevices && $criticalDevices->total_devices > 0)
+    @if($criticalDevices && $criticalDevices->offline_devices > 0)
         <div class="card border-0 shadow-sm p-4 mb-4 alert-{{ $criticalDevices->alert_level }}">
             <div class="d-flex justify-content-between align-items-start">
                 <div>
@@ -80,9 +80,9 @@
                     $yellowCount = $buildings->where('alert_level', 'yellow')->count();
                     $redCount = $buildings->where('alert_level', 'red')->count();
                 @endphp
-                <span class="badge badge-red me-2">{{ $redCount }} Critical</span>
-                <span class="badge badge-yellow me-2">{{ $yellowCount }} Warning</span>
-                <span class="badge badge-green">{{ $greenCount }} Normal</span>
+                <span class="me-3"><strong class="text-danger">{{ $redCount }}</strong> <span class="text-muted">Critical</span></span>
+                <span class="me-3"><strong class="text-warning">{{ $yellowCount }}</strong> <span class="text-muted">Warning</span></span>
+                <span><strong class="text-success">{{ $greenCount }}</strong> <span class="text-muted">Normal</span></span>
             </div>
         </div>
 
@@ -109,7 +109,7 @@
                         <td><span class="text-danger">{{ $building->offline_devices }}</span></td>
                         <td>{{ $building->offline_percentage }}%</td>
                         <td>
-                            <span class="badge badge-{{ $building->alert_level }}">
+                            <span class="fw-semibold text-{{ $building->alert_level === 'red' ? 'danger' : ($building->alert_level === 'yellow' ? 'warning' : 'success') }}">
                                 @if($building->alert_level === 'red')
                                     Critical
                                 @elseif($building->alert_level === 'yellow')
