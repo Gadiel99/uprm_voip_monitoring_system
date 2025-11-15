@@ -171,11 +171,11 @@
             <h6 class="fw-semibold mb-3">Device Reports Search</h6>
             <form method="GET" action="{{ route('reports') }}" id="searchForm">
                 <div class="input-group input-group-lg">
-                    <input type="text" id="searchQuery" name="query" class="form-control" placeholder="Search by user, MAC address, IP address, status, or building..." value="{{ $filters['query'] ?? '' }}">
+                    <input type="text" id="searchQuery" name="query" class="form-control" placeholder="Search devices... (use commas for multiple terms: monzon, 4542ab)" value="{{ $filters['query'] ?? '' }}">
                     <button type="submit" class="btn btn-success px-4" id="searchBtn"><i class="bi bi-search me-1"></i>Search</button>
                     <button type="button" class="btn btn-outline-secondary px-3" id="resetBtn"><i class="bi bi-arrow-clockwise"></i></button>
                 </div>
-                <small class="text-muted mt-2 d-block">Search across all fields: user names, MAC addresses, IP addresses, status (online/offline), and building names</small>
+                <small class="text-muted mt-2 d-block">Search by user, MAC, IP, status, building, or extension. Use commas to search multiple terms (all must match).</small>
             </form>
         </div>
 
@@ -210,12 +210,9 @@
                                     <td>{{ $device->ip_address }}</td>
                                     <td>
                                         @if($device->status == 'online')
-                                            <span class="badge bg-success">Online</span>
+                                            <span class="text-success">Online</span>
                                         @else
-                                            <span class="badge bg-danger">Offline</span>
-                                        @endif
-                                        @if($device->is_critical)
-                                            <span class="badge bg-warning text-dark ms-1">Critical</span>
+                                            <span class="text-danger">Offline</span>
                                         @endif
                                     </td>
                                     <td>{{ $device->building_name }}</td>
