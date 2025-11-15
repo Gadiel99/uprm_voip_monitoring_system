@@ -79,8 +79,6 @@
 </style>
 
 <div class="container-fluid">
-    <h4 class="fw-semibold mb-4">Device Management</h4>
-
     {{-- TABLE: CRITICAL DEVICES --}}
     {{-- Shows critical devices as a separate table --}}
     <div id="buildingOverview">
