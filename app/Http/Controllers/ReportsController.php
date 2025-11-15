@@ -29,8 +29,8 @@ class ReportsController extends Controller
 
         // If any filter present, perform search logic (delegate to shared builder)
         $devices = [];
-        $filters = $request->only(['user','mac','ip','status','building_id']);
-        $hasFilters = collect($filters)->filter(fn($v) => !is_null($v) && $v !== '')->isNotEmpty();
+        $filters = $request->only(['query']);
+        $hasFilters = !empty($request->input('query'));
 
         if ($hasFilters) {
             [$devices, $filters] = $this->buildDevicesQuery($request);
@@ -53,7 +53,7 @@ class ReportsController extends Controller
     public function search(Request $request)
     {
         // Legacy route: redirect to unified index with query params
-        return redirect()->route('reports', $request->only(['user','mac','ip','status','building_id']));
+        return redirect()->route('reports', $request->only(['query']));
     }
     
     /**
@@ -134,11 +134,7 @@ class ReportsController extends Controller
     private function buildDevicesQuery(Request $request): array
     {
         $validated = $request->validate([
-            'user' => 'nullable|string|max:255',
-            'mac' => 'nullable|string|max:32', // allow longer partials
-            'ip' => 'nullable|string|max:45',  // avoid forcing strict ip validation to allow partials
-            'status' => 'nullable|in:online,offline',
-            'building_id' => 'nullable|exists:buildings,building_id',
+            'query' => 'nullable|string|max:255',
         ]);
 
         $query = DB::table('devices as d')
@@ -159,31 +155,25 @@ class ReportsController extends Controller
                 'e.extension_number'
             );
 
-        if (!empty($validated['user'])) {
-            $userTerm = $validated['user'];
-            $query->where(function ($q) use ($userTerm) {
-                $q->where('e.user_first_name', 'like', "%$userTerm%")
-                  ->orWhere('e.user_last_name', 'like', "%$userTerm%")
-                  ->orWhere(DB::raw("CONCAT(e.user_first_name, ' ', e.user_last_name)"), 'like', "%$userTerm%");
+        if (!empty($validated['query'])) {
+            $searchTerm = $validated['query'];
+            // Normalize search term for MAC/IP matching (remove delimiters)
+            $normalizedTerm = str_replace([':', '-', '.', ' '], '', $searchTerm);
+            
+            $query->where(function ($q) use ($searchTerm, $normalizedTerm) {
+                // Search in user names
+                $q->where('e.user_first_name', 'like', "%$searchTerm%")
+                  ->orWhere('e.user_last_name', 'like', "%$searchTerm%")
+                  ->orWhere(DB::raw("CONCAT(e.user_first_name, ' ', e.user_last_name)"), 'like', "%$searchTerm%")
+                  // Search in MAC address (normalized)
+                  ->orWhere(DB::raw("REPLACE(REPLACE(REPLACE(d.mac_address, ':', ''), '-', ''), '.', '')"), 'like', "%$normalizedTerm%")
+                  // Search in IP address (normalized)
+                  ->orWhere(DB::raw("REPLACE(d.ip_address, '.', '')"), 'like', "%$normalizedTerm%")
+                  // Search in status
+                  ->orWhere('d.status', 'like', "%$searchTerm%")
+                  // Search in building name
+                  ->orWhere('b.name', 'like', "%$searchTerm%");
             });
-        }
-        if (!empty($validated['mac'])) {
-            // Normalize MAC search: remove colons, dashes, dots, spaces for flexible searching
-            $macTerm = str_replace([':', '-', '.', ' '], '', $validated['mac']);
-            // Search in normalized MAC (without delimiters)
-            $query->where(DB::raw("REPLACE(REPLACE(REPLACE(d.mac_address, ':', ''), '-', ''), '.', '')"), 'like', "%$macTerm%");
-        }
-        if (!empty($validated['ip'])) {
-            // Normalize IP search: remove dots and spaces for flexible searching
-            $ipTerm = str_replace(['.', ' '], '', $validated['ip']);
-            // Search in normalized IP (without dots)
-            $query->where(DB::raw("REPLACE(d.ip_address, '.', '')"), 'like', "%$ipTerm%");
-        }
-        if (!empty($validated['status'])) {
-            $query->where('d.status', $validated['status']);
-        }
-        if (!empty($validated['building_id'])) {
-            $query->where('b.building_id', $validated['building_id']);
         }
 
         $rawDevices = $query->distinct()->get();
