@@ -100,3 +100,35 @@ We would like to extend our thanks to the following sponsors for lending us the 
 ## License
 
 The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+
+## Controllers
+
+This project follows thin-controller conventions; controllers validate inputs, call model/service methods, and return views or redirects.
+
+- DevicesController
+  - GET /devices → index(): Devices overview page (buildings table and guidance).
+  - GET /devices/building/{building} → byBuilding(building): Filtered listing for a building.
+  - Notes: Read-only mock data currently; wire to DB when ETL is ready.
+
+- AdminUserController (admin-only)
+  - GET /admin/users → index(): Renders Admin page and loads the Users tab with real data.
+  - POST /admin/users → store(): Create user. Required: name, email, password. Role: user|admin (super_admin creation guarded).
+  - PATCH /admin/users/{user}/role → updateRole(): Change role. Restrictions: cannot change own role; cannot demote super admins unless policy allows.
+  - DELETE /admin/users/{user} → destroy(): Delete user. Restrictions: cannot delete self; cannot delete super admins.
+  - Flash: status and validation errors are shown in the Users tab.
+
+- ProfileController (authenticated)
+  - GET /profile → edit(): Account settings modal/tabs.
+  - PATCH /profile → update(): Update name/email. Respects return_to and tab flash to reopen the modal at the correct tab.
+  - PATCH /profile/password → updatePassword(): Update password with current_password check and confirmation.
+  - DELETE /profile → destroy(): Delete current user after password confirmation (Breeze pattern).
+
+- AccountController
+  - Reserved for future account UX flows (not wired).
+
+Middleware
+- 'auth' protects dashboard/routes.
+- 'admin' restricts Admin routes (see App\Http\Middleware\AdminOnly).
+
+Routing
+- See routes/web.php for grouped routes and inline documentation.

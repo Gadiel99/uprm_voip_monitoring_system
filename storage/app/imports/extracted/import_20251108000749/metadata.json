@@ -1,0 +1,33 @@
+{
+  "export_date": "2025-11-06T23:39:30Z",
+  "server": "sipxcom.uprm.edu",
+  "export_version": "1.0",
+  "postgresql": {
+    "host": "localhost",
+    "port": "5432",
+    "database": "sipxconfig",
+    "table": "users",
+    "format": "csv"
+  },
+  "postgresql":{
+    "host": "localhost",
+    "port": "5432",
+    "database": "sipxconfig",
+    "table": "phone",
+    "format": "csv"
+  },
+  "mongodb": {
+    "host": "localhost",
+    "port": "27017",
+    "database": "node",
+    "collection": "registrar",
+    "format": "json"
+  },
+  "files": {
+    "users_sql": "users.sql",
+    "users_csv": "users.csv",
+    "phone_csv": "phone.csv",
+    "registrar": "registrar.json",
+    "metadata": "metadata.json"
+  }
+}

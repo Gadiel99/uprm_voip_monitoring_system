@@ -1,0 +1,86 @@
+﻿buildings,subnet
+Monzon,10.100.30.0
+DeDiego,10.100.31.0
+Centro de Estudiantes,10.100.32.0 
+Monzon,10.100.33.0 
+Stefani,10.100.34.0 
+Stefani,10.100.35.0 
+Piñero,10.100.36.0 
+Piñero,10.100.37.0 
+Adm.Empresas,10.100.38.0 
+MUSA,10.100.42.0
+unkown,10.100.42.128
+Stefani,10.100.56.0 
+Stefani,10.100.57.0 
+Stefani,10.100.58.0 
+Stefani,10.100.59.0 
+Edificio C (Oficina de Extension Agricola),10.100.60.0 
+Luchetti,10.100.61.0
+Ing.Quimica,10.100.62.0 
+Edificio B (Adm.Peq.Negocios y Oficina Adm),10.100.63.0 
+Coliseo,10.100.64.0 
+Monzon,10.100.71.0 
+unkown,10.100.77.0 
+unkown,10.100.115.0 
+Monzon,10.100.100.0
+Centro Nuclear,10.100.115.64
+unkown,10.100.115.96 
+Stefani,10.100.115.128 
+Stefani,10.100.115.192 
+MUSA,10.100.115.224
+Stefani,10.100.116.0 
+Ing.Civil,10.100.117.0 
+Impresos,10.100.117.64 
+unkown,10.100.117.128 
+Artes plasticas,10.100.117.192 
+Edificio D,10.100.118.0 
+Servicios Medicos,10.100.118.64 
+Natatorio,10.100.118.128 
+Cancha de tenis ,10.100.118.192 
+ROTC,10.100.119.0 
+Coliseo,10.100.119.129 
+Oficina de Facultad,10.100.122.0 
+Geologia,10.100.123.0 
+Celis,10.100.124.0 
+Ciencias Marinas,10.100.125.0 
+Biologia,10.100.140.0 
+Decanato de Estudiantes,10.100.142.0 
+Enfermeria,10.100.143.0 
+Chardon,10.100.144.0
+Darlington,10.100.146.0 
+Central Telefonica,10.100.147.0 
+Banda y Orquesta,10.100.147.32 
+Taller de Arte ,10.100.147.64 
+Biblioteca,10.100.147.96 
+Adm.Finca Alzamora,10.100.147.128 
+Prescolar ,10.100.147.144 
+Biblioteca,10.100.147.160
+unkown,10.100.147.192 
+unkown,10.100.147.224 
+Adm.Empresas,10.100.147.240 
+Ing.Agricola,10.100.148.0 
+Adm.Finca Alzamora,10.100.148.128 
+CITAI,10.100.148.192 
+Terrats,10.100.149.0 
+Edificios y Terrenos,10.100.150.0
+Ing.Industrial,10.100.151.0 
+Ing.Civil,10.100.153.0 
+Monzon,10.100.154.0 
+Monzon,10.100.155.0 
+Biblioteca,10.100.156.0 
+Edificio A (Hotel Colegial),10.100.158.0
+Instituto de Recursos de Aguas ,10.100.159.0 
+Adm.Empresas,10.100.159.64 
+Siempre Vivas,10.100.159.96 
+CISA,10.100.159.128 
+Gimnasio,10.100.159.160 
+Vagones,10.100.159.192 
+Monzon,10.100.159.224 
+CID,10.100.160.0 
+Centro Nuclear,10.100.160.0 
+Luchetti,10.100.161.0 
+Edificio D,10.100.162.0 
+Sanchez Hidalgo,10.100.163.0 
+Fisica,10.100.164.0 
+Fisica,10.100.165.0 
+Quimica,10.100.166.0 
