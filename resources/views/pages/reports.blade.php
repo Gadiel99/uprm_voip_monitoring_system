@@ -132,35 +132,37 @@
 
     <div class="card border-0 shadow-sm p-4 reports-wrapper-card">
         {{-- SYSTEM OVERVIEW --}}
-        <div class="mb-4" id="reportsOverviewCard">
-            <h6 class="fw-semibold mb-3">System Overview</h6>
-            <div class="row g-3">
-                <div class="col-md-3">
-                    <div class="stat-tile tile-total text-center">
-                        <h6 class="text-muted mb-1">Total Devices</h6>
-                        <h3 class="text-primary">{{ $stats['total_devices'] }}</h3>
-                        <div class="stat-desc">Registered in system</div>
+        <div class="mb-3" id="reportsOverviewCard">
+            <div class="d-flex justify-content-between align-items-center py-2">
+                <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-hdd-network text-primary" style="font-size: 1.5rem;"></i>
+                    <div>
+                        <small class="text-muted d-block" style="font-size: 0.7rem;">Total Devices</small>
+                        <strong class="text-primary">{{ $stats['total_devices'] }}</strong>
                     </div>
                 </div>
-                <div class="col-md-3">
-                    <div class="stat-tile tile-active text-center">
-                        <h6 class="text-muted mb-1">Active Now</h6>
-                        <h3 class="text-success">{{ $stats['active_devices'] }}</h3>
-                        <div class="stat-desc active">Currently online</div>
+                
+                <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-check-circle text-success" style="font-size: 1.5rem;"></i>
+                    <div>
+                        <small class="text-muted d-block" style="font-size: 0.7rem;">Active Now</small>
+                        <strong class="text-success">{{ $stats['active_devices'] }}</strong>
                     </div>
                 </div>
-                <div class="col-md-3">
-                    <div class="stat-tile tile-inactive text-center">
-                        <h6 class="text-muted mb-1">Inactive</h6>
-                        <h3 class="text-warning">{{ $stats['inactive_devices'] }}</h3>
-                        <div class="stat-desc inactive">Offline devices</div>
+                
+                <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-x-circle text-danger" style="font-size: 1.5rem;"></i>
+                    <div>
+                        <small class="text-muted d-block" style="font-size: 0.7rem;">Inactive</small>
+                        <strong class="text-danger">{{ $stats['inactive_devices'] }}</strong>
                     </div>
                 </div>
-                <div class="col-md-3">
-                    <div class="stat-tile tile-buildings text-center">
-                        <h6 class="text-muted mb-1">Buildings</h6>
-                        <h3 class="text-success">{{ $stats['total_buildings'] }}</h3>
-                        <div class="stat-desc">Monitored locations</div>
+                
+                <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-building text-info" style="font-size: 1.5rem;"></i>
+                    <div>
+                        <small class="text-muted d-block" style="font-size: 0.7rem;">Buildings</small>
+                        <strong class="text-info">{{ $stats['total_buildings'] }}</strong>
                     </div>
                 </div>
             </div>
