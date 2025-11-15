@@ -479,7 +479,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 } else if (isAdmin && editMarkerMode) {
                     editMarker(index);
                 } else {
-                    window.location.href = `/alerts?building=${encodeURIComponent(markerData.name)}`;
+                    // Redirect to building's offline devices page
+                    window.location.href = `/alerts/building/${markerData.id}/offline`;
                 }
             });
 
