@@ -78,34 +78,6 @@
         }
 
         /* 
-         * Component: Left Sidebar
-         * Purpose: Main navigation menu container
-         * Dimensions: 240px width, 100vh height
-         */
-        .sidebar {
-            width: 240px;
-            min-height: 100vh;
-            background-color: #f9fafb;
-            border-right: 1px solid #dee2e6;
-            padding-top: 1rem;
-        }
-
-        /* Sidebar navigation links - default state */
-        .sidebar .nav-link {
-            color: #333;
-            font-weight: 500;
-            border-radius: 8px;
-            margin: 3px 0;
-        }
-
-        /* Sidebar navigation links - active state */
-        .sidebar .nav-link.active {
-            background-color: #d7f5df;
-            color: #198754 !important;
-            font-weight: 600;
-        }
-
-        /* 
          * Component: Dashboard Tab Navigation
          * Purpose: Secondary navigation for main dashboard sections
          */
@@ -216,6 +188,11 @@
 
             <div class="d-flex align-items-center gap-3">
 
+                {{-- Help link --}}
+                <a href="{{ route('help') }}" class="text-dark" title="Help">
+                    <i class="bi bi-question-circle fs-5"></i>
+                </a>
+
                 {{-- Notifications dropdown --}}
                 <div class="dropdown">
                     <a href="#" class="text-dark position-relative" data-bs-toggle="dropdown" aria-expanded="false">
@@ -288,39 +265,6 @@
         </div>
     </nav>
 
-    <div class="d-flex">
-        {{-- Sidebar: navegación lateral simple (Dashboard/Help) --}}
-        <div class="sidebar p-3">
-            <ul class="nav flex-column">
-
-                {{-- Dashboard link --}}
-                <li class="nav-item mb-2">
-                    <a
-                        href="{{ url('/') }}"
-                        class="nav-link {{ request()->is('/') || request()->is('alerts') || request()->is('devices') || request()->is('reports') || request()->is('admin') || request()->is('admin/*') ? 'active' : '' }}"
-                    >
-                        <i class="bi bi-speedometer2 me-2"></i>
-                        Dashboard
-                    </a>
-                </li>
-
-                {{-- Help link --}}
-                <li class="nav-item">
-                    <a
-                        href="{{ url('/help') }}"
-                        class="nav-link {{ request()->is('help') ? 'active' : '' }}"
-                    >
-                        <i class="bi bi-question-circle me-2"></i>
-                        Help
-                    </a>
-                </li>
-
-            </ul>
-        </div>
-
-        {{-- Main content area --}}
-        <div class="flex-grow-1">
-
             {{-- Dashboard top tabs (conditional render) --}}
             @if (
                 request()->is('/') ||
@@ -371,8 +315,6 @@
             <main class="m-4">
                 @yield('content')
             </main>
-        </div>
-    </div>
 
     {{-- Modal de Configuración de Cuenta: pestañas Perfil/Usuario/Email/Password con formularios --}}
     <div class="modal fade" id="accountSettingsModal" tabindex="-1" aria-labelledby="accountSettingsLabel" aria-hidden="true">
