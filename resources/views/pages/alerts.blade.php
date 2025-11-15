@@ -17,8 +17,6 @@
 </style>
 
 <div class="container-fluid">
-    <h4 class="fw-semibold mb-4">System Alerts</h4>
-    
     @if(!$alertSettings->is_active)
         <div class="alert alert-warning mb-4">
             <i class="bi bi-info-circle me-2"></i>
