@@ -128,8 +128,6 @@
 </style>
 
 <div class="container-fluid">
-    <h4 class="reports-section-heading mb-4">Reports</h4>
-
     <div class="card border-0 shadow-sm p-4 reports-wrapper-card">
         {{-- SYSTEM OVERVIEW --}}
         <div class="mb-3" id="reportsOverviewCard">
