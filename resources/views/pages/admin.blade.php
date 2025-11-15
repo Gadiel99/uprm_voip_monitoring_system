@@ -137,19 +137,19 @@
             <div class="card border-0 shadow-sm p-4 mb-4">
                 <h5 class="fw-semibold mb-3">System Logs</h5>
                 <div class="d-flex mb-3">
-                    <input type="text" class="form-control bg-light" id="logSearchInput" placeholder="Search logs by timestamp, IP, action, or comment...">
-                    <button class="btn btn-success ms-2" onclick="filterLogs()"><i class="bi bi-search me-1"></i>Search</button>
-                    <button class="btn btn-outline-secondary ms-2" onclick="clearLogs()"><i class="bi bi-trash me-1"></i>Clear All</button>
+                    <input type="text" class="form-control form-control-sm bg-light" id="logSearchInput" placeholder="Search logs by timestamp, IP, action, or comment...">
+                    <button class="btn btn-success btn-sm ms-2 px-3" onclick="filterLogs()"><i class="bi bi-search me-1"></i>Search</button>
+                    <button class="btn btn-outline-secondary btn-sm ms-2 px-3" onclick="clearLogs()"><i class="bi bi-trash me-1"></i>Clear All</button>
                 </div>
                 
                 <div class="mb-3">
-                    <button class="btn btn-sm btn-outline-secondary me-2" onclick="filterByAction('all')">All</button>
-                    <button class="btn btn-sm btn-outline-primary me-2" onclick="filterByAction('LOGIN')">Login</button>
-                    <button class="btn btn-sm btn-outline-secondary me-2" onclick="filterByAction('LOGOUT')">Logout</button>
-                    <button class="btn btn-sm btn-outline-success me-2" onclick="filterByAction('ADD')">Add</button>
-                    <button class="btn btn-sm btn-outline-warning me-2" onclick="filterByAction('EDIT')">Edit</button>
-                    <button class="btn btn-sm btn-outline-danger me-2" onclick="filterByAction('DELETE')">Delete</button>
-                    <button class="btn btn-sm btn-outline-danger" onclick="filterByAction('ERROR')">Error</button>
+                    <button class="btn btn-sm btn-outline-secondary me-2 py-1 px-2" onclick="filterByAction('all')">All</button>
+                    <button class="btn btn-sm btn-outline-primary me-2 py-1 px-2" onclick="filterByAction('LOGIN')">Login</button>
+                    <button class="btn btn-sm btn-outline-secondary me-2 py-1 px-2" onclick="filterByAction('LOGOUT')">Logout</button>
+                    <button class="btn btn-sm btn-outline-success me-2 py-1 px-2" onclick="filterByAction('ADD')">Add</button>
+                    <button class="btn btn-sm btn-outline-warning me-2 py-1 px-2" onclick="filterByAction('EDIT')">Edit</button>
+                    <button class="btn btn-sm btn-outline-danger me-2 py-1 px-2" onclick="filterByAction('DELETE')">Delete</button>
+                    <button class="btn btn-sm btn-outline-danger py-1 px-2" onclick="filterByAction('ERROR')">Error</button>
                 </div>
                 
                 <small class="text-muted d-block mb-3">Showing <span id="logCount">0</span> logs. Only important system actions are recorded (add, delete, edit, login, logout, errors).</small>
@@ -198,9 +198,9 @@
                             <td class="owner-cell">{{ $ownerName ?? 'N/A' }}</td>
                             <td class="status-cell">
                                 @if($device->status === 'Offline')
-                                    <span class="badge bg-danger">Offline</span>
+                                    <span class="text-danger fw-semibold">Offline</span>
                                 @else
-                                    <span class="badge bg-success">Online</span>
+                                    <span class="text-success fw-semibold">Online</span>
                                 @endif
                             </td>
                             <td class="extensions-cell">
