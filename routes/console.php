@@ -18,6 +18,17 @@ Schedule::command('etl:run --since="5 minutes ago"')
        Log::info('ETL command completed successfully');
     });
 
+// Check and send notifications for critical conditions every 10 minutes
+Schedule::command('notifications:check')
+    ->everyTenMinutes()
+    ->withoutOverlapping()
+    ->onFailure(function () {
+       Log::error('Notification check command failed');
+    })
+    ->onSuccess(function () {
+       Log::info('Notification check completed successfully');
+    });
+
 Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');

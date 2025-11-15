@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Services\ETLService;
+use App\Services\NotificationService;
 use Illuminate\Console\Command;
 
 class RunETL extends Command
@@ -32,9 +33,11 @@ class RunETL extends Command
      *          2. Validates import directory exists
      *          3. Executes the ETL pipeline through ETLService
      *          4. Displays execution statistics in formatted table
-     *          5. Handles exceptions and provides error reporting
+     *          5. Checks and sends notifications for critical conditions
+     *          6. Handles exceptions and provides error reporting
      * 
      * @param ETLService $etl The ETL service instance injected by Laravel's container
+     * @param NotificationService $notificationService The notification service instance
      * @return int Command exit code (SUCCESS=0 or FAILURE=1)
      * 
      * @throws \Exception When ETL process encounters unrecoverable errors
@@ -43,7 +46,7 @@ class RunETL extends Command
      * @author UPRM VoIP Monitoring System Team
      * @date November 6, 2025
      */
-    public function handle(ETLService $etl): int
+    public function handle(ETLService $etl, NotificationService $notificationService): int
     {
         // Get import path
         $importPath = $this->option('import');
@@ -123,6 +126,12 @@ class RunETL extends Command
 
             $this->newLine();
             $this->line('✨ Data from imported files has been successfully processed into MariaDB');
+            $this->newLine();
+
+            // Check and send notifications for critical conditions
+            $this->info('📧 Checking for critical conditions...');
+            $notificationService->checkAndNotify();
+            $this->info('✓ Notification check completed');
             $this->newLine();
 
             return self::SUCCESS;
