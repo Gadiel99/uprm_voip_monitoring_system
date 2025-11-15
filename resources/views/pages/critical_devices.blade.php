@@ -20,7 +20,7 @@
         <h5 class="fw-semibold mb-0">
           <i class="bi bi-exclamation-triangle-fill text-danger me-2"></i>Critical Devices
         </h5>
-        <small class="text-muted">Devices that trigger bell alerts when inactive</small>
+        <small class="text-muted">Click on any device to view its 30-day activity graph</small>
       </div>
       <a href="{{ route('devices') }}" class="btn btn-outline-secondary btn-sm">
         <i class="bi bi-arrow-left me-1"></i> Back to Devices
