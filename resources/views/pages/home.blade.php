@@ -72,14 +72,20 @@
     <button id="deleteMarkerBtn" class="btn btn-danger">
         <i class="bi bi-trash me-1"></i> Delete Marker
     </button>
-    <button id="cancelDeleteBtn" class="btn btn-secondary" style="display: none;">
-        <i class="bi bi-x-circle me-1"></i> Cancel
+    <button id="exitModeBtn" class="btn btn-secondary" style="display: none;">
+        <i class="bi bi-x-circle me-1"></i> Exit Mode
     </button>
     @endif
     
     <button id="resetZoomBtn" class="btn btn-secondary">
         <i class="bi bi-arrow-counterclockwise me-1"></i> Reset View
     </button>
+</div>
+
+{{-- Mode Indicator --}}
+<div id="modeIndicator" class="alert alert-info align-items-center gap-2 mb-3" style="display: none;">
+    <i class="bi bi-info-circle-fill fs-5"></i>
+    <span id="modeIndicatorText" class="fw-semibold"></span>
 </div>
 
 {{-- Main card container for the map --}}
@@ -138,13 +144,10 @@
 
                     {{-- Position (optional to move marker) --}}
                     <div class="mb-3">
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="moveMarkerCheck">
-                            <label class="form-check-label" for="moveMarkerCheck">
-                                Move marker to a new position
-                            </label>
-                        </div>
-                        <small class="text-muted">Check this box, then click on the map to select a new position</small>
+                        <button type="button" class="btn btn-outline-primary" id="moveMarkerCheck">
+                            <i class="bi bi-pin-map me-1"></i> Move marker to a new position
+                        </button>
+                        <small class="text-muted d-block mt-2">Click this button, then click on the map to select a new position</small>
                     </div>
 
                     {{-- Networks Container --}}
@@ -429,10 +432,12 @@ document.addEventListener('DOMContentLoaded', function () {
     const addMarkerBtn = document.getElementById('addMarkerBtn');
     const editMarkerBtn = document.getElementById('editMarkerBtn');
     const deleteMarkerBtn = document.getElementById('deleteMarkerBtn');
-    const cancelDeleteBtn = document.getElementById('cancelDeleteBtn');
+    const exitModeBtn = document.getElementById('exitModeBtn');
     const resetZoomBtn = document.getElementById('resetZoomBtn');
     const zoomInBtn = document.getElementById('zoomInBtn');
     const zoomOutBtn = document.getElementById('zoomOutBtn');
+    const modeIndicator = document.getElementById('modeIndicator');
+    const modeIndicatorText = document.getElementById('modeIndicatorText');
 
     // ===== STATE VARIABLES =====
     let scale = 0.6; // Start with less zoom (was 1)
@@ -444,6 +449,32 @@ document.addEventListener('DOMContentLoaded', function () {
     let startX, startY, scrollLeft, scrollTop;
     let editingMarkerId = null;
     let pendingEditPosition = null;
+
+    // ===== MODE INDICATOR HELPER =====
+    function showModeIndicator(mode) {
+        if (modeIndicator && modeIndicatorText) {
+            modeIndicatorText.textContent = `You are in ${mode} Mode`;
+            
+            // Change color based on mode
+            modeIndicator.className = 'alert d-flex align-items-center gap-2 mb-3';
+            if (mode === 'Add Marker') {
+                modeIndicator.classList.add('alert-primary');
+            } else if (mode === 'Edit Marker') {
+                modeIndicator.classList.add('alert-warning');
+            } else if (mode === 'Delete Marker') {
+                modeIndicator.classList.add('alert-danger');
+            }
+            
+            modeIndicator.style.display = 'flex';
+        }
+    }
+
+    function hideModeIndicator() {
+        if (modeIndicator) {
+            modeIndicator.style.display = 'none';
+            modeIndicator.classList.remove('d-flex');
+        }
+    }
 
     // ===== RENDER MARKERS =====
     function renderMarkers() {
@@ -520,17 +551,23 @@ document.addEventListener('DOMContentLoaded', function () {
         addMarkerBtn.addEventListener('click', async () => {
             addMarkerMode = !addMarkerMode;
             deleteMarkerMode = false;
+            editMarkerMode = false;
             
             if (addMarkerMode) {
                 // Load unassigned networks
                 await loadUnassignedNetworks();
                 
                 addMarkerBtn.classList.add('active');
+                if (editMarkerBtn) editMarkerBtn.classList.remove('active');
                 if (deleteMarkerBtn) deleteMarkerBtn.classList.remove('active');
+                if (exitModeBtn) exitModeBtn.style.display = 'inline-block';
+                showModeIndicator('Add Marker');
                 mapContainer.style.cursor = 'crosshair';
                 alert('✅ Click on the map to place a new marker');
             } else {
                 addMarkerBtn.classList.remove('active');
+                if (exitModeBtn) exitModeBtn.style.display = 'none';
+                hideModeIndicator();
                 mapContainer.style.cursor = 'grab';
             }
             
@@ -583,6 +620,7 @@ document.addEventListener('DOMContentLoaded', function () {
             // Exit add mode (will be reactivated if cancelled)
             addMarkerMode = false;
             if (addMarkerBtn) addMarkerBtn.classList.remove('active');
+            hideModeIndicator();
             mapContainer.style.cursor = 'grab';
             return;
         }
@@ -624,7 +662,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
             // Disable move marker mode
             moveMarkerMode = false;
-            document.getElementById('moveMarkerCheck').checked = false;
             
             // Show temporary marker preview (optional)
             const previewMarker = document.createElement('div');
@@ -670,11 +707,14 @@ document.addEventListener('DOMContentLoaded', function () {
                 editMarkerBtn.classList.add('active');
                 if (addMarkerBtn) addMarkerBtn.classList.remove('active');
                 if (deleteMarkerBtn) deleteMarkerBtn.classList.remove('active');
-                if (cancelDeleteBtn) cancelDeleteBtn.style.display = 'none';
+                if (exitModeBtn) exitModeBtn.style.display = 'inline-block';
+                showModeIndicator('Edit Marker');
                 mapContainer.style.cursor = 'crosshair'; // Changed from 'pointer' to 'crosshair'
                 alert('✏️ Click on any marker to edit it');
             } else {
                 editMarkerBtn.classList.remove('active');
+                if (exitModeBtn) exitModeBtn.style.display = 'none';
+                hideModeIndicator();
                 mapContainer.style.cursor = 'grab';
                 moveMarkerMode = false;
                 editingMarkerId = null;
@@ -735,7 +775,6 @@ document.addEventListener('DOMContentLoaded', function () {
         // Reset move marker mode
         moveMarkerMode = false;
         pendingEditPosition = null;
-        document.getElementById('moveMarkerCheck').checked = false;
         
         // Show modal IMMEDIATELY (don't wait for network loading)
         const modal = new bootstrap.Modal(document.getElementById('editBuildingModal'));
@@ -799,33 +838,27 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // Use event delegation for dynamically loaded checkbox
-    document.body.addEventListener('change', (e) => {
+    // Use event delegation for dynamically loaded button
+    document.body.addEventListener('click', (e) => {
         if (e.target && e.target.id === 'moveMarkerCheck') {
-            moveMarkerMode = e.target.checked;
-            console.log('🔄 Move marker checkbox changed - moveMarkerMode:', moveMarkerMode, 'editingMarkerId:', editingMarkerId);
+            moveMarkerMode = true;
+            console.log('🔄 Move marker button clicked - moveMarkerMode:', moveMarkerMode, 'editingMarkerId:', editingMarkerId);
             
-            if (moveMarkerMode) {
-                console.log('📍 Attempting to enable move marker mode...');
-                
-                // Close the modal so user can click on map
-                const modal = bootstrap.Modal.getInstance(document.getElementById('editBuildingModal'));
-                if (modal) {
-                    console.log('✅ Closing modal...');
-                    modal.hide();
-                } else {
-                    console.log('⚠️ No modal instance found');
-                }
-                
-                mapContainer.style.cursor = 'crosshair';
-                console.log('✅ Move marker mode enabled - cursor set to crosshair, modal closed');
-                console.log('📌 Current state - moveMarkerMode:', moveMarkerMode, 'editingMarkerId:', editingMarkerId);
-                alert('📍 Click on the map to select a new position for this marker.\n\nThe modal will reopen after you select the position.');
+            console.log('📍 Attempting to enable move marker mode...');
+            
+            // Close the modal so user can click on map
+            const modal = bootstrap.Modal.getInstance(document.getElementById('editBuildingModal'));
+            if (modal) {
+                console.log('✅ Closing modal...');
+                modal.hide();
             } else {
-                mapContainer.style.cursor = 'crosshair'; // Keep crosshair for edit mode
-                pendingEditPosition = null;
-                console.log('❌ Move marker mode disabled');
+                console.log('⚠️ No modal instance found');
             }
+            
+            mapContainer.style.cursor = 'crosshair';
+            console.log('✅ Move marker mode enabled - cursor set to crosshair, modal closed');
+            console.log('📌 Current state - moveMarkerMode:', moveMarkerMode, 'editingMarkerId:', editingMarkerId);
+            alert('📍 Click on the map to select a new position for this marker.\n\nThe modal will reopen after you select the position.');
         }
     });
 
@@ -938,6 +971,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 editingMarkerId = null;
                 pendingEditPosition = null;
                 if (editMarkerBtn) editMarkerBtn.classList.remove('active');
+                if (exitModeBtn) exitModeBtn.style.display = 'none';
+                hideModeIndicator();
                 mapContainer.style.cursor = 'grab';
                 
                 // Show success message immediately
@@ -1010,24 +1045,44 @@ document.addEventListener('DOMContentLoaded', function () {
                 deleteMarkerBtn.classList.add('active');
                 if (addMarkerBtn) addMarkerBtn.classList.remove('active');
                 if (editMarkerBtn) editMarkerBtn.classList.remove('active');
-                if (cancelDeleteBtn) cancelDeleteBtn.style.display = 'inline-block';
+                if (exitModeBtn) exitModeBtn.style.display = 'inline-block';
+                showModeIndicator('Delete Marker');
                 mapContainer.style.cursor = 'pointer';
                 alert('🗑️ Click on any marker to delete it. This will remove the building and all its networks from the database.');
             } else {
                 deleteMarkerBtn.classList.remove('active');
-                if (cancelDeleteBtn) cancelDeleteBtn.style.display = 'none';
+                if (exitModeBtn) exitModeBtn.style.display = 'none';
+                hideModeIndicator();
                 mapContainer.style.cursor = 'grab';
             }
             
             renderMarkers();
         });
 
-        if (cancelDeleteBtn) {
-            cancelDeleteBtn.addEventListener('click', () => {
+        // Universal Exit Mode button handler
+        if (exitModeBtn) {
+            exitModeBtn.addEventListener('click', () => {
+                // Exit all modes
+                addMarkerMode = false;
+                editMarkerMode = false;
                 deleteMarkerMode = false;
-                deleteMarkerBtn.classList.remove('active');
-                cancelDeleteBtn.style.display = 'none';
+                moveMarkerMode = false;
+                editingMarkerId = null;
+                pendingEditPosition = null;
+                
+                // Remove active state from all buttons
+                if (addMarkerBtn) addMarkerBtn.classList.remove('active');
+                if (editMarkerBtn) editMarkerBtn.classList.remove('active');
+                if (deleteMarkerBtn) deleteMarkerBtn.classList.remove('active');
+                
+                // Hide exit button and mode indicator
+                exitModeBtn.style.display = 'none';
+                hideModeIndicator();
+                
+                // Reset cursor
                 mapContainer.style.cursor = 'grab';
+                
+                // Re-render markers
                 renderMarkers();
             });
         }
@@ -1059,7 +1114,8 @@ document.addEventListener('DOMContentLoaded', function () {
                     // Exit delete mode
                     deleteMarkerMode = false;
                     if (deleteMarkerBtn) deleteMarkerBtn.classList.remove('active');
-                    if (cancelDeleteBtn) cancelDeleteBtn.style.display = 'none';
+                    if (exitModeBtn) exitModeBtn.style.display = 'none';
+                    hideModeIndicator();
                     mapContainer.style.cursor = 'grab';
                     
                     alert(`✅ Building "${marker.name}" deleted successfully\n\n${networkCount} network(s) returned to Action Required list`);
@@ -1262,10 +1318,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 
                 // Reset pending position only if not in move mode
                 pendingEditPosition = null;
-                const moveCheck = document.getElementById('moveMarkerCheck');
-                if (moveCheck) {
-                    moveCheck.checked = false;
-                }
             } else {
                 console.log('⏳ Modal closed for position selection - keeping moveMarkerMode active');
             }
