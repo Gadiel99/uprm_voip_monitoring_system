@@ -47,8 +47,6 @@
 @extends('components.layout.app')
 
 @section('content')
-<h4 class="fw-semibold mb-4">UPRM Campus Map - System Status</h4>
-
 {{-- Control buttons for map management --}}
 <div class="mb-3 d-flex align-items-center gap-3">
     {{-- Legend - inline with buttons --}}
