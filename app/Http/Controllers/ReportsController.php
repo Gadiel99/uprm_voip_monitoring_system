@@ -157,23 +157,32 @@ class ReportsController extends Controller
 
         if (!empty($validated['query'])) {
             $searchTerm = $validated['query'];
-            // Normalize search term for MAC/IP matching (remove delimiters)
-            $normalizedTerm = str_replace([':', '-', '.', ' '], '', $searchTerm);
             
-            $query->where(function ($q) use ($searchTerm, $normalizedTerm) {
-                // Search in user names
-                $q->where('e.user_first_name', 'like', "%$searchTerm%")
-                  ->orWhere('e.user_last_name', 'like', "%$searchTerm%")
-                  ->orWhere(DB::raw("CONCAT(e.user_first_name, ' ', e.user_last_name)"), 'like', "%$searchTerm%")
-                  // Search in MAC address (normalized)
-                  ->orWhere(DB::raw("REPLACE(REPLACE(REPLACE(d.mac_address, ':', ''), '-', ''), '.', '')"), 'like', "%$normalizedTerm%")
-                  // Search in IP address (normalized)
-                  ->orWhere(DB::raw("REPLACE(d.ip_address, '.', '')"), 'like', "%$normalizedTerm%")
-                  // Search in status
-                  ->orWhere('d.status', 'like', "%$searchTerm%")
-                  // Search in building name
-                  ->orWhere('b.name', 'like', "%$searchTerm%");
-            });
+            // Split search terms by comma and trim each
+            $searchTerms = array_filter(array_map('trim', explode(',', $searchTerm)));
+            
+            // Apply filters for each search term (ALL must match - AND logic)
+            foreach ($searchTerms as $term) {
+                // Normalize search term for MAC/IP matching (remove delimiters)
+                $normalizedTerm = str_replace([':', '-', '.', ' '], '', $term);
+                
+                $query->where(function ($q) use ($term, $normalizedTerm) {
+                    // Search in user names
+                    $q->where('e.user_first_name', 'like', "%$term%")
+                      ->orWhere('e.user_last_name', 'like', "%$term%")
+                      ->orWhere(DB::raw("CONCAT(e.user_first_name, ' ', e.user_last_name)"), 'like', "%$term%")
+                      // Search in MAC address (normalized)
+                      ->orWhere(DB::raw("REPLACE(REPLACE(REPLACE(d.mac_address, ':', ''), '-', ''), '.', '')"), 'like', "%$normalizedTerm%")
+                      // Search in IP address (normalized)
+                      ->orWhere(DB::raw("REPLACE(d.ip_address, '.', '')"), 'like', "%$normalizedTerm%")
+                      // Search in status
+                      ->orWhere('d.status', 'like', "%$term%")
+                      // Search in building name
+                      ->orWhere('b.name', 'like', "%$term%")
+                      // Search in extension number
+                      ->orWhere('e.extension_number', 'like', "%$term%");
+                });
+            }
         }
 
         $rawDevices = $query->distinct()->get();
