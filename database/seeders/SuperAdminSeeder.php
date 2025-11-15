@@ -22,16 +22,6 @@ class SuperAdminSeeder extends Seeder
                 'role' => 'superadmin'
             ]
         );
-        
-        // Create or update Sergio Melendez user
-        User::updateOrCreate(
-            ['email' => 'sergio.melendez@uprm.edu'],
-            [
-                'name' => 'Sergio Melendez',
-                'password' => Hash::make('SergioMelendez2025!'),
-                'role' => 'user'
-            ]
-        );
 
         $this->command->info('✅ Seeded admin users');
     }
