@@ -29,6 +29,14 @@
       </a>
     </div>
 
+    {{-- Search bar for filtering devices --}}
+    <div class="mb-3 d-flex gap-2">
+      <input type="text" id="deviceSearch" class="form-control form-control-sm" placeholder="Search devices... (use commas: monzon, 4542ab)" style="max-width: 400px;">
+      <button type="button" class="btn btn-outline-secondary btn-sm px-2" onclick="document.getElementById('deviceSearch').value=''; filterDevices();">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+
     <div class="table-responsive">
       <table class="table table-bordered table-hover align-middle">
         <thead class="table-light">
@@ -44,17 +52,17 @@
             @php
               $exts = ($extByDevice ?? collect())->get($d->device_id) ?? collect();
             @endphp
-            <tr onclick="showDeviceGraph('{{ $d->ip_address }}', '{{ $d->device_id }}', '{{ $building->name }}', '{{ $network }}')" style="cursor: pointer;">
-              <td class="fw-semibold">{{ $d->ip_address }}</td>
-              <td>{{ $d->mac_address ?? 'N/A' }}</td>
-              <td>
+            <tr class="device-row" onclick="showDeviceGraph('{{ $d->ip_address }}', '{{ $d->device_id }}', '{{ $building->name }}', '{{ $network }}')" style="cursor: pointer;">
+              <td class="fw-semibold device-ip">{{ $d->ip_address }}</td>
+              <td class="device-mac">{{ $d->mac_address ?? 'N/A' }}</td>
+              <td class="device-owner">
                 @if($exts->isNotEmpty())
                   {{ $exts->first()->user_first_name }} {{ $exts->first()->user_last_name }}
                 @else
                   <span class="text-muted">N/A</span>
                 @endif
               </td>
-              <td>
+              <td class="device-extensions">
                 @if($exts->isEmpty())
                   <span class="text-muted">—</span>
                 @else
@@ -69,7 +77,7 @@
               </td>
             </tr>
           @empty
-            <tr>
+            <tr class="empty-devices-row">
               <td colspan="4" class="text-center text-muted">No devices found in this network.</td>
             </tr>
           @endforelse
@@ -99,6 +107,51 @@
 
 <script>
 let activityChart = null;
+
+// Filter devices based on search input
+function filterDevices() {
+    const searchInput = document.getElementById('deviceSearch').value.toLowerCase().trim();
+    const rows = document.querySelectorAll('.device-row');
+    let visibleCount = 0;
+
+    // Split search terms by comma and normalize each term
+    const searchTerms = searchInput.split(',').map(term => term.trim().replace(/[^a-z0-9]/g, '')).filter(term => term !== '');
+
+    rows.forEach(row => {
+        // Get all text content from the row and normalize it
+        const ip = (row.querySelector('.device-ip')?.textContent || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+        const mac = (row.querySelector('.device-mac')?.textContent || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+        const owner = (row.querySelector('.device-owner')?.textContent || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+        const extensions = (row.querySelector('.device-extensions')?.textContent || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+        
+        // Combine all fields into one searchable string
+        const combinedText = ip + mac + owner + extensions;
+        
+        // Check if ALL search terms are found in the combined text
+        const matches = searchTerms.length === 0 || searchTerms.every(term => combinedText.includes(term));
+
+        if (matches) {
+            row.style.display = '';
+            visibleCount++;
+        } else {
+            row.style.display = 'none';
+        }
+    });
+
+    // Update empty message
+    const emptyRow = document.querySelector('.empty-devices-row');
+    if (emptyRow) {
+        emptyRow.style.display = visibleCount === 0 ? '' : 'none';
+    }
+}
+
+// Attach search event listener
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('deviceSearch');
+    if (searchInput) {
+        searchInput.addEventListener('input', filterDevices);
+    }
+});
 
 // Show device activity graph in modal
 function showDeviceGraph(ip, deviceId, building, network) {
