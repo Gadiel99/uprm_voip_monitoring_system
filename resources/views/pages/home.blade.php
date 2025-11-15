@@ -1151,18 +1151,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // ===== ZOOM FUNCTIONALITY =====
     function updateZoom(newScale) {
-        scale = Math.min(Math.max(newScale, 0.64), 3); // Changed min to 0.64
+        scale = Math.min(Math.max(newScale, 0.5), 3);
         mapWrapper.style.transform = `scale(${scale})`;
-        
-        // Adjust wrapper dimensions to match scaled size
-        // This prevents scrolling beyond the visible content
-        const originalWidth = 2202;
-        const originalHeight = 1199;
-        const scaledWidth = originalWidth * scale;
-        const scaledHeight = originalHeight * scale;
-        
-        mapWrapper.style.width = `${scaledWidth}px`;
-        mapWrapper.style.height = `${scaledHeight}px`;
     }
 
     zoomInBtn.addEventListener('click', () => updateZoom(scale + 0.2));
