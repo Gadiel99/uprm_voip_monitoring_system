@@ -131,47 +131,51 @@
     <h4 class="reports-section-heading mb-4">Reports</h4>
 
     <div class="card border-0 shadow-sm p-4 reports-wrapper-card">
+        {{-- SYSTEM OVERVIEW --}}
+        <div class="mb-4" id="reportsOverviewCard">
+            <h6 class="fw-semibold mb-3">System Overview</h6>
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <div class="stat-tile tile-total text-center">
+                        <h6 class="text-muted mb-1">Total Devices</h6>
+                        <h3 class="text-primary">{{ $stats['total_devices'] }}</h3>
+                        <div class="stat-desc">Registered in system</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-tile tile-active text-center">
+                        <h6 class="text-muted mb-1">Active Now</h6>
+                        <h3 class="text-success">{{ $stats['active_devices'] }}</h3>
+                        <div class="stat-desc active">Currently online</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-tile tile-inactive text-center">
+                        <h6 class="text-muted mb-1">Inactive</h6>
+                        <h3 class="text-warning">{{ $stats['inactive_devices'] }}</h3>
+                        <div class="stat-desc inactive">Offline devices</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-tile tile-buildings text-center">
+                        <h6 class="text-muted mb-1">Buildings</h6>
+                        <h3 class="text-success">{{ $stats['total_buildings'] }}</h3>
+                        <div class="stat-desc">Monitored locations</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         {{-- DEVICE REPORTS SEARCH --}}
         <div class="mb-4" id="reportsSearchCard">
             <h6 class="fw-semibold mb-3">Device Reports Search</h6>
             <form method="GET" action="{{ route('reports') }}" id="searchForm">
-                <div class="row g-4">
-                    <div class="col-md-4">
-                        <label class="search-label" for="searchUser">User</label>
-                        <input type="text" id="searchUser" name="user" class="form-control" placeholder="Search by user name..." value="{{ $filters['user'] ?? '' }}">
-                    </div>
-                    <div class="col-md-4">
-                        <label class="search-label" for="searchMac">MAC Address</label>
-                        <input type="text" id="searchMac" name="mac" class="form-control" placeholder="e.g. 4aba or 4a:ba:0d..." value="{{ $filters['mac'] ?? '' }}">
-                        <small class="text-muted">No need for colons or dashes</small>
-                    </div>
-                    <div class="col-md-4">
-                        <label class="search-label" for="searchIp">IP Address</label>
-                        <input type="text" id="searchIp" name="ip" class="form-control" placeholder="e.g. 192168 or 192.168.1..." value="{{ $filters['ip'] ?? '' }}">
-                        <small class="text-muted">No need for dots</small>
-                    </div>
-                    <div class="col-md-4">
-                        <label class="search-label" for="searchStatus">Status</label>
-                        <select id="searchStatus" name="status" class="form-select">
-                            <option value="">All Status</option>
-                            <option value="online" {{ isset($filters['status']) && $filters['status'] == 'online' ? 'selected' : '' }}>Online</option>
-                            <option value="offline" {{ isset($filters['status']) && $filters['status'] == 'offline' ? 'selected' : '' }}>Offline</option>
-                        </select>
-                    </div>
-                    <div class="col-md-4">
-                        <label class="search-label" for="searchBuilding">Building</label>
-                        <select id="searchBuilding" name="building_id" class="form-select">
-                            <option value="">All Buildings</option>
-                            @foreach($buildings as $building)
-                                <option value="{{ $building->building_id }}" {{ isset($filters['building_id']) && $filters['building_id'] == $building->building_id ? 'selected' : '' }}>{{ $building->name }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div class="col-md-4 d-flex align-items-end gap-2">
-                        <button type="submit" class="btn btn-success px-4" id="searchBtn"><i class="bi bi-search me-1"></i>Search</button>
-                        <button type="button" class="btn btn-outline-secondary px-4" id="resetBtn"><i class="bi bi-arrow-clockwise me-1"></i>Reset</button>
-                    </div>
+                <div class="input-group input-group-lg">
+                    <input type="text" id="searchQuery" name="query" class="form-control" placeholder="Search by user, MAC address, IP address, status, or building..." value="{{ $filters['query'] ?? '' }}">
+                    <button type="submit" class="btn btn-success px-4" id="searchBtn"><i class="bi bi-search me-1"></i>Search</button>
+                    <button type="button" class="btn btn-outline-secondary px-3" id="resetBtn"><i class="bi bi-arrow-clockwise"></i></button>
                 </div>
+                <small class="text-muted mt-2 d-block">Search across all fields: user names, MAC addresses, IP addresses, status (online/offline), and building names</small>
             </form>
         </div>
 
@@ -232,41 +236,6 @@
                     </p>
                 </div>
             @endif
-        </div>
-
-        {{-- SYSTEM OVERVIEW --}}
-        <div id="reportsOverviewCard">
-            <h6 class="fw-semibold mb-3">System Overview</h6>
-            <div class="row g-3">
-                <div class="col-md-3">
-                    <div class="stat-tile tile-total text-center">
-                        <h6 class="text-muted mb-1">Total Devices</h6>
-                        <h3 class="text-primary">{{ $stats['total_devices'] }}</h3>
-                        <div class="stat-desc">Registered in system</div>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="stat-tile tile-active text-center">
-                        <h6 class="text-muted mb-1">Active Now</h6>
-                        <h3 class="text-success">{{ $stats['active_devices'] }}</h3>
-                        <div class="stat-desc active">Currently online</div>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="stat-tile tile-inactive text-center">
-                        <h6 class="text-muted mb-1">Inactive</h6>
-                        <h3 class="text-warning">{{ $stats['inactive_devices'] }}</h3>
-                        <div class="stat-desc inactive">Offline devices</div>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="stat-tile tile-buildings text-center">
-                        <h6 class="text-muted mb-1">Buildings</h6>
-                        <h3 class="text-success">{{ $stats['total_buildings'] }}</h3>
-                        <div class="stat-desc">Monitored locations</div>
-                    </div>
-                </div>
-            </div>
         </div>
     </div>
 </div>
