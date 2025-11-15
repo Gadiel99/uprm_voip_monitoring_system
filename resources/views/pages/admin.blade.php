@@ -102,8 +102,6 @@
 </style>
 
 <div class="container-fluid">
-    <h4 class="fw-semibold mb-4">Admin Panel</h4>
-
     {{-- NAV PILLS --}}
     <ul class="nav nav-pills bg-light p-2 rounded mb-4" id="adminTab" role="tablist">
         <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#backup"><i class="bi bi-hdd-stack me-2"></i>Backup</button></li>
@@ -117,15 +115,13 @@
         {{-- BACKUP --}}
         <div class="tab-pane fade show active" id="backup" role="tabpanel">
             <div class="card border-0 shadow-sm p-4 mb-4">
-                <h5 class="fw-semibold mb-3">Backup Configuration</h5>
                 <div class="mb-3">
                     <label class="form-label fw-semibold">Local Backup Path</label>
                     <input type="text" class="form-control bg-light" value="/var/backups/monitoring" readonly>
                     <small class="text-muted">Backups are stored locally in this directory.</small>
                 </div>
 
-                <h5 class="fw-semibold mt-4 mb-3">Backup Operations</h5>
-                <div class="d-flex gap-2">
+                <div class="d-flex gap-2 mt-4">
                     <button class="btn btn-success"><i class="bi bi-archive me-2"></i>Create Backup & Download (ZIP)</button>
                     <button class="btn btn-outline-secondary"><i class="bi bi-upload me-2"></i>Restore from Backup</button>
                 </div>
@@ -135,7 +131,6 @@
         {{-- LOGS --}}
         <div class="tab-pane fade" id="logs" role="tabpanel">
             <div class="card border-0 shadow-sm p-4 mb-4">
-                <h5 class="fw-semibold mb-3">System Logs</h5>
                 <div class="d-flex mb-3">
                     <input type="text" class="form-control form-control-sm bg-light" id="logSearchInput" placeholder="Search logs by timestamp, IP, action, or comment...">
                     <button class="btn btn-success btn-sm ms-2 px-3" onclick="filterLogs()"><i class="bi bi-search me-1"></i>Search</button>
@@ -308,9 +303,6 @@
         {{-- USERS --}}
         <div class="tab-pane fade" id="users" role="tabpanel">
             <div class="card border-0 shadow-sm p-4 mb-4">
-                <h5 class="fw-semibold mb-3">User Management</h5>
-                <p class="text-muted small">Manage system users, roles, and access permissions.</p>
-
                 {{-- Flash messages (success only - errors shown in modal) --}}
                 @if(session('status'))
                     <div class="alert alert-success alert-dismissible fade show" role="alert">
