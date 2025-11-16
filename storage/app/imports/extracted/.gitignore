@@ -1,0 +1,3 @@
+# Ignore all extracted directories and files
+*
+!.gitignore

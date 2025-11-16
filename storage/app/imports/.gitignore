@@ -1,0 +1,8 @@
+# Ignore all import files (archives and extracted)
+archives/*
+extracted/*
+
+# Keep directory structure
+!.gitignore
+!archives/.gitignore
+!extracted/.gitignore
