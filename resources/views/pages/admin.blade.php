@@ -250,7 +250,7 @@
                             <input type="number" class="form-control @error('lower_threshold') is-invalid @enderror" 
                                    name="lower_threshold" min="0" max="100" 
                                    value="{{ old('lower_threshold', $alertSettings->lower_threshold ?? 30) }}">
-                            <small class="text-muted d-block mt-1">Below this is <span class="badge bg-success">Normal</span></small>
+                            <small class="text-muted d-block mt-1">Below this is <span class="text-success fw-semibold">Normal</span></small>
                             @error('lower_threshold')
                                 <div class="text-danger small mt-1">{{ $message }}</div>
                             @enderror
@@ -260,7 +260,7 @@
                             <input type="number" class="form-control @error('upper_threshold') is-invalid @enderror" 
                                    name="upper_threshold" min="0" max="100" 
                                    value="{{ old('upper_threshold', $alertSettings->upper_threshold ?? 70) }}">
-                            <small class="text-muted d-block mt-1">Above this is <span class="badge bg-danger">Critical</span></small>
+                            <small class="text-muted d-block mt-1">Above this is <span class="text-danger fw-semibold">Critical</span></small>
                             @error('upper_threshold')
                                 <div class="text-danger small mt-1">{{ $message }}</div>
                             @enderror
@@ -275,15 +275,6 @@
                                     <i class="bi bi-arrow-counterclockwise me-2"></i>Reset to Default
                                 </button>
                             </div>
-                        </div>
-                    </div>
-                    <div class="mt-3">
-                        <div class="alert alert-info mb-0">
-                            <i class="bi bi-info-circle me-2"></i>
-                            <strong>How it works:</strong> Buildings with offline device percentage 
-                            &lt; {{ old('lower_threshold', $alertSettings->lower_threshold ?? 30) }}% are <span class="badge bg-success">Normal</span>, 
-                            between {{ old('lower_threshold', $alertSettings->lower_threshold ?? 30) }}% - {{ old('upper_threshold', $alertSettings->upper_threshold ?? 70) }}% are <span class="badge bg-warning text-dark">Warning</span>, 
-                            and &gt; {{ old('upper_threshold', $alertSettings->upper_threshold ?? 70) }}% are <span class="badge bg-danger">Critical</span>.
                         </div>
                     </div>
                 </form>
