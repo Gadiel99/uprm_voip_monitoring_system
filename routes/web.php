@@ -51,6 +51,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/devices', [DevicesController::class, 'index'])->name('devices');
     Route::get('/devices/critical', [DevicesController::class, 'criticalDevices'])->name('devices.critical');
     Route::get('/devices/unmapped', [DevicesController::class, 'unmapped'])->name('devices.unmapped');
+    Route::get('/devices/unmapped/network/{network}', [DevicesController::class, 'unmappedNetwork'])->name('devices.unmappedNetwork');
     Route::get('/devices/building/{building}', [DevicesController::class, 'byBuilding'])->name('devices.byBuilding');
     Route::get('/devices/building/{building}/network/{network}', [DevicesController::class, 'byNetwork'])->name('devices.byNetwork');
 
