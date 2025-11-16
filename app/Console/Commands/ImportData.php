@@ -1,4 +1,5 @@
 <?php
+// filepath: app/Console/Commands/ImportData.php
 
 namespace App\Console\Commands;
 
@@ -34,7 +35,7 @@ class ImportData extends Command
             return self::FAILURE;
         }
 
-        $this->info("📦 Extracting data from: {$filePath}");
+        $this->info("📦 Extracting data from: " . basename($filePath));
         $this->newLine();
 
         try {
@@ -49,29 +50,27 @@ class ImportData extends Command
                 $this->newLine();
                 $this->info("📂 Extracted Files:");
                 foreach ($stats['extracted_files'] as $file) {
-                    $this->line("   " . $file);
+                    $this->line("   ✓ " . $file);
                 }
             }
 
             $this->newLine();
             
+            // Check required files
             if (!$stats['files_found']['users_csv'] || !$stats['files_found']['registrar_json']) {
-                $this->warn('⚠️  Warning: Required files not found in archive!');
+                $this->warn('⚠️  Warning: Required files not found!');
                 $this->info('   Expected: users.csv and registrar.json');
-                $this->info('   Please check the archive structure and re-export from server.');
                 return self::FAILURE;
             }
             
             $this->info('✅ Extraction completed successfully!');
-            $this->info('📂 Files extracted to: ' . $stats['extract_path']);
+            $this->info('📂 Location: ' . $stats['extract_path']);
             $this->newLine();
             
             // Show next steps
-            $this->info('📋 Next Steps:');
-            $this->line('   Run ETL to process data into MariaDB:');
-            $this->line('');
-            $this->comment('      php artisan etl:run --import=' . $stats['extract_path']);
-            $this->line('');
+            $this->info('📋 Next Step: Run ETL');
+            $this->comment('   php artisan etl:run --import=' . $stats['extract_path']);
+            $this->newLine();
             
             return self::SUCCESS;
 
@@ -89,35 +88,24 @@ class ImportData extends Command
 
     private function displayExtractionStats(array $stats): void
     {
-        $this->info("📊 Extraction Summary:");
         $this->table(
-            ['Item', 'Value'],
+            ['Item', 'Status'],
             [
                 ['Archive', $stats['archive']],
                 ['Timestamp', $stats['timestamp']],
-                ['Users CSV', $stats['files_found']['users_csv'] ? '✅ Found' : '❌ Missing'],
-                ['Registrar JSON', $stats['files_found']['registrar_json'] ? '✅ Found' : '❌ Missing'],
+                ['Users CSV', $stats['files_found']['users_csv'] ? '✅ Found (' . number_format($stats['record_counts']['users']) . ' records)' : '❌ Missing'],
+                ['Registrar JSON', $stats['files_found']['registrar_json'] ? '✅ Found (' . number_format($stats['record_counts']['registrations']) . ' records)' : '❌ Missing'],
                 ['Metadata', $stats['files_found']['metadata'] ? '✅ Found' : '⚠️ Missing'],
-            ]
-        );
-
-        $this->newLine();
-        $this->info("📈 Record Counts:");
-        $this->table(
-            ['Source', 'Records'],
-            [
-                ['PostgreSQL Users', number_format($stats['record_counts']['users'])],
-                ['MongoDB Registrations', number_format($stats['record_counts']['registrations'])],
             ]
         );
 
         // Display metadata if available
         if (isset($stats['metadata'])) {
             $this->newLine();
-            $this->info("ℹ️ Export Metadata:");
-            $this->line("   Export Date: " . ($stats['metadata']['export_date'] ?? 'Unknown'));
-            $this->line("   Source Server: " . ($stats['metadata']['server'] ?? 'Unknown'));
-            $this->line("   Export Version: " . ($stats['metadata']['export_version'] ?? 'Unknown'));
+            $this->info("ℹ️ Export Info:");
+            $this->line("   Date: " . ($stats['metadata']['export_date'] ?? 'Unknown'));
+            $this->line("   Server: " . ($stats['metadata']['server'] ?? 'Unknown'));
+            $this->line("   Version: " . ($stats['metadata']['export_version'] ?? 'Unknown'));
         }
     }
 
@@ -130,7 +118,7 @@ class ImportData extends Command
             return self::SUCCESS;
         }
 
-        $this->info("📂 Extracted Imports:");
+        $this->info("📂 Extracted Imports (" . count($imports) . "):");
         $this->newLine();
 
         $tableData = [];
@@ -138,13 +126,13 @@ class ImportData extends Command
             $metadata = $import['metadata'];
             $tableData[] = [
                 $import['name'],
+                date('Y-m-d H:i:s', $import['created']),
                 $metadata['export_date'] ?? 'Unknown',
-                $metadata['server'] ?? 'Unknown',
             ];
         }
 
         $this->table(
-            ['Directory', 'Export Date', 'Source Server'],
+            ['Directory', 'Extracted At', 'Export Date'],
             $tableData
         );
 
@@ -153,7 +141,7 @@ class ImportData extends Command
 
     private function cleanExtracts(DataImportService $importService): int
     {
-        $this->info("🧹 Cleaning old extracted imports...");
+        $this->info("🧹 Cleaning old imports (older than 7 days)...");
         
         $removed = $importService->cleanOldExtracts(7);
         
