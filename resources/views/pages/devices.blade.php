@@ -134,6 +134,14 @@
             <h5 class="fw-semibold mb-3">Buildings Overview</h5>
             <p class="text-muted mb-3">Select a building to view all connected devices and their graphs.</p>
 
+            {{-- Search bar for filtering buildings --}}
+            <div class="mb-3 d-flex gap-2">
+                <input type="text" id="buildingSearch" class="form-control form-control-sm" placeholder="Search buildings by name..." style="max-width: 400px;">
+                <button type="button" class="btn btn-outline-secondary btn-sm px-2" onclick="document.getElementById('buildingSearch').value=''; filterBuildings();">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+
             <table class="table table-bordered table-hover align-middle mb-0">
                 <thead class="table-light">
                     <tr>
@@ -142,15 +150,18 @@
                         <th style="width: 25%;">Total Devices</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody id="buildingsTableBody">
                     {{-- All buildings from database --}}
                     @foreach($overview as $building)
-                        <tr onclick="window.location.href='{{ route('devices.byBuilding', $building->building_id) }}'">
-                            <td><i class="bi bi-building me-2 text-success"></i> {{ $building->name }}</td>
+                        <tr class="building-row" data-building-name="{{ strtolower($building->name) }}" onclick="window.location.href='{{ route('devices.byBuilding', $building->building_id) }}'">
+                            <td class="building-name"><i class="bi bi-building me-2 text-success"></i> {{ $building->name }}</td>
                             <td>{{ $building->total_networks }}</td>
                             <td>{{ $building->total_devices }}</td>
                         </tr>
                     @endforeach
+                    <tr class="no-results-row" style="display: none;">
+                        <td colspan="3" class="text-center text-muted">No buildings found matching your search.</td>
+                    </tr>
                 </tbody>
             </table>
         </div>
@@ -158,5 +169,38 @@
 
 </div>
 
+<script>
+// Filter buildings based on search input
+function filterBuildings() {
+    const searchInput = document.getElementById('buildingSearch').value.toLowerCase().trim();
+    const rows = document.querySelectorAll('.building-row');
+    const noResultsRow = document.querySelector('.no-results-row');
+    let visibleCount = 0;
+
+    rows.forEach(row => {
+        const buildingName = row.getAttribute('data-building-name');
+        
+        if (buildingName.includes(searchInput)) {
+            row.style.display = '';
+            visibleCount++;
+        } else {
+            row.style.display = 'none';
+        }
+    });
+
+    // Show/hide no results message
+    if (noResultsRow) {
+        noResultsRow.style.display = visibleCount === 0 && searchInput !== '' ? '' : 'none';
+    }
+}
+
+// Attach search event listener
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('buildingSearch');
+    if (searchInput) {
+        searchInput.addEventListener('input', filterBuildings);
+    }
+});
+</script>
 
 @endsection
