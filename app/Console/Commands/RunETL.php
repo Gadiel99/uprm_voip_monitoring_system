@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use App\Services\ETLService;
 use App\Services\NotificationService;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Artisan;
 
 class RunETL extends Command
 {
@@ -128,10 +129,11 @@ class RunETL extends Command
             $this->line('✨ Data from imported files has been successfully processed into MariaDB');
             $this->newLine();
 
-            // Check and send notifications for critical conditions
-            $this->info('📧 Checking for critical conditions...');
-            $notificationService->checkAndNotify();
-            $this->info('✓ Notification check completed');
+            // After ETL completes, run consolidated notification using real data
+            $this->info('📧 Running notifications:test (consolidated email with real data)...');
+            $exit = Artisan::call('notifications:test');
+            $this->line(rtrim(Artisan::output()));
+            $this->info($exit === 0 ? '✓ Notifications:test completed' : '⚠ Notifications:test exited with non-zero code');
             $this->newLine();
 
             return self::SUCCESS;
