@@ -29,6 +29,17 @@ Schedule::command('notifications:check')
        Log::info('Notification check completed successfully');
     });
 
+// Clean up old import files daily at 2:00 AM
+Schedule::command('imports:cleanup')
+    ->dailyAt('02:00')
+    ->withoutOverlapping()
+    ->onFailure(function () {
+       Log::error('Import file cleanup failed');
+    })
+    ->onSuccess(function () {
+       Log::info('Import file cleanup completed successfully');
+    });
+
 Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
