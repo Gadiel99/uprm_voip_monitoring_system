@@ -265,11 +265,16 @@
                                 <div class="text-danger small mt-1">{{ $message }}</div>
                             @enderror
                         </div>
-                        <div class="col-md-3">
+                        <div class="col-md-6">
                             <label class="form-label fw-semibold d-block">&nbsp;</label>
-                            <button type="submit" class="btn btn-success">
-                                <i class="bi bi-check-circle me-2"></i>Save Thresholds
-                            </button>
+                            <div class="d-flex gap-2">
+                                <button type="submit" class="btn btn-success">
+                                    <i class="bi bi-check-circle me-2"></i>Save Thresholds
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary" onclick="resetThresholdsToDefault()">
+                                    <i class="bi bi-arrow-counterclockwise me-2"></i>Reset to Default
+                                </button>
+                            </div>
                         </div>
                     </div>
                     <div class="mt-3">
@@ -542,6 +547,15 @@
   </div>
 </div>{{-- ===================== UNIVERSAL JS ===================== --}}
 <script>
+// Reset threshold values to default
+function resetThresholdsToDefault() {
+    const lowerThresholdInput = document.querySelector('input[name="lower_threshold"]');
+    const upperThresholdInput = document.querySelector('input[name="upper_threshold"]');
+    
+    if (lowerThresholdInput) lowerThresholdInput.value = 10;
+    if (upperThresholdInput) upperThresholdInput.value = 25;
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     // ===== Tab Activation =====
     const activeTab = @json($activeTab ?? request()->get('tab') ?? (($errors->has('lower_threshold') || $errors->has('upper_threshold')) ? 'settings' : null));
