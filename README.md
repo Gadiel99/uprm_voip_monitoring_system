@@ -132,3 +132,13 @@ Middleware
 
 Routing
 - See routes/web.php for grouped routes and inline documentation.
+
+## 📚 Documentation
+
+For detailed information about specific system components, see the `/docs` directory:
+
+- **[CRON_SETUP.md](docs/CRON_SETUP.md)** - ETL process and scheduled task configuration
+- **[EMAIL_NOTIFICATIONS.md](docs/EMAIL_NOTIFICATIONS.md)** - Email alert system setup and configuration
+- **[REPORTS_FUNCTIONALITY.md](docs/REPORTS_FUNCTIONALITY.md)** - Report generation and system monitoring
+- **[FILE_CLEANUP_POLICY.md](docs/FILE_CLEANUP_POLICY.md)** - Import file retention and cleanup automation
+- **[testing/](docs/testing/)** - Test documentation, cases, and results
