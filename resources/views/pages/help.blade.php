@@ -150,6 +150,14 @@
         <ul class="mb-3">
             <li><strong>Access Settings:</strong> Go to <strong>Admin → Settings</strong> to manage critical devices and alert display preferences.</li>
             <li><strong>Critical Devices:</strong> Add or remove high-priority devices that require special monitoring. Enter the device's IP Address, MAC Address, and Owner information.</li>
+            <li><strong>Alert Thresholds:</strong> Configure offline device percentage thresholds for building alerts:
+                <ul>
+                    <li><strong>Lower Threshold:</strong> Buildings with offline percentage below this value are considered <span class="badge bg-success">Normal</span> (default: 10%)</li>
+                    <li><strong>Upper Threshold:</strong> Buildings with offline percentage above this value are considered <span class="badge bg-danger">Critical</span> (default: 25%)</li>
+                    <li>Buildings with offline percentage between the two thresholds are <span class="badge bg-warning text-dark">Warning</span></li>
+                    <li>Use the "Reset to Default" button to restore thresholds to 10% (lower) and 25% (upper)</li>
+                </ul>
+            </li>
             <li><strong>Alert Display Settings:</strong> Choose to sort alerts <em>By Severity</em> (Critical first) or <em>Alphabetically</em> (by building name).</li>
             <li><strong>Save Changes:</strong> All changes are saved automatically or require confirmation depending on the setting type.</li>
         </ul>
