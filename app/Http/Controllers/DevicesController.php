@@ -244,14 +244,68 @@ class DevicesController extends Controller
 
         // Create a mock building object
         $building = (object) [
-            'building_id' => 0,
+            'building_id' => null,
             'name' => 'Need Connection'
         ];
 
-        return view('pages.devices_by_building', [
+        return view('pages.unmapped_networks', [
             'building'    => $building,
             'networks'    => $networks->pluck('subnet'),
             'devicesByNetwork' => $devicesByNetwork,
+        ]);
+    }
+
+    /**
+     * Display devices in an unmapped network.
+     *
+     * @param  string $network
+     * @return \Illuminate\Contracts\View\View
+     */
+    public function unmappedNetwork($network)
+    {
+        // Decode network parameter
+        $network = urldecode($network);
+
+        // Get the network record
+        $networkRecord = DB::table('networks as n')
+            ->where('n.subnet', $network)
+            ->whereNotExists(function($query) {
+                $query->select(DB::raw(1))
+                      ->from('building_networks as bn')
+                      ->whereRaw('bn.network_id = n.network_id');
+            })
+            ->first();
+
+        abort_if(!$networkRecord, 404, 'Network not found or already assigned to a building');
+
+        // Get devices for this network
+        $devices = DB::table('devices as d')
+            ->where('d.network_id', $networkRecord->network_id)
+            ->orderBy('d.ip_address')
+            ->select('d.device_id', 'd.ip_address', 'd.mac_address', 'd.status', 'd.is_critical', 'd.network_id')
+            ->get();
+
+        // Get extensions for these devices
+        $extByDevice = $devices->isEmpty()
+            ? collect()
+            : DB::table('device_extensions as de')
+                ->join('extensions as e', 'e.extension_id', '=', 'de.extension_id')
+                ->whereIn('de.device_id', $devices->pluck('device_id'))
+                ->select('de.device_id', 'e.extension_number', 'e.user_first_name', 'e.user_last_name')
+                ->get()
+                ->groupBy('device_id');
+
+        // Create a mock building object
+        $building = (object) [
+            'building_id' => null,
+            'name' => 'Need Connection'
+        ];
+
+        return view('pages.unmapped_network_devices', [
+            'building'    => $building,
+            'network'     => $network,
+            'devices'     => $devices,
+            'extByDevice' => $extByDevice,
         ]);
     }
 }
