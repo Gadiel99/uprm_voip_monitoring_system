@@ -84,6 +84,14 @@
             </div>
         </div>
 
+        {{-- Search bar for filtering buildings --}}
+        <div class="mb-3 d-flex gap-2">
+            <input type="text" id="buildingSearch" class="form-control form-control-sm" placeholder="Search buildings by name..." style="max-width: 400px;">
+            <button type="button" class="btn btn-outline-secondary btn-sm px-2" onclick="document.getElementById('buildingSearch').value=''; filterBuildings();">
+                <i class="bi bi-x-lg"></i>
+            </button>
+        </div>
+
         <table class="table table-bordered table-hover align-middle mb-0">
             <thead class="table-light">
                 <tr>
@@ -95,10 +103,10 @@
                     <th>Alert Level</th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody id="buildingsTableBody">
                 @forelse($buildings as $building)
-                    <tr class="clickable-row" onclick="window.location.href='{{ route('alerts.offlineDevices', $building->building_id) }}'">
-                        <td>
+                    <tr class="clickable-row building-row" data-building-name="{{ strtolower($building->name) }}" onclick="window.location.href='{{ route('alerts.offlineDevices', $building->building_id) }}'">
+                        <td class="building-name">
                             <i class="bi bi-building me-2 text-{{ $building->alert_level === 'red' ? 'danger' : ($building->alert_level === 'yellow' ? 'warning' : 'success') }}"></i>
                             {{ $building->name }}
                         </td>
@@ -119,10 +127,13 @@
                         </td>
                     </tr>
                 @empty
-                    <tr>
+                    <tr class="empty-buildings-row">
                         <td colspan="6" class="text-center text-muted">No buildings found.</td>
                     </tr>
                 @endforelse
+                <tr class="no-results-row" style="display: none;">
+                    <td colspan="6" class="text-center text-muted">No buildings found matching your search.</td>
+                </tr>
             </tbody>
         </table>
         
@@ -147,7 +158,38 @@ document.addEventListener('DOMContentLoaded', function() {
         @endforeach
     };
     localStorage.setItem('buildingStatuses', JSON.stringify(buildingStatuses));
+
+    // Attach search event listener
+    const searchInput = document.getElementById('buildingSearch');
+    if (searchInput) {
+        searchInput.addEventListener('input', filterBuildings);
+    }
 });
+
+// Filter buildings based on search input
+function filterBuildings() {
+    const searchInput = document.getElementById('buildingSearch').value.toLowerCase().trim();
+    const rows = document.querySelectorAll('.building-row');
+    const noResultsRow = document.querySelector('.no-results-row');
+    const emptyRow = document.querySelector('.empty-buildings-row');
+    let visibleCount = 0;
+
+    rows.forEach(row => {
+        const buildingName = row.getAttribute('data-building-name');
+        
+        if (buildingName.includes(searchInput)) {
+            row.style.display = '';
+            visibleCount++;
+        } else {
+            row.style.display = 'none';
+        }
+    });
+
+    // Show/hide no results message
+    if (noResultsRow) {
+        noResultsRow.style.display = visibleCount === 0 && searchInput !== '' && rows.length > 0 ? '' : 'none';
+    }
+}
 </script>
 
 @endsection
