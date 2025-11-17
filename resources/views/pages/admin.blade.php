@@ -136,19 +136,19 @@
                     <div class="col-md-3">
                         <div class="border rounded p-2 text-center">
                             <div class="text-muted" style="font-size: 0.75rem;">Total Backups</div>
-                            <div class="h5 mb-0 text-primary">{{ $backupStats['total_backups'] }}</div>
+                            <div class="h5 mb-0 text-primary">{{ $backupStats['total_backups'] ?? 'N/A' }}</div>
                         </div>
                     </div>
                     <div class="col-md-3">
                         <div class="border rounded p-2 text-center">
                             <div class="text-muted" style="font-size: 0.75rem;">Total Size</div>
-                            <div class="h5 mb-0 text-success">{{ $backupStats['total_size_formatted'] }}</div>
+                            <div class="h5 mb-0 text-success">{{ $backupStats['total_size_formatted'] ?? 'N/A' }}</div>
                         </div>
                     </div>
                     <div class="col-md-3">
                         <div class="border rounded p-2 text-center">
                             <div class="text-muted" style="font-size: 0.75rem;">Retention</div>
-                            <div class="h5 mb-0 text-info">{{ $backupStats['retention_weeks'] }} weeks</div>
+                            <div class="h5 mb-0 text-info">{{ ($backupStats['retention_weeks'] ?? 'N/A') }} {{ isset($backupStats['retention_weeks']) ? 'weeks' : '' }}</div>
                         </div>
                     </div>
                     <div class="col-md-3">

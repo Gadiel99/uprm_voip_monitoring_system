@@ -3,10 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Models\AlertSettings;
+use App\Models\Devices;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rules\Password;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\DB;
 use App\Helpers\SystemLogger;
+use App\Services\BackupService;
 
 /**
  * Controlador de Administración de Usuarios.
@@ -29,9 +33,10 @@ class AdminUserController extends Controller
     /**
      * Muestra la lista de usuarios y badges de conteos.
      *
+     * @param  BackupService  $backupService
      * @return \Illuminate\Contracts\View\View
      */
-    public function index()
+    public function index(BackupService $backupService)
     {
         $users = \App\Models\User::orderByRaw("
                 CASE LOWER(REPLACE(role, '_',''))
@@ -46,6 +51,49 @@ class AdminUserController extends Controller
         
         // Get system logs from session
         $systemLogs = session()->get('system_logs', []);
+        
+        // Get alert settings for Settings tab
+        $alertSettings = AlertSettings::current();
+        
+        // Get critical devices for Settings tab
+        $criticalDevices = Devices::where('is_critical', true)
+            ->select('device_id', 'ip_address', 'mac_address', 'status', 'owner')
+            ->orderBy('ip_address')
+            ->get();
+        
+        // Get extensions for critical devices to show owner names
+        $criticalDeviceIds = $criticalDevices->pluck('device_id');
+        $extensionsByCriticalDevice = $criticalDeviceIds->isEmpty()
+            ? collect()
+            : DB::table('device_extensions as de')
+                ->join('extensions as e', 'e.extension_id', '=', 'de.extension_id')
+                ->whereIn('de.device_id', $criticalDeviceIds)
+                ->select('de.device_id', 'e.extension_number', 'e.user_first_name', 'e.user_last_name')
+                ->get()
+                ->groupBy('device_id');
+        
+        // Get available devices (not already critical) for dropdown
+        $availableDevices = Devices::where('is_critical', false)
+            ->select('device_id', 'ip_address', 'mac_address', 'owner')
+            ->orderBy('ip_address')
+            ->get();
+        
+        // Get backup info
+        $latestBackup = $backupService->getLatestBackup();
+        $backupStats = null;
+        try {
+            $backupStats = $backupService->getBackupStats();
+        } catch (\Throwable $e) {
+            \Log::warning('Could not get backup stats: '.$e->getMessage());
+        }
+        $allBackups = $backupService->getAllBackups();
+        
+        // Exclude the latest backup from the list (since it's shown separately)
+        if ($latestBackup && !empty($allBackups)) {
+            $allBackups = array_filter($allBackups, function($backup) use ($latestBackup) {
+                return $backup['filename'] !== $latestBackup['filename'];
+            });
+        }
 
         return view('pages.admin', [
             'activeTab' => 'users',
@@ -53,6 +101,13 @@ class AdminUserController extends Controller
             'users' => $users,
             'adminsCount' => $adminsCount,
             'systemLogs' => $systemLogs,
+            'alertSettings' => $alertSettings,
+            'criticalDevices' => $criticalDevices,
+            'extensionsByCriticalDevice' => $extensionsByCriticalDevice,
+            'availableDevices' => $availableDevices,
+            'latestBackup' => $latestBackup,
+            'backupStats' => $backupStats,
+            'allBackups' => $allBackups,
         ]);
     }
 

@@ -46,7 +46,7 @@ class AdminController extends Controller
         $recentUsers = $this->safeLatest(User::class, 8);
 
         // Buildings with network/device summaries (best-effort)
-        $buildings = $this->safeAll(Building::class, ['building_id','name','code','created_at']);
+        $buildings = $this->safeAll(Building::class, ['building_id','name','created_at']);
 
         // Try to read last ~100 lines of the laravel.log for the "Logs" tab
         $logLines = $this->tailLaravelLog(100);
@@ -81,7 +81,12 @@ class AdminController extends Controller
         
         // Get backup info
         $latestBackup = $backupService->getLatestBackup();
-        $backupStats = $backupService->getBackupStats();
+        $backupStats = null;
+        try {
+            $backupStats = $backupService->getBackupStats();
+        } catch (\Throwable $e) {
+            Log::warning('Could not get backup stats: '.$e->getMessage());
+        }
         $allBackups = $backupService->getAllBackups();
         
         // Exclude the latest backup from the list (since it's shown separately)
