@@ -39,7 +39,7 @@
  *   - Bootstrap grid system compatible
  * 
  * Branding:
- *   - Title: "UPRM Monitoring System"
+ *   - Title: "UPRM VoIP Monitoring System"
  *   - Color scheme: UPRM green (#0f5132, #d1e7dd)
  *   - Logo integration ready
  * 
@@ -70,7 +70,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>UPRM Monitoring System</title>
+    <title>UPRM VoIP Monitoring System</title>
 
     {{-- Bootstrap 5 CSS --}}
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -125,7 +125,7 @@
             {{-- Brand logo and text --}}
             <a class="navbar-brand d-flex align-items-center" href="#">
                 <img src="{{ asset('images/uprm_logo.png') }}" alt="UPRM Logo">
-                <span class="fw-semibold">UPRM Monitoring System</span>
+                <span class="fw-semibold">UPRM VoIP Monitoring System</span>
             </a>
 
             {{-- Right side navbar icons and profile --}}
