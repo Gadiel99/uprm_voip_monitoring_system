@@ -120,6 +120,11 @@ Route::middleware(['auth','admin'])->group(function () {
     // Notification preferences
     Route::post('/admin/notification-preferences', [AdminController::class, 'updateNotificationPreferences'])->name('admin.notification-preferences.update');
     
+    // Backup management
+    Route::post('/admin/backup/create', [AdminController::class, 'createBackup'])->name('admin.backup.create');
+    Route::get('/admin/backup/download', [AdminController::class, 'downloadLatestBackup'])->name('admin.backup.download');
+    Route::post('/admin/backup/restore', [AdminController::class, 'restoreBackup'])->name('admin.backup.restore');
+    
     // Device Activity API
     Route::get('/api/device-activity/{deviceId}', [DeviceActivityController::class, 'getActivity'])->name('api.device-activity');
     Route::get('/api/device-activity/{deviceId}/both', [DeviceActivityController::class, 'getBothDays'])->name('api.device-activity.both');
