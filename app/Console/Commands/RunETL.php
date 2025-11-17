@@ -129,11 +129,17 @@ class RunETL extends Command
             $this->line('✨ Data from imported files has been successfully processed into MariaDB');
             $this->newLine();
 
-            // After ETL completes, run consolidated notification using real data
-            $this->info('📧 Running notifications:test (consolidated email with real data)...');
-            $exit = Artisan::call('notifications:test');
-            $this->line(rtrim(Artisan::output()));
-            $this->info($exit === 0 ? '✓ Notifications:test completed' : '⚠ Notifications:test exited with non-zero code');
+            // After ETL completes, check and send notifications if enabled
+            $alertSettings = \App\Models\AlertSettings::current();
+            
+            if ($alertSettings->is_active && $alertSettings->email_notifications_enabled) {
+                $this->info('📧 Checking for critical alerts...');
+                $exit = Artisan::call('notifications:check');
+                $this->line(rtrim(Artisan::output()));
+                $this->info($exit === 0 ? '✓ Notification check completed' : '⚠ Notification check exited with non-zero code');
+            } else {
+                $this->line('⏸️  Email notifications are disabled — skipping notification check');
+            }
             $this->newLine();
 
             return self::SUCCESS;
