@@ -45,6 +45,19 @@ Schedule::command('activity:rotate')
        Log::info('Activity data rotation completed successfully');
     });
 
+// Create database backup every Sunday at 3:00 AM
+Schedule::command('backup:database')
+    ->weekly()
+    ->sundays()
+    ->at('03:00')
+    ->withoutOverlapping()
+    ->onFailure(function () {
+       Log::error('Weekly database backup failed');
+    })
+    ->onSuccess(function () {
+       Log::info('Weekly database backup completed successfully');
+    });
+
 Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
