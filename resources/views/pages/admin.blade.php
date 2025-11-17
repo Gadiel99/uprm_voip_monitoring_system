@@ -167,6 +167,13 @@
                     </button>
                 </div>
 
+                @if(session('alert_settings_status'))
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        {{ session('alert_settings_status') }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                @endif
+
                 <table class="table table-bordered table-hover align-middle" id="criticalTable">
                     <thead class="table-light">
                         <tr>
@@ -234,13 +241,6 @@
                 {{-- Alert Thresholds Configuration --}}
                 <h6 class="fw-semibold">Alert Thresholds</h6>
                 <p class="text-muted small mb-3">Configure offline device percentage thresholds for building alerts.</p>
-                
-                @if(session('alert_settings_status'))
-                    <div class="alert alert-success alert-dismissible fade show" role="alert">
-                        {{ session('alert_settings_status') }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
-                @endif
 
                 <form method="POST" action="{{ route('admin.alert-settings.update') }}">
                     @csrf
