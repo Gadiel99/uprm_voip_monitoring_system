@@ -376,9 +376,13 @@ step_8_setup_application() {
     sed -i "s/^DB_USERNAME=.*/DB_USERNAME=${DB_USER}/" .env
     sed -i "s/^DB_PASSWORD=.*/DB_PASSWORD=${DB_PASSWORD}/" .env
     
+    # Set ownership before installing dependencies
+    print_info "Setting directory ownership to $WEB_USER..."
+    chown -R $WEB_USER:$WEB_USER "$APP_DIR"
+    
     # Install PHP dependencies
     print_info "Installing PHP dependencies (this may take a few minutes)..."
-    sudo -u $WEB_USER composer install --no-interaction --prefer-dist --optimize-autoloader --quiet
+    sudo -u $WEB_USER composer install --no-interaction --prefer-dist --optimize-autoloader
     
     # Generate application key
     if grep -q "APP_KEY=$" .env || grep -q "APP_KEY=base64:" .env | grep -q "base64:$"; then
