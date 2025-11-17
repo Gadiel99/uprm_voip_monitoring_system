@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Services\NotificationService;
 use Illuminate\Console\Command;
+use App\Models\AlertSettings;
 
 class CheckAndNotify extends Command
 {
@@ -26,6 +27,16 @@ class CheckAndNotify extends Command
      */
     public function handle(NotificationService $notificationService): int
     {
+        try {
+            $settings = AlertSettings::current();
+            if (!($settings->is_active ?? true) || !($settings->email_notifications_enabled ?? true)) {
+                $this->info('Email notifications disabled — skipping.');
+                return Command::SUCCESS;
+            }
+        } catch (\Throwable $e) {
+            $this->warn('Could not read AlertSettings; proceeding with default behavior.');
+        }
+
         $this->info('Checking for critical conditions...');
         $notificationService->checkAndNotify();
         $this->info('Notification check completed.');
