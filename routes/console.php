@@ -9,15 +9,17 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schedule;
 use App\Models\AlertSettings;
 
-Schedule::command('etl:run --since="5 minutes ago"')
-    ->everyFiveMinutes()
-    ->withoutOverlapping()
-    ->onFailure(function () {
-       Log::error('ETL command failed');
-    })
-    ->onSuccess(function () {
-       Log::info('ETL command completed successfully');
-    });
+// ETL is now handled exclusively by auto-import-voip-cron.sh to prevent duplicate runs
+// The cron script runs every 5 minutes and handles: download → extract → ETL → notifications
+// Schedule::command('etl:run --since="5 minutes ago"')
+//     ->everyFiveMinutes()
+//     ->withoutOverlapping()
+//     ->onFailure(function () {
+//        Log::error('ETL command failed');
+//     })
+//     ->onSuccess(function () {
+//        Log::info('ETL command completed successfully');
+//     });
 
 // NOTE: Notification check is now handled by auto-import-voip-cron.sh
 // which runs after ETL completes to ensure fresh data is checked

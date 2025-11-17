@@ -16,7 +16,8 @@ class RunETL extends Command
      * @var string $signature The command signature string
      */
     protected $signature = 'etl:run 
-                            {--import= : Path to extracted import directory (required)}';
+                            {--import= : Path to extracted import directory}
+                            {--since= : Time window to look for imports (e.g., "5 minutes ago")}';
     
     /**
      * @brief Brief description of the command functionality
@@ -53,17 +54,56 @@ class RunETL extends Command
     {
         // Get import path
         $importPath = $this->option('import');
+        $since = $this->option('since');
         
         // Display process initiation message
         $this->info('🚀 Starting ETL process...');
         $this->newLine();
         
+        // If --since is provided, find the most recent import within that time window
+        if ($since && !$importPath) {
+            $sinceTimestamp = strtotime($since);
+            if ($sinceTimestamp === false) {
+                $this->error("❌ Invalid --since value: {$since}");
+                return self::FAILURE;
+            }
+            
+            $importsDir = storage_path('app/imports/extracted');
+            if (!is_dir($importsDir)) {
+                $this->warn("⚠️  No imports directory found, skipping ETL.");
+                return self::SUCCESS;
+            }
+            
+            // Find the most recent import directory
+            $imports = glob($importsDir . '/import_*', GLOB_ONLYDIR);
+            if (empty($imports)) {
+                $this->info("ℹ️  No import directories found in the time window, skipping ETL.");
+                return self::SUCCESS;
+            }
+            
+            // Get the newest import that's within the time window
+            usort($imports, fn($a, $b) => filemtime($b) <=> filemtime($a));
+            foreach ($imports as $dir) {
+                if (filemtime($dir) >= $sinceTimestamp) {
+                    $importPath = $dir;
+                    $this->info("📂 Found recent import: " . basename($dir));
+                    break;
+                }
+            }
+            
+            if (!$importPath) {
+                $this->info("ℹ️  No imports modified since {$since}, skipping ETL.");
+                return self::SUCCESS;
+            }
+        }
+        
         // Validate import path is provided
         if (!$importPath) {
-            $this->error("❌ The --import option is required");
+            $this->error("❌ Either --import or --since option is required");
             $this->newLine();
             $this->comment('💡 Usage:');
             $this->line('   php artisan etl:run --import=/path/to/extracted/import');
+            $this->line('   php artisan etl:run --since="5 minutes ago"');
             $this->newLine();
             $this->comment('💡 First, extract the archive using:');
             $this->line('   php artisan data:import /path/to/archive.tar.gz');
