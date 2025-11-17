@@ -27,6 +27,13 @@
         <img src="{{ asset('images/logo-uprm.png') }}" alt="UPRM Logo" width="80" class="mb-3">
         <h5 class="fw-semibold mb-4">UPRM VoIP Monitoring System</h5>
 
+        {{-- Success Message --}}
+        @if (session('status'))
+            <div class="alert alert-success text-start">
+                <i class="bi bi-check-circle me-2"></i>{{ session('status') }}
+            </div>
+        @endif
+
         {{-- Errores --}}
         @if ($errors->any())
             <div class="alert alert-danger text-start">
@@ -51,13 +58,18 @@
             </div>
 
             {{-- Password --}}
-            <div class="mb-4 text-start">
+            <div class="mb-3 text-start">
                 <label for="password" class="form-label fw-semibold">Password</label>
                 <div class="input-group">
                     <span class="input-group-text bg-light"><i class="bi bi-lock"></i></span>
                     <input id="password" type="password" name="password" class="form-control"
                            placeholder="Enter your password" required>
                 </div>
+            </div>
+
+            {{-- Forgot Password Link --}}
+            <div class="mb-4 text-end">
+                <a href="{{ route('password.request') }}" class="text-decoration-none small">Forgot your password?</a>
             </div>
 
             {{-- Login button --}}
@@ -68,5 +80,20 @@
         <p class="small text-muted mb-0">© {{ date('Y') }} UPRM VoIP Monitoring System</p>
     </div>
 </div>
+
+<script>
+    // Show password as text on focus, hide on blur
+    document.addEventListener('DOMContentLoaded', function() {
+        const passwordInput = document.getElementById('password');
+        if (passwordInput) {
+            passwordInput.addEventListener('focus', function() {
+                this.type = 'text';
+            });
+            passwordInput.addEventListener('blur', function() {
+                this.type = 'password';
+            });
+        }
+    });
+</script>
 </body>
 </html>
