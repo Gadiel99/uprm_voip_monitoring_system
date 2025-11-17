@@ -36,14 +36,21 @@ class NotificationService
     }
 
     /**
-     * Return a unique list of recipient email addresses.
-     * Pulls all users listed in the admin panel (users table).
-     * Falls back to MAIL_ADMIN_ADDRESS if no users are found.
+     * Return a list of recipient email addresses.
+     * Priority:
+     * 1) If MAIL_ALERTS_TO is set, use that single distribution address (recommended)
+     * 2) Otherwise, send to all users with valid emails
+     * 3) Fallback to MAIL_ADMIN_ADDRESS if none
      *
      * @return array<string>
      */
     public function getRecipients(): array
     {
+        $dist = env('MAIL_ALERTS_TO');
+        if ($dist && filter_var($dist, FILTER_VALIDATE_EMAIL)) {
+            return [$dist];
+        }
+
         $emails = User::query()
             ->whereNotNull('email')
             ->pluck('email')
@@ -74,7 +81,8 @@ class NotificationService
     {
         $alertSettings = AlertSettings::current();
         
-        if (!$alertSettings->is_active) {
+        // Don't send notifications if alerts are inactive or email notifications are disabled
+        if (!$alertSettings->is_active || !$alertSettings->email_notifications_enabled) {
             return;
         }
 
@@ -183,18 +191,8 @@ class NotificationService
         try {
             $recipients = $this->getRecipients();
 
-            Mail::send('emails.critical-alert', [
-                'criticalBuildings' => $criticalBuildings,
-                'offlineDevices' => $offlineDevices,
-                'alertSettings' => $alertSettings,
-            ], function ($message) use ($recipients, $criticalBuildings, $offlineDevices) {
-                // Send to everyone listed in the admin panel (users table)
-                if (count($recipients) > 1) {
-                    $message->to($recipients[0])->bcc(array_slice($recipients, 1));
-                } elseif (count($recipients) === 1) {
-                    $message->to($recipients[0]);
-                }
-                
+            if (count($recipients) > 0) {
+                // Build subject line
                 $subject = "CRITICAL ALERT: ";
                 $parts = [];
                 if ($criticalBuildings->isNotEmpty()) {
@@ -203,8 +201,18 @@ class NotificationService
                 if ($offlineDevices->isNotEmpty()) {
                     $parts[] = $offlineDevices->count() . " Critical Device(s) Offline";
                 }
-                $message->subject($subject . implode(', ', $parts));
-            });
+                $subject .= implode(', ', $parts);
+
+                // Send ONE email with all recipients in a single transaction
+                Log::info('Sending consolidated alert to all recipients', ['recipients' => $recipients]);
+                Mail::send('emails.critical-alert', [
+                    'criticalBuildings' => $criticalBuildings,
+                    'offlineDevices' => $offlineDevices,
+                    'alertSettings' => $alertSettings,
+                ], function ($message) use ($recipients, $subject) {
+                    $message->to($recipients)->subject($subject);
+                });
+            }
 
             // Mark all buildings as notified
             foreach ($criticalBuildings as $building) {
@@ -228,6 +236,43 @@ class NotificationService
         }
     }
 
+    /**
+     * Reset all cached notification states for buildings and devices.
+     * Returns summary counts of cleared states.
+     *
+     * @return array{buildings:int,devices:int}
+     */
+    public function resetAllStates(): array
+    {
+        $buildingIds = Building::query()->pluck('building_id');
+        $deviceIds   = Devices::query()->pluck('device_id');
+
+        $clearedBuildings = 0;
+        foreach ($buildingIds as $bid) {
+            if (Cache::forget("state_building_{$bid}")) {
+                $clearedBuildings++;
+            }
+            Cache::forget("notification_building_{$bid}");
+        }
+
+        $clearedDevices = 0;
+        foreach ($deviceIds as $did) {
+            if (Cache::forget("state_device_{$did}")) {
+                $clearedDevices++;
+            }
+            Cache::forget("notification_device_{$did}");
+        }
+
+        Log::info('Notification states reset', [
+            'buildings_cleared' => $clearedBuildings,
+            'devices_cleared' => $clearedDevices,
+        ]);
+
+        return [
+            'buildings' => $clearedBuildings,
+            'devices' => $clearedDevices,
+        ];
+    }
     /**
      * Clear notification cache for a specific building.
      * Useful when a building recovers from critical state.

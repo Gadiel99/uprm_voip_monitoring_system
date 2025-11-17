@@ -354,5 +354,39 @@ class AdminController extends Controller
 
         return response()->json($devices);
     }
+
+    /**
+     * Update notification preferences (system-wide for all admins).
+     *
+     * @param  Request  $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function updateNotificationPreferences(Request $request)
+    {
+        $user = $request->user();
+        
+        if (!$user) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+
+        $validated = $request->validate([
+            'email_notifications_enabled' => 'sometimes|boolean',
+            'push_notifications_enabled' => 'sometimes|boolean',
+        ]);
+
+        $settings = AlertSettings::current();
+        $settings->update($validated);
+
+        $this->addSystemLog('INFO', "System-wide notification preferences updated by {$user->name}");
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Notification preferences updated successfully (system-wide)',
+            'preferences' => [
+                'email_notifications_enabled' => $settings->email_notifications_enabled,
+                'push_notifications_enabled' => $settings->push_notifications_enabled,
+            ]
+        ]);
+    }
 }
 

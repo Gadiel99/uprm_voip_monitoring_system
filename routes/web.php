@@ -115,6 +115,9 @@ Route::middleware(['auth','admin'])->group(function () {
     
     // API: Get critical devices status (for notifications)
     Route::get('/api/critical-devices/status', [AdminController::class, 'getCriticalDevicesStatus'])->name('api.critical-devices.status');
+    
+    // Notification preferences
+    Route::post('/admin/notification-preferences', [AdminController::class, 'updateNotificationPreferences'])->name('admin.notification-preferences.update');
 });
 
 /*

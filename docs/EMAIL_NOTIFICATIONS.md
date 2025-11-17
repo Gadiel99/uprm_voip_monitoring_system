@@ -26,8 +26,9 @@ NOTIFICATIONS_AUTO_RESET=true
 ```
 
 **Important**: 
-- Recipients are pulled from the **users table** (admin panel). All users receive notifications.
-- `MAIL_ADMIN_ADDRESS` is only used as a fallback if no users exist.
+- Recipients are pulled from the **users table** (admin panel). Only users with **email notifications enabled** receive alerts.
+- Users can toggle their email notification preferences in the Admin Settings panel.
+- `MAIL_ADMIN_ADDRESS` is only used as a fallback if no users with notifications enabled exist.
 - Set `NOTIFICATIONS_AUTO_RESET=false` to manually control when notification states reset.
 
 ### 2. Postfix MTA
@@ -228,12 +229,29 @@ $notificationService->clearDeviceNotification($deviceId);
 3. **Sensitive Data**: Email templates do not include passwords or sensitive credentials
 4. **Access Control**: Only administrators should receive critical notifications
 
+## System-Wide Notification Settings
+
+Administrators can control notification settings for the entire system through the Admin panel:
+
+1. Navigate to **Admin** → **Settings** tab
+2. Find the **Notification Settings (System-wide)** section
+3. Toggle preferences:
+   - **Email Notifications**: Enable/disable email alerts for critical conditions (applies to all users)
+   - **Push Notifications**: Browser notifications (coming soon)
+
+**Important:**
+- These settings are **system-wide** and shared across all administrators
+- When an admin toggles email notifications OFF, no users will receive email alerts
+- When toggled back ON, all users in the system will receive notifications again
+- Changes are saved automatically and apply immediately
+- System logs record all preference updates with the admin's name
+
 ## Future Enhancements
 
 Potential improvements:
-- Multiple recipient support (distribution lists)
-- Notification priority levels
+- Browser push notifications (UI already in place)
 - SMS/Slack integration
 - Notification history in database
-- Web UI for notification preferences
 - Custom notification templates per building
+- Notification priority levels
+- Per-building or per-device notification preferences

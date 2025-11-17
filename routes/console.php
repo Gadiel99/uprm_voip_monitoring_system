@@ -18,9 +18,9 @@ Schedule::command('etl:run --since="5 minutes ago"')
        Log::info('ETL command completed successfully');
     });
 
-// Check and send notifications for critical conditions every 10 minutes
+// Check and send notifications for critical conditions every 5 minutes
 Schedule::command('notifications:check')
-    ->everyTenMinutes()
+    ->everyFiveMinutes()
     ->withoutOverlapping()
     ->onFailure(function () {
        Log::error('Notification check command failed');

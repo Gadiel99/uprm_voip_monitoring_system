@@ -21,12 +21,16 @@ class AlertSettings extends Model
         'lower_threshold',
         'upper_threshold',
         'is_active',
+        'email_notifications_enabled',
+        'push_notifications_enabled',
     ];
 
     protected $casts = [
         'is_active' => 'boolean',
         'lower_threshold' => 'integer',
         'upper_threshold' => 'integer',
+        'email_notifications_enabled' => 'boolean',
+        'push_notifications_enabled' => 'boolean',
     ];
 
     /**
@@ -42,6 +46,8 @@ class AlertSettings extends Model
                 'lower_threshold' => 30,
                 'upper_threshold' => 70,
                 'is_active' => true,
+                'email_notifications_enabled' => true,
+                'push_notifications_enabled' => false,
             ]);
         }
         

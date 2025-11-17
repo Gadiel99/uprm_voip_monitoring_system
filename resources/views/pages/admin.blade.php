@@ -281,17 +281,17 @@
 
                 <hr class="my-4">
 
-                {{-- Notification Settings (also inside Settings tab) --}}
-                <h6 class="fw-semibold mb-3">Notification Settings</h6>
+                {{-- Notification Settings (System-wide for all admins) --}}
+                <h6 class="fw-semibold mb-3">Notification Settings <small class="text-muted">(System-wide)</small></h6>
                 <div class="form-check form-switch mb-2">
-                    <input class="form-check-input" type="checkbox" id="emailNotifications" checked>
+                    <input class="form-check-input" type="checkbox" id="emailNotifications" {{ $alertSettings->email_notifications_enabled ? 'checked' : '' }}>
                     <label class="form-check-label fw-semibold" for="emailNotifications">Email Notifications</label>
-                    <p class="text-muted small ms-4 mb-0">Receive alerts via email</p>
+                    <p class="text-muted small ms-4 mb-0">Enable email alerts for all users (system-wide setting)</p>
                 </div>
                 <div class="form-check form-switch">
-                    <input class="form-check-input" type="checkbox" id="pushNotifications">
+                    <input class="form-check-input" type="checkbox" id="pushNotifications" {{ $alertSettings->push_notifications_enabled ? 'checked' : '' }}>
                     <label class="form-check-label fw-semibold" for="pushNotifications">Push Notifications</label>
-                    <p class="text-muted small ms-4 mb-0">Browser push notifications</p>
+                    <p class="text-muted small ms-4 mb-0">Browser push notifications (coming soon)</p>
                 </div>
             </div>
         </div>
@@ -669,6 +669,72 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         passwordField.addEventListener('blur', function() {
             this.type = 'password';
+        });
+    }
+    
+    // ===== Notification Preferences (System-wide) =====
+    const emailNotificationsToggle = document.getElementById('emailNotifications');
+    const pushNotificationsToggle = document.getElementById('pushNotifications');
+    
+    if (emailNotificationsToggle) {
+        emailNotificationsToggle.addEventListener('change', async function() {
+            const isEnabled = this.checked;
+            try {
+                const response = await fetch('{{ route('admin.notification-preferences.update') }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({
+                        email_notifications_enabled: isEnabled
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    addLog('INFO', `System-wide email notifications ${isEnabled ? 'enabled' : 'disabled'}`);
+                } else {
+                    throw new Error(data.message || 'Failed to update preferences');
+                }
+            } catch (error) {
+                console.error('Error updating email notifications:', error);
+                // Revert toggle on error
+                this.checked = !isEnabled;
+                alert('Failed to update email notification preferences. Please try again.');
+            }
+        });
+    }
+    
+    if (pushNotificationsToggle) {
+        pushNotificationsToggle.addEventListener('change', async function() {
+            const isEnabled = this.checked;
+            try {
+                const response = await fetch('{{ route('admin.notification-preferences.update') }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({
+                        push_notifications_enabled: isEnabled
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    addLog('INFO', `System-wide push notifications ${isEnabled ? 'enabled' : 'disabled'}`);
+                } else {
+                    throw new Error(data.message || 'Failed to update preferences');
+                }
+            } catch (error) {
+                console.error('Error updating push notifications:', error);
+                // Revert toggle on error
+                this.checked = !isEnabled;
+                alert('Failed to update push notification preferences. Please try again.');
+            }
         });
     }
     
