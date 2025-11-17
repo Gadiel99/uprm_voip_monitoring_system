@@ -582,13 +582,18 @@ class ETLService
                 }
                 
                 // Check if device exists
-                $deviceExists = Devices::where('mac_address', $formattedMac)->exists();
+                $existingDevice = Devices::where('mac_address', $formattedMac)->first();
+                $deviceExists = $existingDevice !== null;
                 
                 // Create or update device - build the data array
                 $deviceData = [
                     'status' => $status,
-                    'is_critical' => false,
                 ];
+                
+                // Preserve is_critical flag if device exists, otherwise set to false for new devices
+                if (!$deviceExists) {
+                    $deviceData['is_critical'] = false;
+                }
                 
                 // Only set IP and network if available
                 if ($ipAddress) {

@@ -206,14 +206,16 @@
                         <div class="stat-value">{{ $device->network->buildings->pluck('name')->implode(', ') }}</div>
                     </div>
                     @endif
+                    @if($device->network)
                     <div class="stat-row">
                         <div class="stat-label">Network</div>
-                        <div class="stat-value">{{ $device->network->name ?? 'Unknown' }}</div>
+                        <div class="stat-value">{{ $device->network->subnet }}</div>
                     </div>
+                    @endif
                     @if($device->extensions && $device->extensions->count() > 0)
                     <div class="stat-row">
                         <div class="stat-label">Extensions</div>
-                        <div class="stat-value">{{ $device->extensions->pluck('extension')->implode(', ') }}</div>
+                        <div class="stat-value">{{ $device->extensions->pluck('extension_number')->implode(', ') }}</div>
                     </div>
                     @endif
                 </div>

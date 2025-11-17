@@ -92,21 +92,10 @@ class NotificationService
 
         foreach ($buildingsData as $building) {
             $level = $alertSettings->getAlertLevel((float) $building->offline_percentage);
-            $stateKey = "state_building_{$building->building_id}";
             
-            // Track new critical buildings
-            if ($level === 'red' && !Cache::has($stateKey)) {
+            // Always include critical buildings (no state tracking)
+            if ($level === 'red') {
                 $criticalBuildings->push($building);
-            }
-            
-            // Auto-reset: clear state when building exits critical state
-            if ($this->autoReset && $level !== 'red' && Cache::has($stateKey)) {
-                Cache::forget($stateKey);
-                Log::info("Building state reset (auto)", [
-                    'building_id' => $building->building_id,
-                    'building_name' => $building->name,
-                    'level' => $level,
-                ]);
             }
         }
 
@@ -114,37 +103,19 @@ class NotificationService
         $offlineDevices = Devices::where('is_critical', true)
             ->where('status', 'offline')
             ->with(['network.buildings', 'extensions'])
-            ->get();
-
-        $newOfflineDevices = collect();
-        foreach ($offlineDevices as $device) {
-            $stateKey = "state_device_{$device->device_id}";
-            if (!Cache::has($stateKey)) {
-                $newOfflineDevices->push($device);
-            }
-        }
-
-        // Auto-reset online critical devices
-        if ($this->autoReset) {
-            $onlineCritical = Devices::where('is_critical', true)
-                ->where('status', 'online')
-                ->get();
-            
-            foreach ($onlineCritical as $device) {
-                $stateKey = "state_device_{$device->device_id}";
-                if (Cache::has($stateKey)) {
-                    Cache::forget($stateKey);
-                    Log::info("Device state reset (auto)", [
-                        'device_id' => $device->device_id,
-                        'ip_address' => $device->ip_address,
-                    ]);
+            ->get()
+            ->map(function($device) {
+                // Populate owner from extensions if not set
+                if (empty($device->owner) && $device->extensions->isNotEmpty()) {
+                    $firstExt = $device->extensions->first();
+                    $device->owner = trim(($firstExt->user_first_name ?? '') . ' ' . ($firstExt->user_last_name ?? ''));
                 }
-            }
-        }
+                return $device;
+            });
 
-        // Send consolidated notification if there are any critical conditions
-        if ($criticalBuildings->isNotEmpty() || $newOfflineDevices->isNotEmpty()) {
-            $this->sendConsolidatedNotification($criticalBuildings, $newOfflineDevices, $alertSettings);
+        // Send consolidated notification every time if there are any critical conditions
+        if ($criticalBuildings->isNotEmpty() || $offlineDevices->isNotEmpty()) {
+            $this->sendConsolidatedNotification($criticalBuildings, $offlineDevices, $alertSettings);
         }
     }
 
@@ -212,23 +183,13 @@ class NotificationService
                 ], function ($message) use ($recipients, $subject) {
                     $message->to($recipients)->subject($subject);
                 });
+                
+                Log::info("Consolidated critical alert sent", [
+                    'critical_buildings_count' => $criticalBuildings->count(),
+                    'offline_devices_count' => $offlineDevices->count(),
+                    'recipients_count' => count($recipients),
+                ]);
             }
-
-            // Mark all buildings as notified
-            foreach ($criticalBuildings as $building) {
-                Cache::put("state_building_{$building->building_id}", 'red', now()->addDays(30));
-            }
-
-            // Mark all devices as notified
-            foreach ($offlineDevices as $device) {
-                Cache::put("state_device_{$device->device_id}", 'offline', now()->addDays(30));
-            }
-
-            Log::info("Consolidated critical alert sent", [
-                'critical_buildings_count' => $criticalBuildings->count(),
-                'offline_devices_count' => $offlineDevices->count(),
-                'recipients_count' => count($recipients),
-            ]);
         } catch (\Exception $e) {
             Log::error("Failed to send consolidated critical alert", [
                 'error' => $e->getMessage(),

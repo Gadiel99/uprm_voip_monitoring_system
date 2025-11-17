@@ -19,26 +19,9 @@ Schedule::command('etl:run --since="5 minutes ago"')
        Log::info('ETL command completed successfully');
     });
 
-// Check and send notifications for critical conditions every 5 minutes
-Schedule::command('notifications:check')
-   ->everyFiveMinutes()
-   ->when(function () {
-      try {
-         $settings = AlertSettings::current();
-         return ($settings->is_active ?? true) && ($settings->email_notifications_enabled ?? true);
-      } catch (\Throwable $e) {
-         // If settings cannot be read, do not block notifications by default
-         Log::warning('Scheduler could not read AlertSettings: '.$e->getMessage());
-         return true;
-      }
-   })
-    ->withoutOverlapping()
-    ->onFailure(function () {
-       Log::error('Notification check command failed');
-    })
-    ->onSuccess(function () {
-       Log::info('Notification check completed successfully');
-    });
+// NOTE: Notification check is now handled by auto-import-voip-cron.sh
+// which runs after ETL completes to ensure fresh data is checked
+// Removed duplicate scheduler entry to prevent double emails
 
 // Clean up old import files daily at 2:00 AM
 Schedule::command('imports:cleanup')

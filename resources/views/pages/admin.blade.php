@@ -199,7 +199,7 @@
                             <td class="mac-cell">{{ $device->mac_address }}</td>
                             <td class="owner-cell">{{ $ownerName ?? 'N/A' }}</td>
                             <td class="status-cell">
-                                @if($device->status === 'Offline')
+                                @if($device->status === 'offline')
                                     <span class="text-danger fw-semibold">Offline</span>
                                 @else
                                     <span class="text-success fw-semibold">Online</span>

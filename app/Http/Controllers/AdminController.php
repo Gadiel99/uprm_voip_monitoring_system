@@ -348,7 +348,7 @@ class AdminController extends Controller
                 'owner' => $extension 
                     ? trim($extension->user_first_name . ' ' . $extension->user_last_name)
                     : 'N/A',
-                'status' => $device->status
+                'status' => ucfirst($device->status) // Capitalize: offline -> Offline, online -> Online
             ];
         });
 
