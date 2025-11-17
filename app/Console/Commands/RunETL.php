@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Services\ETLService;
 use App\Services\NotificationService;
+use App\Services\DeviceActivityService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Artisan;
 
@@ -39,6 +40,7 @@ class RunETL extends Command
      * 
      * @param ETLService $etl The ETL service instance injected by Laravel's container
      * @param NotificationService $notificationService The notification service instance
+     * @param DeviceActivityService $activityService The device activity service instance
      * @return int Command exit code (SUCCESS=0 or FAILURE=1)
      * 
      * @throws \Exception When ETL process encounters unrecoverable errors
@@ -47,7 +49,7 @@ class RunETL extends Command
      * @author UPRM VoIP Monitoring System Team
      * @date November 6, 2025
      */
-    public function handle(ETLService $etl, NotificationService $notificationService): int
+    public function handle(ETLService $etl, NotificationService $notificationService, DeviceActivityService $activityService): int
     {
         // Get import path
         $importPath = $this->option('import');
@@ -127,6 +129,12 @@ class RunETL extends Command
 
             $this->newLine();
             $this->line('✨ Data from imported files has been successfully processed into MariaDB');
+            $this->newLine();
+            
+            // Record device activity for this 5-minute interval
+            $this->info('📊 Recording device activity...');
+            $activityService->recordActivity();
+            $this->line('✓ Device activity recorded');
             $this->newLine();
 
             // After ETL completes, check and send notifications if enabled

@@ -51,6 +51,17 @@ Schedule::command('imports:cleanup')
        Log::info('Import file cleanup completed successfully');
     });
 
+// Rotate device activity data daily at midnight
+Schedule::command('activity:rotate')
+    ->dailyAt('00:01') // Run at 12:01 AM
+    ->withoutOverlapping()
+    ->onFailure(function () {
+       Log::error('Activity data rotation failed');
+    })
+    ->onSuccess(function () {
+       Log::info('Activity data rotation completed successfully');
+    });
+
 Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');

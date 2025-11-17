@@ -10,6 +10,7 @@ use App\Http\Controllers\ReportsController;
 use App\Http\Controllers\AlertsController;
 use App\Http\Controllers\BuildingController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\DeviceActivityController;
 
 /**
  * Controllers overview:
@@ -118,6 +119,10 @@ Route::middleware(['auth','admin'])->group(function () {
     
     // Notification preferences
     Route::post('/admin/notification-preferences', [AdminController::class, 'updateNotificationPreferences'])->name('admin.notification-preferences.update');
+    
+    // Device Activity API
+    Route::get('/api/device-activity/{deviceId}', [DeviceActivityController::class, 'getActivity'])->name('api.device-activity');
+    Route::get('/api/device-activity/{deviceId}/both', [DeviceActivityController::class, 'getBothDays'])->name('api.device-activity.both');
 });
 
 /*

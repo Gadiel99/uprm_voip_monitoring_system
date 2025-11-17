@@ -323,25 +323,30 @@
                             <td>{{ $user->name }}</td>
                             <td>{{ $user->email }}</td>
                             <td class="role-cell">
-                                <span class="role-text">{{ ucfirst($user->role) }}</span>
+                                <span class="role-text">{{ $user->role === 'admin' ? 'Administrator' : 'Assistant' }}</span>
                                 <form action="{{ route('admin.users.update', $user) }}" method="POST" class="role-form d-none" style="display:inline-block;">
                                     @csrf
                                     @method('PATCH')
                                     <select class="form-select form-select-sm" name="role" style="width: auto; display: inline-block;">
-                                        <option value="user" {{ $user->role === 'user' ? 'selected' : '' }}>User</option>
-                                        <option value="admin" {{ $user->role === 'admin' ? 'selected' : '' }}>Admin</option>
+                                        <option value="user" {{ $user->role === 'user' ? 'selected' : '' }}>Assistant</option>
+                                        <option value="admin" {{ $user->role === 'admin' ? 'selected' : '' }}>Administrator</option>
                                     </select>
                                     <button type="submit" class="btn btn-sm btn-success ms-1"><i class="bi bi-check-lg"></i></button>
                                     <button type="button" class="btn btn-sm btn-secondary cancel-edit"><i class="bi bi-x-lg"></i></button>
                                 </form>
                             </td>
                             <td>
-                                <button class="btn btn-sm btn-outline-secondary edit-role-btn"><i class="bi bi-pencil"></i></button>
-                                <form action="{{ route('admin.users.destroy', $user) }}" method="POST" style="display:inline-block;" onsubmit="return handleFormSubmit(event, 'Delete this user?', 'Delete User')">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button class="btn btn-sm btn-danger"><i class="bi bi-trash"></i></button>
-                                </form>
+                                @if($user->id === Auth::id())
+                                    <button class="btn btn-sm btn-outline-secondary" disabled title="Cannot edit yourself"><i class="bi bi-pencil"></i></button>
+                                    <button class="btn btn-sm btn-danger" disabled title="Cannot delete yourself"><i class="bi bi-trash"></i></button>
+                                @else
+                                    <button class="btn btn-sm btn-outline-secondary edit-role-btn"><i class="bi bi-pencil"></i></button>
+                                    <form action="{{ route('admin.users.destroy', $user) }}" method="POST" style="display:inline-block;" onsubmit="return handleFormSubmit(event, 'Delete this user?', 'Delete User')">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button class="btn btn-sm btn-danger"><i class="bi bi-trash"></i></button>
+                                    </form>
+                                @endif
                             </td>
                         </tr>
                         @endforeach
@@ -516,8 +521,8 @@
             <div class="mb-3">
                 <label class="form-label fw-semibold">Role</label>
                 <select class="form-select @error('role') is-invalid @enderror" name="role" required>
-                    <option value="user" {{ old('role') == 'user' ? 'selected' : '' }}>User</option>
-                    <option value="admin" {{ old('role') == 'admin' ? 'selected' : '' }}>Admin</option>
+                    <option value="user" {{ old('role') == 'user' ? 'selected' : '' }}>Assistant</option>
+                    <option value="admin" {{ old('role') == 'admin' ? 'selected' : '' }}>Administrator</option>
                 </select>
                 @error('role')
                     <div class="invalid-feedback">{{ $message }}</div>

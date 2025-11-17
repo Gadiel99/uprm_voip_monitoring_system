@@ -462,10 +462,6 @@
 
                     </div>
 
-                    <div class="text-end mt-4">
-                        <button class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
-                    </div>
-
                 </div>
             </div>
         </div>
