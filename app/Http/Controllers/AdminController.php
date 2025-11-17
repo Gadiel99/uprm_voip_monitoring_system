@@ -12,6 +12,7 @@ use App\Models\Building;
 use App\Models\Network;
 use App\Models\Devices;
 use App\Models\AlertSettings;
+use App\Services\BackupService;
 
 /**
  * Controlador del panel de administración (dashboard).
@@ -28,9 +29,10 @@ class AdminController extends Controller
      * Renderiza el dashboard de administración con datos de BD y logs recientes.
      *
      * @param  Request  $request
+     * @param  BackupService  $backupService
      * @return \Illuminate\Contracts\View\View
      */
-    public function index(Request $request)
+    public function index(Request $request, BackupService $backupService)
     {
         // Simple, resilient counts (if a table doesn't exist yet, catch and set 0)
         $stats = [
@@ -77,6 +79,18 @@ class AdminController extends Controller
             ->orderBy('ip_address')
             ->get();
         
+        // Get backup info
+        $latestBackup = $backupService->getLatestBackup();
+        $backupStats = $backupService->getBackupStats();
+        $allBackups = $backupService->getAllBackups();
+        
+        // Exclude the latest backup from the list (since it's shown separately)
+        if ($latestBackup && !empty($allBackups)) {
+            $allBackups = array_filter($allBackups, function($backup) use ($latestBackup) {
+                return $backup['filename'] !== $latestBackup['filename'];
+            });
+        }
+        
         // Flag to let Blade know if we should show server-driven Users section
         $isUsersServer = true;
 
@@ -90,6 +104,9 @@ class AdminController extends Controller
             'criticalDevices' => $criticalDevices,
             'extensionsByCriticalDevice' => $extensionsByCriticalDevice,
             'availableDevices' => $availableDevices,
+            'latestBackup'  => $latestBackup,
+            'backupStats'   => $backupStats,
+            'allBackups'    => $allBackups,
             'isUsersServer' => $isUsersServer,
             'users'         => $recentUsers, // fallback for now; AdminUserController overrides
             'activeTab'     => $request->get('tab') // optional active tab switching
@@ -387,6 +404,94 @@ class AdminController extends Controller
                 'push_notifications_enabled' => $settings->push_notifications_enabled,
             ]
         ]);
+    }
+
+    /**
+     * Create a new database backup and download as ZIP
+     *
+     * @param  BackupService  $backupService
+     * @return \Symfony\Component\HttpFoundation\BinaryFileResponse|\Illuminate\Http\RedirectResponse
+     */
+    public function createBackup(BackupService $backupService)
+    {
+        $result = $backupService->createBackup();
+
+        if ($result['success']) {
+            $this->addSystemLog('SUCCESS', 'Database backup created: ' . $result['file']);
+            
+            // Download the backup file
+            return response()->download($result['path'], $result['file'], [
+                'Content-Type' => 'application/zip',
+            ])->deleteFileAfterSend(false);
+        } else {
+            $this->addSystemLog('ERROR', 'Backup creation failed: ' . $result['message']);
+            
+            return redirect()->route('admin', ['tab' => 'backup'])
+                ->with('error', $result['message']);
+        }
+    }
+
+    /**
+     * Download the latest backup file
+     *
+     * @param  BackupService  $backupService
+     * @return \Symfony\Component\HttpFoundation\BinaryFileResponse|\Illuminate\Http\RedirectResponse
+     */
+    public function downloadLatestBackup(BackupService $backupService)
+    {
+        $latest = $backupService->getLatestBackup();
+
+        if (!$latest) {
+            $this->addSystemLog('WARNING', 'Attempted to download backup but none exist');
+            
+            return redirect()->route('admin', ['tab' => 'backup'])
+                ->with('error', 'No backups available to download');
+        }
+
+        $this->addSystemLog('INFO', 'Downloaded backup: ' . $latest['filename']);
+
+        return response()->download($latest['path'], $latest['filename'], [
+            'Content-Type' => 'application/zip',
+        ]);
+    }
+
+    /**
+     * Show restore confirmation page with file upload
+     *
+     * @return \Illuminate\Contracts\View\View
+     */
+    public function showRestorePage()
+    {
+        return view('pages.admin_restore');
+    }
+
+    /**
+     * Restore database from uploaded backup file
+     *
+     * @param  Request  $request
+     * @param  BackupService  $backupService
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function restoreBackup(Request $request, BackupService $backupService)
+    {
+        $validated = $request->validate([
+            'backup_file' => 'required|string'
+        ]);
+
+        $filename = $validated['backup_file'];
+        $result = $backupService->restoreBackup($filename);
+
+        if ($result['success']) {
+            $this->addSystemLog('SUCCESS', 'Database restored from: ' . $filename);
+            
+            return redirect()->route('admin', ['tab' => 'backup'])
+                ->with('success', $result['message']);
+        } else {
+            $this->addSystemLog('ERROR', 'Restore failed: ' . $result['message']);
+            
+            return redirect()->route('admin', ['tab' => 'backup'])
+                ->with('error', $result['message']);
+        }
     }
 }
 
