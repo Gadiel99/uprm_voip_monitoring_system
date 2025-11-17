@@ -212,10 +212,10 @@
                                 @endif
                             </td>
                             <td>
-                                <form action="{{ route('admin.critical-devices.destroy', $device->device_id) }}" method="POST" style="display:inline-block;">
+                                <form action="{{ route('admin.critical-devices.destroy', $device->device_id) }}" method="POST" style="display:inline-block;" onsubmit="return handleFormSubmit(event, 'Remove this device from critical list?', 'Remove Device')">
                                     @csrf
                                     @method('DELETE')
-                                    <button class="btn btn-sm btn-danger" onclick="return confirm('Remove this device from critical list?')">
+                                    <button class="btn btn-sm btn-danger">
                                         <i class="bi bi-trash"></i>
                                     </button>
                                 </form>
@@ -235,9 +235,9 @@
                 <h6 class="fw-semibold">Alert Thresholds</h6>
                 <p class="text-muted small mb-3">Configure offline device percentage thresholds for building alerts.</p>
                 
-                @if(session('status') && request()->get('tab') === 'settings')
+                @if(session('alert_settings_status'))
                     <div class="alert alert-success alert-dismissible fade show" role="alert">
-                        {{ session('status') }}
+                        {{ session('alert_settings_status') }}
                         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                     </div>
                 @endif
@@ -288,11 +288,6 @@
                     <label class="form-check-label fw-semibold" for="emailNotifications">Email Notifications</label>
                     <p class="text-muted small ms-4 mb-0">Enable email alerts for all users (system-wide setting)</p>
                 </div>
-                <div class="form-check form-switch">
-                    <input class="form-check-input" type="checkbox" id="pushNotifications" {{ $alertSettings->push_notifications_enabled ? 'checked' : '' }}>
-                    <label class="form-check-label fw-semibold" for="pushNotifications">Push Notifications</label>
-                    <p class="text-muted small ms-4 mb-0">Browser push notifications (coming soon)</p>
-                </div>
             </div>
         </div>
 
@@ -300,9 +295,9 @@
         <div class="tab-pane fade" id="users" role="tabpanel">
             <div class="card border-0 shadow-sm p-4 mb-4">
                 {{-- Flash messages (success only - errors shown in modal) --}}
-                @if(session('status'))
+                @if(session('user_status'))
                     <div class="alert alert-success alert-dismissible fade show" role="alert">
-                        {{ session('status') }}
+                        {{ session('user_status') }}
                         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                     </div>
                 @endif
@@ -342,10 +337,10 @@
                             </td>
                             <td>
                                 <button class="btn btn-sm btn-outline-secondary edit-role-btn"><i class="bi bi-pencil"></i></button>
-                                <form action="{{ route('admin.users.destroy', $user) }}" method="POST" style="display:inline-block;">
+                                <form action="{{ route('admin.users.destroy', $user) }}" method="POST" style="display:inline-block;" onsubmit="return handleFormSubmit(event, 'Delete this user?', 'Delete User')">
                                     @csrf
                                     @method('DELETE')
-                                    <button class="btn btn-sm btn-danger" onclick="return confirm('Delete this user?')"><i class="bi bi-trash"></i></button>
+                                    <button class="btn btn-sm btn-danger"><i class="bi bi-trash"></i></button>
                                 </form>
                             </td>
                         </tr>
@@ -674,7 +669,6 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // ===== Notification Preferences (System-wide) =====
     const emailNotificationsToggle = document.getElementById('emailNotifications');
-    const pushNotificationsToggle = document.getElementById('pushNotifications');
     
     if (emailNotificationsToggle) {
         emailNotificationsToggle.addEventListener('change', async function() {
@@ -702,38 +696,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.error('Error updating email notifications:', error);
                 // Revert toggle on error
                 this.checked = !isEnabled;
-                alert('Failed to update email notification preferences. Please try again.');
-            }
-        });
-    }
-    
-    if (pushNotificationsToggle) {
-        pushNotificationsToggle.addEventListener('change', async function() {
-            const isEnabled = this.checked;
-            try {
-                const response = await fetch('{{ route('admin.notification-preferences.update') }}', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                    },
-                    body: JSON.stringify({
-                        push_notifications_enabled: isEnabled
-                    })
-                });
-                
-                const data = await response.json();
-                
-                if (data.success) {
-                    addLog('INFO', `System-wide push notifications ${isEnabled ? 'enabled' : 'disabled'}`);
-                } else {
-                    throw new Error(data.message || 'Failed to update preferences');
-                }
-            } catch (error) {
-                console.error('Error updating push notifications:', error);
-                // Revert toggle on error
-                this.checked = !isEnabled;
-                alert('Failed to update push notification preferences. Please try again.');
+                customAlert('Failed to update email notification preferences. Please try again.', 'Error', 'error');
             }
         });
     }
@@ -794,16 +757,18 @@ function enableTableActions(tableId) {
 
         // DELETE
         if (e.target.closest('.delete-btn')) {
-            if (confirm('🗑️ Delete this entry?')) {
-                // Get info before deleting
-                const cells = [...row.children];
-                const firstCell = cells[0]?.textContent.trim() || 'Unknown';
-                
-                row.remove();
-                
-                // Log deletion
-                addLog('DELETE', `Entry deleted from ${tableId}: ${firstCell}`);
-            }
+            customConfirm('🗑️ Delete this entry?', 'Delete Entry').then(confirmed => {
+                if (confirmed) {
+                    // Get info before deleting
+                    const cells = [...row.children];
+                    const firstCell = cells[0]?.textContent.trim() || 'Unknown';
+                    
+                    row.remove();
+                    
+                    // Log deletion
+                    addLog('DELETE', `Entry deleted from ${tableId}: ${firstCell}`);
+                }
+            });
             return;
         }
 
@@ -912,7 +877,7 @@ function onAddServer(ev) {
     
     // Validate
     if (!name || !ip || !port) {
-        alert('❌ All fields are required');
+        customAlert('❌ All fields are required', 'Validation Error', 'error');
         return;
     }
 
@@ -1043,11 +1008,25 @@ function filterByAction(action) {
 
 // Clear all logs
 function clearLogs() {
-    if (confirm('Are you sure you want to clear all logs?')) {
-        localStorage.removeItem('systemLogs');
-        addLog('DELETE', 'All system logs were cleared by admin', 'Admin');
-        updateLogsDisplay();
-    }
+    customConfirm('Are you sure you want to clear all logs?', 'Clear All Logs').then(confirmed => {
+        if (confirmed) {
+            localStorage.removeItem('systemLogs');
+            addLog('DELETE', 'All system logs were cleared by admin', 'Admin');
+            updateLogsDisplay();
+        }
+    });
+}
+
+/* ==================== FORM SUBMIT HANDLER ==================== */
+function handleFormSubmit(event, message, title) {
+    event.preventDefault();
+    const form = event.target;
+    customConfirm(message, title).then(confirmed => {
+        if (confirmed) {
+            form.submit();
+        }
+    });
+    return false;
 }
 
 /* ==================== ALERT DISPLAY SETTINGS ==================== */
