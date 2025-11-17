@@ -445,6 +445,8 @@ step_13_install_apache() {
         a2enmod rewrite
         a2enmod ssl
         a2enmod headers
+        a2enmod proxy_fcgi
+        a2enmod setenvif
         
         # Create Apache configuration
         print_info "Creating Apache configuration..."
@@ -487,8 +489,7 @@ EOF
         a2ensite voip-monitoring.conf
         a2dissite 000-default.conf
         
-        # Enable proxy modules for PHP-FPM
-        a2enmod proxy_fcgi setenvif
+        # Enable PHP-FPM configuration
         a2enconf php${PHP_VERSION}-fpm
         
         # Test and reload Apache
@@ -500,8 +501,119 @@ EOF
         else
             print_error "Apache configuration test failed"
         fi
+        
+        # Configure SSL/HTTPS
+        if prompt_yn "Configure SSL/HTTPS with Let's Encrypt?"; then
+            step_13a_setup_ssl "$domain_name"
+        fi
     else
         print_info "Skipping Apache installation"
+    fi
+}
+
+step_13a_setup_ssl() {
+    local domain="$1"
+    
+    print_header "STEP 13a: Configuring SSL/HTTPS"
+    
+    # Check if domain is localhost or IP
+    if [[ "$domain" == "localhost" ]] || [[ "$domain" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+        print_warning "Cannot use Let's Encrypt with localhost or IP addresses"
+        print_info "Creating self-signed certificate instead..."
+        
+        # Create SSL directory
+        mkdir -p /etc/apache2/ssl
+        
+        # Generate self-signed certificate
+        openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+            -keyout /etc/apache2/ssl/voip-selfsigned.key \
+            -out /etc/apache2/ssl/voip-selfsigned.crt \
+            -subj "/C=US/ST=PuertoRico/L=Mayaguez/O=UPRM/CN=${domain}" &> /dev/null
+        
+        # Update Apache config for self-signed SSL
+        cat > /etc/apache2/sites-available/voip-monitoring-ssl.conf << EOF
+# HTTP VirtualHost - Redirect to HTTPS
+<VirtualHost *:80>
+    ServerName ${domain}
+    DocumentRoot ${APP_DIR}/public
+
+    RewriteEngine On
+    RewriteCond %{HTTPS} off
+    RewriteRule ^(.*)$ https://%{HTTP_HOST}\$1 [R=301,L]
+</VirtualHost>
+
+# HTTPS VirtualHost
+<VirtualHost *:443>
+    ServerName ${domain}
+    ServerAdmin webmaster@${domain}
+    DocumentRoot ${APP_DIR}/public
+
+    SSLEngine on
+    SSLCertificateFile /etc/apache2/ssl/voip-selfsigned.crt
+    SSLCertificateKeyFile /etc/apache2/ssl/voip-selfsigned.key
+
+    # Security Headers
+    Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains"
+    Header always set X-Frame-Options "SAMEORIGIN"
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set X-XSS-Protection "1; mode=block"
+
+    <Directory ${APP_DIR}/public>
+        Options -Indexes +FollowSymLinks
+        AllowOverride All
+        Require all granted
+    </Directory>
+
+    ErrorLog \${APACHE_LOG_DIR}/voip-monitoring-ssl-error.log
+    CustomLog \${APACHE_LOG_DIR}/voip-monitoring-ssl-access.log combined
+
+    ServerSignature Off
+
+    <FilesMatch \.php$>
+        SetHandler "proxy:unix:/var/run/php/php${PHP_VERSION}-fpm.sock|fcgi://localhost"
+    </FilesMatch>
+
+    # Modern SSL Configuration
+    SSLProtocol all -SSLv3 -TLSv1 -TLSv1.1
+    SSLCipherSuite HIGH:!aNULL:!MD5:!3DES
+    SSLHonorCipherOrder on
+</VirtualHost>
+EOF
+        
+        a2dissite voip-monitoring.conf &> /dev/null || true
+        a2ensite voip-monitoring-ssl.conf
+        systemctl reload apache2
+        
+        print_success "Self-signed SSL certificate installed"
+        print_warning "Browsers will show a security warning (this is normal)"
+        print_info "Application accessible at: https://${domain}"
+        
+    else
+        # Use Let's Encrypt for real domains
+        print_info "Installing Certbot for Let's Encrypt..."
+        apt-get install -y -qq certbot python3-certbot-apache
+        
+        print_info "Obtaining SSL certificate from Let's Encrypt..."
+        
+        # Run certbot
+        if certbot --apache -d "$domain" --non-interactive --agree-tos --register-unsafely-without-email --redirect; then
+            print_success "Let's Encrypt SSL certificate installed"
+            print_success "HTTPS configured with automatic renewal"
+            print_info "Certificate will auto-renew before expiration"
+            
+            # Update .env to use HTTPS
+            sed -i "s|^APP_URL=.*|APP_URL=https://${domain}|" "$APP_DIR/.env"
+            
+            # Force HTTPS in Laravel (already done in AppServiceProvider during previous setup)
+            print_success "Application URL updated to HTTPS"
+            print_info "Application accessible at: https://${domain}"
+        else
+            print_error "Let's Encrypt certificate installation failed"
+            print_info "You may need to:"
+            print_info "  1. Ensure DNS points to this server"
+            print_info "  2. Port 80 and 443 are open in firewall"
+            print_info "  3. Run manually: sudo certbot --apache -d $domain"
+        fi
     fi
 }
 
