@@ -40,7 +40,7 @@
          Incluye estilos de navbar, sidebar y pestañas superiores (Home/Alerts/Devices/Reports/Admin). -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UPRM Monitoring System</title>
+    <title>UPRM VoIP Monitoring System</title>
 
     {{-- External CSS and JavaScript Libraries --}}
     {{-- Bootstrap 5.3.3 - Frontend CSS framework --}}
@@ -183,7 +183,7 @@
             {{-- University logo and name --}}
             <a class="navbar-brand d-flex align-items-center" href="{{ url('/') }}">
                 <img src="{{ asset('images/logo-uprm.png') }}" alt="UPRM Logo" height="36" class="me-2">
-                <span class="fw-semibold text-dark">UPRM Monitoring System</span>
+                <span class="fw-semibold text-dark">UPRM VoIP Monitoring System</span>
             </a>
 
             <div class="d-flex align-items-center gap-3">
@@ -329,9 +329,9 @@
 
                 {{-- Modal body --}}
                 <div class="modal-body">
-                    @if (session('status'))
+                    @if (session('account_status'))
                         <div class="alert alert-success py-2 mb-3">
-                            {{ ucfirst(str_replace('-', ' ', session('status'))) }}
+                            {{ ucfirst(str_replace('-', ' ', session('account_status'))) }}
                         </div>
                     @endif
 
@@ -640,5 +640,9 @@ function logLogoutAndSubmit() {
     document.getElementById('logoutForm').submit();
 }
 </script>
+
+{{-- Include custom notification modals --}}
+@include('components.notification-modals')
+
 </body>
 </html>
