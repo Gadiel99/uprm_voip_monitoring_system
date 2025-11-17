@@ -286,6 +286,26 @@ step_6_install_mariadb() {
 step_7_setup_database() {
     print_header "STEP 7: Configuring Database"
     
+    # Check if database already exists and is accessible
+    if mariadb -e "USE ${DB_NAME};" 2>/dev/null; then
+        print_info "Database '${DB_NAME}' already exists"
+        
+        # Try to get existing user password from .env if it exists
+        if [[ -f "$APP_DIR/.env" ]] && grep -q "^DB_PASSWORD=" "$APP_DIR/.env"; then
+            existing_password=$(grep "^DB_PASSWORD=" "$APP_DIR/.env" | cut -d '=' -f2)
+            if [[ -n "$existing_password" ]]; then
+                DB_PASSWORD="$existing_password"
+                print_info "Using existing database password from .env"
+            fi
+        fi
+        
+        # Test connection with existing credentials
+        if [[ -n "$DB_PASSWORD" ]] && mariadb -u"${DB_USER}" -p"${DB_PASSWORD}" -e "USE ${DB_NAME};" 2>/dev/null; then
+            print_success "Database connection verified with existing credentials"
+            return 0
+        fi
+    fi
+    
     # Generate database password if not set
     if [[ -z "$DB_PASSWORD" ]]; then
         DB_PASSWORD=$(generate_password)
@@ -294,7 +314,7 @@ step_7_setup_database() {
     
     print_info "Creating database and user..."
     
-    # Create database and user
+    # Create database and user (IF NOT EXISTS handles re-runs)
     mariadb -e "CREATE DATABASE IF NOT EXISTS ${DB_NAME} CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;" 2>/dev/null || true
     mariadb -e "CREATE USER IF NOT EXISTS '${DB_USER}'@'localhost' IDENTIFIED BY '${DB_PASSWORD}';" 2>/dev/null || true
     mariadb -e "GRANT ALL PRIVILEGES ON ${DB_NAME}.* TO '${DB_USER}'@'localhost';" 2>/dev/null || true
@@ -305,6 +325,7 @@ step_7_setup_database() {
         print_success "Database '$DB_NAME' created and accessible"
     else
         print_error "Database connection test failed"
+        print_warning "If database already exists with different credentials, please update DB_PASSWORD in .env"
         exit 1
     fi
 }
