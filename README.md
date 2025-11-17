@@ -141,4 +141,5 @@ For detailed information about specific system components, see the `/docs` direc
 - **[EMAIL_NOTIFICATIONS.md](docs/EMAIL_NOTIFICATIONS.md)** - Email alert system setup and configuration
 - **[REPORTS_FUNCTIONALITY.md](docs/REPORTS_FUNCTIONALITY.md)** - Report generation and system monitoring
 - **[FILE_CLEANUP_POLICY.md](docs/FILE_CLEANUP_POLICY.md)** - Import file retention and cleanup automation
+- **[DATABASE_BACKUP.md](docs/DATABASE_BACKUP.md)** - Weekly database backup and restore system
 - **[testing/](docs/testing/)** - Test documentation, cases, and results
