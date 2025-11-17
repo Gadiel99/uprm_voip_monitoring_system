@@ -149,7 +149,7 @@ class AdminController extends Controller
         }
 
         return redirect()->route('admin', ['tab' => 'settings'])
-            ->with('status', 'Alert settings updated successfully.');
+            ->with('alert_settings_status', 'Alert settings updated successfully.');
     }
 
     /**
@@ -178,7 +178,7 @@ class AdminController extends Controller
         $this->addSystemLog('SUCCESS', "Device added to critical list: {$device->ip_address} ({$device->mac_address})");
 
         return redirect()->route('admin', ['tab' => 'settings'])
-            ->with('status', 'Device added to critical list successfully.');
+            ->with('alert_settings_status', 'Device added to critical list successfully.');
     }
 
     /**
@@ -204,7 +204,7 @@ class AdminController extends Controller
         $this->addSystemLog('INFO', "Device removed from critical list: {$device->ip_address} ({$device->mac_address})");
 
         return redirect()->route('admin', ['tab' => 'settings'])
-            ->with('status', 'Device removed from critical list successfully.');
+            ->with('alert_settings_status', 'Device removed from critical list successfully.');
     }
 
     /**
