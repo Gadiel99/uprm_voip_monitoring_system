@@ -80,7 +80,7 @@ class ProfileController extends Controller
         $request->user()->update(['name' => $clean]);
 
         return Redirect::to($this->targetUrl($request))
-            ->with('account_status', 'username-updated')
+            ->with('account_status', 'name-updated')
             ->with('account_tab', 'username');
     }
 
