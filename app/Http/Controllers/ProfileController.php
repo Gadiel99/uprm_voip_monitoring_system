@@ -54,7 +54,7 @@ class ProfileController extends Controller
         $user->save();
 
         return Redirect::to($this->targetUrl($request))
-            ->with('status', 'profile-updated')
+            ->with('account_status', 'profile-updated')
             ->with('account_tab', $request->input('tab', 'username'));
     }
 
@@ -80,7 +80,7 @@ class ProfileController extends Controller
         $request->user()->update(['name' => $clean]);
 
         return Redirect::to($this->targetUrl($request))
-            ->with('status', 'username-updated')
+            ->with('account_status', 'username-updated')
             ->with('account_tab', 'username');
     }
 
@@ -113,7 +113,7 @@ class ProfileController extends Controller
         $u->save();
 
         return Redirect::to($this->targetUrl($request))
-            ->with('status', 'email-updated')
+            ->with('account_status', 'email-updated')
             ->with('account_tab', 'email');
     }
 
@@ -150,7 +150,7 @@ class ProfileController extends Controller
         $u->save();
 
         return Redirect::to($this->targetUrl($request))
-            ->with('status', 'password-updated')
+            ->with('account_status', 'password-updated')
             ->with('account_tab', 'password');
     }
 
