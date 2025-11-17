@@ -130,31 +130,31 @@
             @endif
 
             {{-- Backup Statistics --}}
-            <div class="card border-0 shadow-sm p-4 mb-4">
-                <h6 class="fw-semibold mb-3">Backup Statistics</h6>
-                <div class="row">
+            <div class="card border-0 shadow-sm p-3 mb-3">
+                <h6 class="fw-semibold mb-2">Backup Statistics</h6>
+                <div class="row g-2">
                     <div class="col-md-3">
-                        <div class="border rounded p-3 text-center">
-                            <div class="text-muted small">Total Backups</div>
-                            <div class="h4 mb-0 text-primary">{{ $backupStats['total_backups'] }}</div>
+                        <div class="border rounded p-2 text-center">
+                            <div class="text-muted" style="font-size: 0.75rem;">Total Backups</div>
+                            <div class="h5 mb-0 text-primary">{{ $backupStats['total_backups'] }}</div>
                         </div>
                     </div>
                     <div class="col-md-3">
-                        <div class="border rounded p-3 text-center">
-                            <div class="text-muted small">Total Size</div>
-                            <div class="h4 mb-0 text-success">{{ $backupStats['total_size_formatted'] }}</div>
+                        <div class="border rounded p-2 text-center">
+                            <div class="text-muted" style="font-size: 0.75rem;">Total Size</div>
+                            <div class="h5 mb-0 text-success">{{ $backupStats['total_size_formatted'] }}</div>
                         </div>
                     </div>
                     <div class="col-md-3">
-                        <div class="border rounded p-3 text-center">
-                            <div class="text-muted small">Retention</div>
-                            <div class="h4 mb-0 text-info">{{ $backupStats['retention_weeks'] }} weeks</div>
+                        <div class="border rounded p-2 text-center">
+                            <div class="text-muted" style="font-size: 0.75rem;">Retention</div>
+                            <div class="h5 mb-0 text-info">{{ $backupStats['retention_weeks'] }} weeks</div>
                         </div>
                     </div>
                     <div class="col-md-3">
-                        <div class="border rounded p-3 text-center">
-                            <div class="text-muted small">Schedule</div>
-                            <div class="h4 mb-0 text-warning">Weekly</div>
+                        <div class="border rounded p-2 text-center">
+                            <div class="text-muted" style="font-size: 0.75rem;">Schedule</div>
+                            <div class="h5 mb-0 text-warning">Weekly</div>
                         </div>
                     </div>
                 </div>
