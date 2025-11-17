@@ -114,16 +114,161 @@
 
         {{-- BACKUP --}}
         <div class="tab-pane fade show active" id="backup" role="tabpanel">
+            {{-- Success/Error Messages --}}
+            @if(session('success'))
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    <i class="bi bi-check-circle me-2"></i>{{ session('success') }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            @endif
+
+            @if(session('error'))
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="bi bi-exclamation-triangle me-2"></i>{{ session('error') }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            @endif
+
+            {{-- Backup Statistics --}}
             <div class="card border-0 shadow-sm p-4 mb-4">
+                <h6 class="fw-semibold mb-3">Backup Statistics</h6>
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="border rounded p-3 text-center">
+                            <div class="text-muted small">Total Backups</div>
+                            <div class="h4 mb-0 text-primary">{{ $backupStats['total_backups'] }}</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="border rounded p-3 text-center">
+                            <div class="text-muted small">Total Size</div>
+                            <div class="h4 mb-0 text-success">{{ $backupStats['total_size_formatted'] }}</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="border rounded p-3 text-center">
+                            <div class="text-muted small">Retention</div>
+                            <div class="h4 mb-0 text-info">{{ $backupStats['retention_weeks'] }} weeks</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="border rounded p-3 text-center">
+                            <div class="text-muted small">Schedule</div>
+                            <div class="h4 mb-0 text-warning">Weekly</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Backup Actions --}}
+            <div class="card border-0 shadow-sm p-4 mb-4">
+                <h6 class="fw-semibold mb-3">Backup Management</h6>
+                
+                @if($latestBackup)
+                    <div class="mb-4 pb-3 border-bottom">
+                        <div class="mb-2">
+                            <strong>Latest Backup:</strong> 
+                            <span class="font-monospace">{{ $latestBackup['filename'] }}</span>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <small class="text-muted">Size:</small> {{ $latestBackup['size_formatted'] }}
+                            </div>
+                            <div class="col-md-4">
+                                <small class="text-muted">Created:</small> {{ $latestBackup['created_at'] }}
+                            </div>
+                            <div class="col-md-4">
+                                <small class="text-muted">Age:</small> {{ $latestBackup['age'] }}
+                            </div>
+                        </div>
+                    </div>
+                @endif
+
                 <div class="mb-3">
-                    <label class="form-label fw-semibold">Local Backup Path</label>
+                    <label class="form-label fw-semibold">Storage Location</label>
                     <input type="text" class="form-control bg-light" value="/var/backups/monitoring" readonly>
-                    <small class="text-muted">Backups are stored locally in this directory.</small>
+                    <small class="text-muted">Backups are automatically created weekly and stored in this directory.</small>
                 </div>
 
                 <div class="d-flex gap-2 mt-4">
-                    <button class="btn btn-success"><i class="bi bi-archive me-2"></i>Create Backup & Download (ZIP)</button>
-                    <button class="btn btn-outline-secondary"><i class="bi bi-upload me-2"></i>Restore from Backup</button>
+                    @if($latestBackup)
+                        <a href="{{ route('admin.backup.download') }}" class="btn btn-success">
+                            <i class="bi bi-download me-2"></i>Download Latest Backup
+                        </a>
+                        <button type="button" class="btn btn-outline-warning" data-bs-toggle="modal" data-bs-target="#restoreModal">
+                            <i class="bi bi-arrow-counterclockwise me-2"></i>Restore from Backup
+                        </button>
+                    @else
+                        <div class="alert alert-warning mb-0">
+                            <i class="bi bi-exclamation-triangle me-2"></i>No backups available. Weekly backups run automatically on Sundays at 3:00 AM.
+                        </div>
+                    @endif
+                </div>
+            </div>
+
+            {{-- All Backups List --}}
+            @if(!empty($allBackups))
+                <div class="card border-0 shadow-sm p-4 mb-4">
+                    <h6 class="fw-semibold mb-3">Available Backups</h6>
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Filename</th>
+                                    <th>Size</th>
+                                    <th>Created</th>
+                                    <th>Age</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($allBackups as $backup)
+                                    <tr>
+                                        <td class="font-monospace small">{{ $backup['filename'] }}</td>
+                                        <td>{{ $backup['size_formatted'] }}</td>
+                                        <td>{{ $backup['created_at'] }}</td>
+                                        <td>{{ $backup['age'] }}</td>
+                                        <td>
+                                            <button type="button" class="btn btn-sm btn-outline-primary" 
+                                                    onclick="restoreBackup('{{ $backup['filename'] }}')">
+                                                <i class="bi bi-arrow-counterclockwise me-1"></i>Restore
+                                            </button>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            @endif
+        </div>
+
+        {{-- Restore Confirmation Modal --}}
+        <div class="modal fade" id="restoreModal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header bg-warning">
+                        <h5 class="modal-title">
+                            <i class="bi bi-exclamation-triangle me-2"></i>Restore Database
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="alert alert-danger">
+                            <strong>Warning:</strong> This will replace ALL current database data with the backup data. This action cannot be undone!
+                        </div>
+                        <p>Are you sure you want to restore from: <strong id="restoreFilename">{{ $latestBackup['filename'] ?? '' }}</strong>?</p>
+                        <form id="restoreForm" action="{{ route('admin.backup.restore') }}" method="POST">
+                            @csrf
+                            <input type="hidden" name="backup_file" id="restoreFileInput" value="{{ $latestBackup['filename'] ?? '' }}">
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-warning" onclick="document.getElementById('restoreForm').submit();">
+                            <i class="bi bi-arrow-counterclockwise me-2"></i>Restore Database
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1041,6 +1186,18 @@ function handleFormSubmit(event, message, title) {
 function loadAlertDisplaySettings() {
     // Set default sort order: severity + alphabetical
     localStorage.setItem('alertSortOrder', 'bySeverityThenAlpha');
+}
+
+/* ==================== BACKUP RESTORE FUNCTION ==================== */
+
+function restoreBackup(filename) {
+    // Update modal with selected backup filename
+    document.getElementById('restoreFilename').textContent = filename;
+    document.getElementById('restoreFileInput').value = filename;
+    
+    // Show the restore modal
+    const modal = new bootstrap.Modal(document.getElementById('restoreModal'));
+    modal.show();
 }
 
 </script>
