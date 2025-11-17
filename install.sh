@@ -312,11 +312,25 @@ step_7_setup_database() {
 step_8_setup_application() {
     print_header "STEP 8: Setting Up Laravel Application"
     
-    # Check if app directory exists
+    # Check if app directory exists, if not clone it
     if [[ ! -d "$APP_DIR" ]]; then
-        print_error "Application directory not found: $APP_DIR"
-        print_info "Please clone the repository to $APP_DIR first"
-        exit 1
+        print_info "Application directory not found, cloning repository..."
+        
+        read -p "Enter GitHub repository URL [https://github.com/Gadiel99/uprm_voip_monitoring_system.git]: " repo_url
+        repo_url=${repo_url:-https://github.com/Gadiel99/uprm_voip_monitoring_system.git}
+        
+        # Create parent directory
+        mkdir -p /var/www
+        
+        # Clone repository
+        if git clone "$repo_url" "$APP_DIR"; then
+            print_success "Repository cloned successfully"
+        else
+            print_error "Failed to clone repository"
+            exit 1
+        fi
+    else
+        print_info "Application directory already exists"
     fi
     
     cd "$APP_DIR"
