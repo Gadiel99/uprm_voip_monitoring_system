@@ -99,7 +99,7 @@ class AdminUserController extends Controller
         );
 
         return redirect()->route('admin.users', ['tab' => 'users'])
-            ->with('status', 'User created successfully.')
+            ->with('user_status', 'User created successfully.')
             ->with('showAddModal', false);
     }
 
@@ -139,7 +139,7 @@ class AdminUserController extends Controller
         );
         
         return redirect()->route('admin.users', ['tab' => 'users'])
-            ->with('status', 'Role updated successfully.');
+            ->with('user_status', 'Role updated successfully.');
     }
 
     /**
@@ -177,7 +177,7 @@ class AdminUserController extends Controller
         );
         
         return redirect()->route('admin.users', ['tab' => 'users'])
-            ->with('status', 'User deleted successfully.');
+            ->with('user_status', 'User deleted successfully.');
     }
 
     /**
@@ -208,6 +208,6 @@ class AdminUserController extends Controller
         );
         
         return redirect()->route('admin.users', ['tab' => 'users'])
-            ->with('status', 'Role updated successfully.');
+            ->with('user_status', 'Role updated successfully.');
     }
 }
