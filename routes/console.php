@@ -7,6 +7,7 @@ use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schedule;
+use App\Models\AlertSettings;
 
 Schedule::command('etl:run --since="5 minutes ago"')
     ->everyFiveMinutes()
@@ -20,7 +21,17 @@ Schedule::command('etl:run --since="5 minutes ago"')
 
 // Check and send notifications for critical conditions every 5 minutes
 Schedule::command('notifications:check')
-    ->everyFiveMinutes()
+   ->everyFiveMinutes()
+   ->when(function () {
+      try {
+         $settings = AlertSettings::current();
+         return ($settings->is_active ?? true) && ($settings->email_notifications_enabled ?? true);
+      } catch (\Throwable $e) {
+         // If settings cannot be read, do not block notifications by default
+         Log::warning('Scheduler could not read AlertSettings: '.$e->getMessage());
+         return true;
+      }
+   })
     ->withoutOverlapping()
     ->onFailure(function () {
        Log::error('Notification check command failed');
