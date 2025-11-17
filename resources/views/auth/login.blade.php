@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - UPRM Monitoring System</title>
+    <title>Login - UPRM VoIP Monitoring System</title>
 
     {{-- Bootstrap 5 --}}
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -25,7 +25,7 @@
 <div class="login-container">
     <div class="login-card text-center">
         <img src="{{ asset('images/logo-uprm.png') }}" alt="UPRM Logo" width="80" class="mb-3">
-        <h5 class="fw-semibold mb-4">UPRM Monitoring System</h5>
+        <h5 class="fw-semibold mb-4">UPRM VoIP Monitoring System</h5>
 
         {{-- Errores --}}
         @if ($errors->any())
@@ -65,7 +65,7 @@
         </form>
 
         <hr class="my-4">
-        <p class="small text-muted mb-0">© {{ date('Y') }} UPRM Monitoring System</p>
+        <p class="small text-muted mb-0">© {{ date('Y') }} UPRM VoIP Monitoring System</p>
     </div>
 </div>
 </body>
