@@ -638,12 +638,17 @@
             </div>
             <div class="mb-3">
                 <label class="form-label fw-semibold">Password</label>
-                <input type="password" id="addUserPassword" class="form-control @error('password') is-invalid @enderror" 
-                       name="password" placeholder="Example: CampusNet#24!" 
-                       minlength="8" maxlength="64" 
-                       pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':&quot;\\|,.<>\/?]).{8,64}$"
-                       title="Password must contain: 8-64 characters, at least one uppercase letter, one lowercase letter, one number, and one special character"
-                       autocomplete="new-password" required>
+                <div class="input-group">
+                    <input type="password" id="addUserPassword" class="form-control @error('password') is-invalid @enderror" 
+                           name="password" placeholder="Example: CampusNet#24!" 
+                           minlength="8" maxlength="64" 
+                           pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':&quot;\\|,.<>\/?]).{8,64}$"
+                           title="Password must contain: 8-64 characters, at least one uppercase letter, one lowercase letter, one number, and one special character"
+                           autocomplete="new-password" required>
+                    <button class="btn btn-outline-secondary" type="button" onclick="togglePasswordVisibility('addUserPassword', this)">
+                        <i class="bi bi-eye"></i>
+                    </button>
+                </div>
                 @if($passwordErrors)
                     <div class="invalid-feedback d-block">
                         <ul class="mb-0 ps-3">
@@ -683,6 +688,22 @@
   </div>
 </div>{{-- ===================== UNIVERSAL JS ===================== --}}
 <script>
+// Toggle password visibility
+function togglePasswordVisibility(inputId, button) {
+    const input = document.getElementById(inputId);
+    const icon = button.querySelector('i');
+    
+    if (input.type === 'password') {
+        input.type = 'text';
+        icon.classList.remove('bi-eye');
+        icon.classList.add('bi-eye-slash');
+    } else {
+        input.type = 'password';
+        icon.classList.remove('bi-eye-slash');
+        icon.classList.add('bi-eye');
+    }
+}
+
 // Reset threshold values to default
 function resetThresholdsToDefault() {
     const lowerThresholdInput = document.querySelector('input[name="lower_threshold"]');
