@@ -63,20 +63,20 @@
     
     #confirmModal .modal-header,
     #alertModal .modal-header {
-        padding: 1.25rem 1.5rem;
+        padding: 0.75rem 1.5rem 0.5rem 1.5rem;
     }
     
     #confirmModal .modal-body,
     #alertModal .modal-body {
-        padding: 1.5rem;
+        padding: 0.75rem 1.5rem;
         white-space: pre-wrap;
-        line-height: 1.6;
-        font-size: 1rem;
+        line-height: 1.5;
+        font-size: 0.95rem;
     }
     
     #confirmModal .modal-footer,
     #alertModal .modal-footer {
-        padding: 1rem 1.5rem;
+        padding: 0.75rem 1.5rem;
     }
     
     #confirmModal .btn-primary,
