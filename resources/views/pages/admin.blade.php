@@ -642,7 +642,6 @@
                     <input type="password" id="addUserPassword" class="form-control @error('password') is-invalid @enderror" 
                            name="password" placeholder="Example: CampusNet#24!" 
                            minlength="8" maxlength="64" 
-                           pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':&quot;\\|,.<>\/?]).{8,64}$"
                            title="Password must contain: 8-64 characters, at least one uppercase letter, one lowercase letter, one number, and one special character"
                            autocomplete="new-password" required>
                     <button class="btn btn-outline-secondary" type="button" onclick="togglePasswordVisibility('addUserPassword', this)">
@@ -660,11 +659,11 @@
                 @endif
                 <div class="text-muted small mt-2">
                     Password requirements:
-                    <ul class="small mb-0">
-                        <li>8–64 characters</li>
-                        <li>At least one uppercase and one lowercase letter</li>
-                        <li>At least one number</li>
-                        <li>At least one symbol (e.g., ! @ # $ %)</li>
+                    <ul class="small mb-0" id="addUserPasswordReqs">
+                        <li id="req-length"><i class="bi bi-circle"></i> 8–64 characters</li>
+                        <li id="req-case"><i class="bi bi-circle"></i> At least one uppercase and one lowercase letter</li>
+                        <li id="req-number"><i class="bi bi-circle"></i> At least one number</li>
+                        <li id="req-symbol"><i class="bi bi-circle"></i> At least one symbol (e.g., ! @ # $ %)</li>
                     </ul>
                 </div>
             </div>
@@ -704,6 +703,62 @@ function togglePasswordVisibility(inputId, button) {
     }
 }
 
+// Validate password requirements in real-time for Add User
+function validatePasswordRequirements(inputId, reqPrefix) {
+    const password = document.getElementById(inputId);
+    if (!password) return;
+    validatePasswordRequirementsWithElement(password, reqPrefix);
+}
+
+function validatePasswordRequirementsWithElement(password, reqPrefix) {
+    if (!password) return;
+    
+    // Check if already initialized
+    if (password.dataset.validationInitialized === 'true') return;
+    
+    password.dataset.validationInitialized = 'true';
+    
+    password.addEventListener('input', function() {
+        const value = this.value;
+        
+        // Length check (8-64 characters)
+        const lengthOk = value.length >= 8 && value.length <= 64;
+        updateRequirement(`${reqPrefix}-length`, lengthOk);
+        
+        // Case check (uppercase and lowercase)
+        const caseOk = /[a-z]/.test(value) && /[A-Z]/.test(value);
+        updateRequirement(`${reqPrefix}-case`, caseOk);
+        
+        // Number check
+        const numberOk = /\d/.test(value);
+        updateRequirement(`${reqPrefix}-number`, numberOk);
+        
+        // Symbol check
+        const symbolOk = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(value);
+        updateRequirement(`${reqPrefix}-symbol`, symbolOk);
+    });
+}
+
+function updateRequirement(reqId, isValid) {
+    const reqElement = document.getElementById(reqId);
+    if (!reqElement) return;
+    
+    const icon = reqElement.querySelector('i');
+    if (!icon) return;
+    
+    if (isValid) {
+        reqElement.classList.remove('text-muted');
+        reqElement.classList.add('text-success');
+        icon.classList.remove('bi-circle');
+        icon.classList.add('bi-check-circle-fill');
+    } else {
+        reqElement.classList.remove('text-success');
+        reqElement.classList.add('text-muted');
+        icon.classList.remove('bi-check-circle-fill');
+        icon.classList.add('bi-circle');
+    }
+}
+
 // Reset threshold values to default
 function resetThresholdsToDefault() {
     const lowerThresholdInput = document.querySelector('input[name="lower_threshold"]');
@@ -714,6 +769,31 @@ function resetThresholdsToDefault() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+    // Initialize password validation when Add User modal is shown
+    const addUserModalEl = document.getElementById('addUserModal');
+    
+    if (addUserModalEl) {
+        // Listen for Bootstrap modal shown event
+        addUserModalEl.addEventListener('shown.bs.modal', function() {
+            setTimeout(() => {
+                const passwordInput = addUserModalEl.querySelector('#addUserPassword');
+                if (passwordInput) {
+                    validatePasswordRequirementsWithElement(passwordInput, 'req');
+                }
+            }, 200);
+        });
+        
+        // If modal is reopened due to validation errors
+        @if(old('_token') && ($errors->has('name') || $errors->has('email') || $errors->has('password') || $errors->has('role')))
+            setTimeout(() => {
+                const passwordInput = addUserModalEl.querySelector('#addUserPassword');
+                if (passwordInput) {
+                    validatePasswordRequirementsWithElement(passwordInput, 'req');
+                }
+            }, 500);
+        @endif
+    }
+    
     // ===== Tab Activation =====
     const activeTab = @json($activeTab ?? request()->get('tab') ?? (($errors->has('lower_threshold') || $errors->has('upper_threshold')) ? 'settings' : null));
     if (activeTab) {

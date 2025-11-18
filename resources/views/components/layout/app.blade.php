@@ -463,13 +463,13 @@
 
                                 <div class="text-muted small d-block mb-2">
                                     Password requirements:
-                                    <ul class="small mb-0">
-                                        <li>8–64 characters</li>
-                                        <li>At least one uppercase and one lowercase letter</li>
-                                        <li>At least one number</li>
-                                        <li>At least one symbol (e.g., ! @ # $ %)</li>
-                                        <li>Must be different from your current password</li>
+                                    <ul class="small mb-0" id="accPasswordReqs">
+                                        <li id="acc-req-length"><i class="bi bi-circle"></i> 8–64 characters</li>
+                                        <li id="acc-req-case"><i class="bi bi-circle"></i> At least one uppercase and one lowercase letter</li>
+                                        <li id="acc-req-number"><i class="bi bi-circle"></i> At least one number</li>
+                                        <li id="acc-req-symbol"><i class="bi bi-circle"></i> At least one symbol (e.g., ! @ # $ %)</li>
                                     </ul>
+                                    <p class="small mb-0 mt-1"><i class="bi bi-info-circle"></i> Password must be different from your current password (validated on submit)</p>
                                 </div>
 
                                 <button class="btn btn-dark w-100" type="submit">Update Password</button>
@@ -547,7 +547,57 @@ function togglePasswordVisibility(inputId, button) {
     }
 }
 
+// Validate password requirements in real-time for account settings
+function validatePasswordRequirements(inputId, reqPrefix) {
+    const password = document.getElementById(inputId);
+    if (!password) return;
+    
+    password.addEventListener('input', function() {
+        const value = this.value;
+        
+        // Length check (8-64 characters)
+        const lengthOk = value.length >= 8 && value.length <= 64;
+        updateRequirement(`${reqPrefix}-req-length`, lengthOk);
+        
+        // Case check (uppercase and lowercase)
+        const caseOk = /[a-z]/.test(value) && /[A-Z]/.test(value);
+        updateRequirement(`${reqPrefix}-req-case`, caseOk);
+        
+        // Number check
+        const numberOk = /\d/.test(value);
+        updateRequirement(`${reqPrefix}-req-number`, numberOk);
+        
+        // Symbol check
+        const symbolOk = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(value);
+        updateRequirement(`${reqPrefix}-req-symbol`, symbolOk);
+        
+        // Different from current (always show as pending since we can't check client-side)
+        updateRequirement(`${reqPrefix}-req-different`, false);
+    });
+}
+
+function updateRequirement(reqId, isValid) {
+    const reqElement = document.getElementById(reqId);
+    if (!reqElement) return;
+    
+    const icon = reqElement.querySelector('i');
+    if (isValid) {
+        reqElement.classList.remove('text-muted');
+        reqElement.classList.add('text-success');
+        icon.classList.remove('bi-circle');
+        icon.classList.add('bi-check-circle-fill');
+    } else {
+        reqElement.classList.remove('text-success');
+        reqElement.classList.add('text-muted');
+        icon.classList.remove('bi-check-circle-fill');
+        icon.classList.add('bi-circle');
+    }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
+    // Initialize password validation for account settings
+    validatePasswordRequirements('acc_new_password', 'acc');
+    
     const notifContent = document.getElementById('notif-content');
     const notifBadge = document.getElementById('notif-badge');
 
