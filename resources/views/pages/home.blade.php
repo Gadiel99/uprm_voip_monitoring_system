@@ -404,8 +404,17 @@ document.addEventListener('DOMContentLoaded', function () {
     
     // ===== BUILDING STATUS DATA (from controller - synced with alerts page) =====
     const buildingStatuses = {!! json_encode($buildings->pluck('alert_level', 'name')->toArray()) !!};
+    const buildingStats = {!! json_encode($buildings->mapWithKeys(function($b) { 
+        return [$b->name => [
+            'online_devices' => $b->online_devices,
+            'total_devices' => $b->total_devices,
+            'offline_percentage' => $b->offline_percentage,
+            'alert_level' => $b->alert_level
+        ]]; 
+    })->toArray()) !!};
     
     console.log('Building statuses loaded from controller:', buildingStatuses);
+    console.log('Building stats loaded from controller:', buildingStats);
 
     // Function to get marker color based on status
     function getMarkerColor(buildingName) {
@@ -415,6 +424,26 @@ document.addEventListener('DOMContentLoaded', function () {
             case "yellow": return "#ffc107"; // Yellow - Warning
             case "green": return "#198754";  // Green - Normal
             default: return "#198754";
+        }
+    }
+    
+    // Function to get status label
+    function getStatusLabel(alertLevel) {
+        switch(alertLevel) {
+            case "red": return "Critical";
+            case "yellow": return "Warning";
+            case "green": return "Normal";
+            default: return "Normal";
+        }
+    }
+    
+    // Function to get status color class
+    function getStatusColorClass(alertLevel) {
+        switch(alertLevel) {
+            case "red": return "text-danger";
+            case "yellow": return "text-warning";
+            case "green": return "text-success";
+            default: return "text-success";
         }
     }
 
@@ -485,8 +514,25 @@ document.addEventListener('DOMContentLoaded', function () {
             marker.className = 'marker';
             marker.style.top = `${markerData.top}%`;
             marker.style.left = `${markerData.left}%`;
-            marker.title = markerData.name;
             marker.dataset.index = index;
+            
+            // Get building stats
+            const stats = buildingStats[markerData.name] || { online_devices: 0, total_devices: 0, offline_percentage: 0, alert_level: 'green' };
+            const onlinePercentage = stats.total_devices > 0 ? ((stats.online_devices / stats.total_devices) * 100).toFixed(1) : 0;
+            const statusLabel = getStatusLabel(stats.alert_level);
+            const statusColorClass = getStatusColorClass(stats.alert_level);
+            
+            // Create detailed tooltip with HTML
+            marker.setAttribute('data-bs-toggle', 'tooltip');
+            marker.setAttribute('data-bs-placement', 'top');
+            marker.setAttribute('data-bs-html', 'true');
+            marker.setAttribute('data-bs-title', `
+                <div style="text-align: left; font-size: 0.875rem;">
+                    <strong>${markerData.name}</strong><br>
+                    <span class="${statusColorClass}">${statusLabel}</span><br>
+                    <small>${onlinePercentage}% working</small>
+                </div>
+            `);
             
             // Set marker color based on building status (keep original color in all modes)
             marker.style.backgroundColor = getMarkerColor(markerData.name);
@@ -514,8 +560,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
             markersLayer.appendChild(marker);
 
-            // Initialize tooltip
-            new bootstrap.Tooltip(marker);
+            // Initialize tooltip with HTML enabled
+            new bootstrap.Tooltip(marker, { html: true });
         });
     }
 
