@@ -41,6 +41,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>UPRM VoIP Monitoring System</title>
+    <link rel="icon" type="image/png" href="{{ asset('images/logo-uprm.png') }}">
 
     {{-- External CSS and JavaScript Libraries --}}
     {{-- Bootstrap 5.3.3 - Frontend CSS framework --}}
@@ -422,27 +423,42 @@
                                 <input type="hidden" name="tab" value="password"><!-- NEW -->
 
                                 <label class="form-label fw-semibold">Current Password</label>
-                                <input type="password" id="acc_current_password" name="current_password" class="form-control mb-2" placeholder="Enter current password" autocomplete="current-password" required>
+                                <div class="input-group mb-2">
+                                    <input type="password" id="acc_current_password" name="current_password" class="form-control" placeholder="Enter current password" autocomplete="current-password" required>
+                                    <button class="btn btn-outline-secondary" type="button" onclick="togglePasswordVisibility('acc_current_password', this)">
+                                        <i class="bi bi-eye"></i>
+                                    </button>
+                                </div>
                                 @error('current_password') <div class="text-danger small mb-2">{{ $message }}</div> @enderror
 
                                 <label class="form-label fw-semibold">New Password</label>
-                                <input
-                                    type="password"
-                                    id="acc_new_password"
-                                    name="password"
-                                    class="form-control mb-2"
-                                    placeholder="Example: CampusNet#24!"
-                                    minlength="8"
-                                    maxlength="64"
-                                    pattern=".{8,64}"
-                                    title="Use 8-64 characters with upper- and lowercase letters, a number, and a symbol"
-                                    autocomplete="new-password"
-                                    required
-                                >
+                                <div class="input-group mb-2">
+                                    <input
+                                        type="password"
+                                        id="acc_new_password"
+                                        name="password"
+                                        class="form-control"
+                                        placeholder="Example: CampusNet#24!"
+                                        minlength="8"
+                                        maxlength="64"
+                                        pattern=".{8,64}"
+                                        title="Use 8-64 characters with upper- and lowercase letters, a number, and a symbol"
+                                        autocomplete="new-password"
+                                        required
+                                    >
+                                    <button class="btn btn-outline-secondary" type="button" onclick="togglePasswordVisibility('acc_new_password', this)">
+                                        <i class="bi bi-eye"></i>
+                                    </button>
+                                </div>
                                 @error('password') <div class="text-danger small mb-2">{{ $message }}</div> @enderror
 
                                 <label class="form-label fw-semibold">Confirm New Password</label>
-                                <input type="password" id="acc_new_password_confirmation" name="password_confirmation" class="form-control mb-2" placeholder="Confirm new password" autocomplete="new-password" required>
+                                <div class="input-group mb-2">
+                                    <input type="password" id="acc_new_password_confirmation" name="password_confirmation" class="form-control" placeholder="Confirm new password" autocomplete="new-password" required>
+                                    <button class="btn btn-outline-secondary" type="button" onclick="togglePasswordVisibility('acc_new_password_confirmation', this)">
+                                        <i class="bi bi-eye"></i>
+                                    </button>
+                                </div>
                                 @error('password_confirmation') <div class="text-danger small mb-2">{{ $message }}</div> @enderror
 
                                 <div class="text-muted small d-block mb-2">
@@ -515,6 +531,22 @@
 
 {{-- Critical device notifications --}}
 <script>
+// Toggle password visibility
+function togglePasswordVisibility(inputId, button) {
+    const input = document.getElementById(inputId);
+    const icon = button.querySelector('i');
+    
+    if (input.type === 'password') {
+        input.type = 'text';
+        icon.classList.remove('bi-eye');
+        icon.classList.add('bi-eye-slash');
+    } else {
+        input.type = 'password';
+        icon.classList.remove('bi-eye-slash');
+        icon.classList.add('bi-eye');
+    }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     const notifContent = document.getElementById('notif-content');
     const notifBadge = document.getElementById('notif-badge');
