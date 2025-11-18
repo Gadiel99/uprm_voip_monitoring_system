@@ -23,12 +23,22 @@
           </div>
           <div class="mb-3">
             <label for="password" class="form-label">New Password</label>
-            <input type="password" class="form-control" name="password">
+            <div class="input-group">
+                <input type="password" id="settings_password" class="form-control" name="password">
+                <button class="btn btn-outline-secondary" type="button" onclick="togglePasswordVisibility('settings_password', this)">
+                    <i class="bi bi-eye"></i>
+                </button>
+            </div>
             <small class="text-muted">Leave blank to keep current password.</small>
           </div>
           <div class="mb-3">
             <label for="password_confirmation" class="form-label">Confirm New Password</label>
-            <input type="password" class="form-control" name="password_confirmation">
+            <div class="input-group">
+                <input type="password" id="settings_password_confirmation" class="form-control" name="password_confirmation">
+                <button class="btn btn-outline-secondary" type="button" onclick="togglePasswordVisibility('settings_password_confirmation', this)">
+                    <i class="bi bi-eye"></i>
+                </button>
+            </div>
           </div>
         </div>
         <div class="modal-footer">
@@ -38,4 +48,22 @@
     </form>
   </div>
 </div>
+
+<script>
+// Toggle password visibility
+function togglePasswordVisibility(inputId, button) {
+    const input = document.getElementById(inputId);
+    const icon = button.querySelector('i');
+    
+    if (input.type === 'password') {
+        input.type = 'text';
+        icon.classList.remove('bi-eye');
+        icon.classList.add('bi-eye-slash');
+    } else {
+        input.type = 'password';
+        icon.classList.remove('bi-eye-slash');
+        icon.classList.add('bi-eye');
+    }
+}
+</script>
 @endsection
