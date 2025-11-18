@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Reset Password - UPRM VoIP Monitoring System</title>
+    <link rel="icon" type="image/png" href="{{ asset('images/logo-uprm.png') }}">
 
     {{-- Bootstrap 5 --}}
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -63,6 +64,9 @@
                     <span class="input-group-text bg-light"><i class="bi bi-lock"></i></span>
                     <input id="password" type="password" name="password" class="form-control"
                            placeholder="Enter new password" required autocomplete="new-password">
+                    <button class="btn btn-outline-secondary" type="button" onclick="togglePasswordVisibility('password', this)">
+                        <i class="bi bi-eye"></i>
+                    </button>
                 </div>
             </div>
 
@@ -73,6 +77,9 @@
                     <span class="input-group-text bg-light"><i class="bi bi-lock-fill"></i></span>
                     <input id="password_confirmation" type="password" name="password_confirmation" class="form-control"
                            placeholder="Confirm new password" required autocomplete="new-password">
+                    <button class="btn btn-outline-secondary" type="button" onclick="togglePasswordVisibility('password_confirmation', this)">
+                        <i class="bi bi-eye"></i>
+                    </button>
                 </div>
             </div>
 
@@ -105,22 +112,21 @@
 </div>
 
 <script>
-    // Show password as text on focus, hide on blur
-    document.addEventListener('DOMContentLoaded', function() {
-        function autoShowPassword(inputId) {
-            const input = document.getElementById(inputId);
-            if (!input) return;
-            input.addEventListener('focus', function() {
-                this.type = 'text';
-            });
-            input.addEventListener('blur', function() {
-                this.type = 'password';
-            });
-        }
+    // Toggle password visibility
+    function togglePasswordVisibility(inputId, button) {
+        const input = document.getElementById(inputId);
+        const icon = button.querySelector('i');
         
-        autoShowPassword('password');
-        autoShowPassword('password_confirmation');
-    });
+        if (input.type === 'password') {
+            input.type = 'text';
+            icon.classList.remove('bi-eye');
+            icon.classList.add('bi-eye-slash');
+        } else {
+            input.type = 'password';
+            icon.classList.remove('bi-eye-slash');
+            icon.classList.add('bi-eye');
+        }
+    }
 </script>
 </body>
 </html>
