@@ -489,8 +489,21 @@ class AdminController extends Controller
         if ($result['success']) {
             $this->addSystemLog('SUCCESS', 'Database restored from: ' . $filename);
             
+            // Set restore notification flag in cache for 24 hours
+            \Cache::put('database_restored', [
+                'timestamp' => now()->toDateTimeString(),
+                'admin' => auth()->user()->name,
+                'backup_file' => $filename
+            ], now()->addHours(24));
+            
+            // Invalidate all sessions except current admin
+            $currentSessionId = session()->getId();
+            \DB::table('sessions')
+                ->where('id', '!=', $currentSessionId)
+                ->delete();
+            
             return redirect()->route('admin', ['tab' => 'backup'])
-                ->with('success', $result['message']);
+                ->with('success', $result['message'] . ' All users have been logged out.');
         } else {
             $this->addSystemLog('ERROR', 'Restore failed: ' . $result['message']);
             
