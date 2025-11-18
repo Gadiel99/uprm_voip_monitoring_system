@@ -91,11 +91,22 @@
         border-color: #006f3f;
     }
     
+    #confirmModal .btn-danger {
+        background-color: #dc3545;
+        border-color: #dc3545;
+    }
+    
+    #confirmModal .btn-danger:hover {
+        background-color: #c82333;
+        border-color: #bd2130;
+    }
+    
     #alertModal .modal-header.alert-success {
         background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
     }
     
-    #alertModal .modal-header.alert-danger {
+    #alertModal .modal-header.alert-danger,
+    #confirmModal .modal-header.alert-danger {
         background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
     }
     
@@ -128,9 +139,36 @@ window.customConfirm = function(message, title = 'Confirm Action') {
         const messageEl = document.getElementById('confirmModalMessage');
         const titleEl = document.getElementById('confirmModalTitle');
         const confirmBtn = document.getElementById('confirmModalConfirmBtn');
+        const headerEl = document.querySelector('#confirmModal .modal-header');
+        const iconEl = document.querySelector('#confirmModal .modal-title i');
         
         messageEl.textContent = message;
         titleEl.textContent = title;
+        
+        // Detect if this is a delete/remove action
+        const isDeleteAction = message.toLowerCase().includes('delete') || 
+                               message.toLowerCase().includes('remove') || 
+                               message.toLowerCase().includes('clear') ||
+                               message.includes('🗑️') ||
+                               title.toLowerCase().includes('delete') ||
+                               title.toLowerCase().includes('remove') ||
+                               title.toLowerCase().includes('clear');
+        
+        // Reset classes
+        headerEl.className = 'modal-header border-0 bg-gradient';
+        iconEl.className = 'bi me-2';
+        confirmBtn.className = 'btn';
+        
+        if (isDeleteAction) {
+            // Red/danger styling for delete actions
+            headerEl.classList.add('alert-danger');
+            iconEl.classList.add('bi-exclamation-triangle-fill', 'text-danger');
+            confirmBtn.classList.add('btn-danger');
+        } else {
+            // Default warning styling
+            iconEl.classList.add('bi-question-circle-fill', 'text-warning');
+            confirmBtn.classList.add('btn-primary');
+        }
         
         // Clone button to remove old event listeners
         const newConfirmBtn = confirmBtn.cloneNode(true);
