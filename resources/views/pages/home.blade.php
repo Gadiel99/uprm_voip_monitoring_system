@@ -304,8 +304,8 @@
 
 /* Delete mode styling */
 .marker.delete-mode {
-    background-color: #dc3545 !important;
     animation: pulse 0.8s infinite;
+    cursor: pointer;
 }
 
 @keyframes pulse {
@@ -488,13 +488,12 @@ document.addEventListener('DOMContentLoaded', function () {
             marker.title = markerData.name;
             marker.dataset.index = index;
             
-            // Set marker color based on building status
+            // Set marker color based on building status (keep original color in all modes)
             marker.style.backgroundColor = getMarkerColor(markerData.name);
 
+            // Only add delete-mode class for visual indicator (pulse animation)
             if (deleteMarkerMode) {
                 marker.classList.add('delete-mode');
-            } else if (editMarkerMode) {
-                marker.style.backgroundColor = '#ffc107'; // Yellow for edit mode
             }
 
             // Click handler
