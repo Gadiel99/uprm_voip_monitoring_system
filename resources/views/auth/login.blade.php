@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - UPRM VoIP Monitoring System</title>
+    <link rel="icon" type="image/png" href="{{ asset('images/logo-uprm.png') }}">
 
     {{-- Bootstrap 5 --}}
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -26,6 +27,27 @@
     <div class="login-card text-center">
         <img src="{{ asset('images/logo-uprm.png') }}" alt="UPRM Logo" width="80" class="mb-3">
         <h5 class="fw-semibold mb-4">UPRM VoIP Monitoring System</h5>
+
+        {{-- Database Restore Notification --}}
+        @if (Cache::has('database_restored'))
+            @php
+                $restoreInfo = Cache::get('database_restored');
+            @endphp
+            <div class="alert alert-warning text-start">
+                <div class="d-flex align-items-start">
+                    <i class="bi bi-exclamation-triangle-fill me-2 mt-1"></i>
+                    <div>
+                        <strong>Database Restore Notice</strong>
+                        <p class="mb-2 small">A database restore was performed on {{ $restoreInfo['timestamp'] }}.</p>
+                        <p class="mb-2 small">If you're having trouble logging in:</p>
+                        <ul class="small mb-0">
+                            <li>Use the <a href="{{ route('password.request') }}" class="alert-link">Forgot Password</a> link below</li>
+                            <li>Or contact an administrator for assistance</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        @endif
 
         {{-- Success Message --}}
         @if (session('status'))
@@ -64,6 +86,9 @@
                     <span class="input-group-text bg-light"><i class="bi bi-lock"></i></span>
                     <input id="password" type="password" name="password" class="form-control"
                            placeholder="Enter your password" required>
+                    <button class="btn btn-outline-secondary" type="button" onclick="togglePasswordVisibility('password', this)">
+                        <i class="bi bi-eye"></i>
+                    </button>
                 </div>
             </div>
 
@@ -82,18 +107,21 @@
 </div>
 
 <script>
-    // Show password as text on focus, hide on blur
-    document.addEventListener('DOMContentLoaded', function() {
-        const passwordInput = document.getElementById('password');
-        if (passwordInput) {
-            passwordInput.addEventListener('focus', function() {
-                this.type = 'text';
-            });
-            passwordInput.addEventListener('blur', function() {
-                this.type = 'password';
-            });
+    // Toggle password visibility
+    function togglePasswordVisibility(inputId, button) {
+        const input = document.getElementById(inputId);
+        const icon = button.querySelector('i');
+        
+        if (input.type === 'password') {
+            input.type = 'text';
+            icon.classList.remove('bi-eye');
+            icon.classList.add('bi-eye-slash');
+        } else {
+            input.type = 'password';
+            icon.classList.remove('bi-eye-slash');
+            icon.classList.add('bi-eye');
         }
-    });
+    }
 </script>
 </body>
 </html>
