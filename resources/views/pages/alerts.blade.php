@@ -21,7 +21,7 @@
         <div class="alert alert-warning mb-4">
             <i class="bi bi-info-circle me-2"></i>
             <strong>Alert monitoring is currently disabled.</strong> 
-            Enable it in <a href="{{ route('admin', ['tab' => 'settings']) }}" class="alert-link">Admin  Settings</a> to see color-coded statuses.
+            Enable it in <a href="{{ route('admin', ['tab' => 'settings']) }}" class="alert-link">Admin → Settings</a> to see color-coded statuses.
         </div>
     @endif
     
@@ -84,12 +84,20 @@
             </div>
         </div>
 
-        {{-- Search bar for filtering buildings --}}
-        <div class="mb-3 d-flex gap-2">
-            <input type="text" id="buildingSearch" class="form-control form-control-sm" placeholder="Search buildings by name..." style="max-width: 400px;">
-            <button type="button" class="btn btn-outline-secondary btn-sm px-2" onclick="document.getElementById('buildingSearch').value=''; filterBuildings();">
-                <i class="bi bi-x-lg"></i>
-            </button>
+        {{-- Search bar and thresholds --}}
+        <div class="mb-3 d-flex justify-content-between align-items-center">
+            <div class="d-flex gap-2">
+                <input type="text" id="buildingSearch" class="form-control form-control-sm" placeholder="Search buildings by name..." style="max-width: 400px;">
+                <button type="button" class="btn btn-outline-secondary btn-sm px-2" onclick="document.getElementById('buildingSearch').value=''; filterBuildings();">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+            <div class="text-muted small">
+                <strong>Thresholds:</strong>
+                <span class="badge bg-success ms-1">&lt;{{ $alertSettings->lower_threshold }}%</span>
+                <span class="badge bg-warning text-dark">{{ $alertSettings->lower_threshold }}-{{ $alertSettings->upper_threshold }}%</span>
+                <span class="badge bg-danger">&gt;{{ $alertSettings->upper_threshold }}%</span>
+            </div>
         </div>
 
         <table class="table table-bordered table-hover align-middle mb-0">
