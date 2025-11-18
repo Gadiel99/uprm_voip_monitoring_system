@@ -28,6 +28,7 @@
  * 
  * Results Table Columns:
  *   - User (assigned user name)
+ *   - Extension (phone extension number)
  *   - MAC Address (network identifier)
  *   - IP Address (device IP)
  *   - Status (color-coded badge)
@@ -81,6 +82,7 @@
  * 
  * Results Table Columns:
  *   - User (assigned user name or N/A)
+ *   - Extension (phone extension number or N/A)
  *   - MAC Address (network identifier)
  *   - IP Address (device IP)
  *   - Status (color-coded badge)
@@ -188,6 +190,7 @@
                         <thead class="table-light">
                             <tr>
                                 <th>User</th>
+                                <th>Extension</th>
                                 <th>MAC Address</th>
                                 <th>IP Address</th>
                                 <th>Status</th>
@@ -204,6 +207,19 @@
                                             @endforeach
                                         @else
                                             <span class="text-muted">N/A</span>
+                                        @endif
+                                    </td>
+                                    <td>
+                                        @if(count($device->extensions) > 0)
+                                            <div class="d-flex flex-wrap gap-1">
+                                                @foreach($device->extensions as $ext)
+                                                    <span class="badge bg-light text-dark border">
+                                                        {{ $ext['number'] ?? 'N/A' }}
+                                                    </span>
+                                                @endforeach
+                                            </div>
+                                        @else
+                                            <span class="text-muted">—</span>
                                         @endif
                                     </td>
                                     <td>{{ $device->mac_address }}</td>
