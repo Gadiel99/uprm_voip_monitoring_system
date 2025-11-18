@@ -358,7 +358,7 @@ step_8_setup_application() {
     
     # Create .env file if it doesn't exist
     if [[ ! -f .env ]]; then
-        print_info "Creating .env file..."
+        print_info "Creating .env f`ile..."
         if [[ -f .env.example ]]; then
             cp .env.example .env
         else
@@ -376,13 +376,13 @@ step_8_setup_application() {
     sed -i "s/^DB_USERNAME=.*/DB_USERNAME=${DB_USER}/" .env
     sed -i "s/^DB_PASSWORD=.*/DB_PASSWORD=${DB_PASSWORD}/" .env
     
-    # Set ownership before installing dependencies
+    # Install PHP dependencies (run as root first to create vendor directory)
+    print_info "Installing PHP dependencies (this may take a few minutes)..."
+    composer install --no-interaction --prefer-dist --optimize-autoloader
+    
+    # Set ownership after dependencies are installed
     print_info "Setting directory ownership to $WEB_USER..."
     chown -R $WEB_USER:$WEB_USER "$APP_DIR"
-    
-    # Install PHP dependencies
-    print_info "Installing PHP dependencies (this may take a few minutes)..."
-    sudo -u $WEB_USER composer install --no-interaction --prefer-dist --optimize-autoloader
     
     # Generate application key
     if grep -q "APP_KEY=$" .env || grep -q "APP_KEY=base64:" .env | grep -q "base64:$"; then
