@@ -350,8 +350,13 @@ class AdminController extends Controller
     /**
      * Get critical devices with their current status (for notifications API)
      */
-    public function getCriticalDevicesStatus()
+    public function getCriticalDevicesStatus(Request $request)
     {
+        // Prevent direct browser access - only allow AJAX requests
+        if (!$request->expectsJson() && !$request->ajax()) {
+            return redirect()->route('dashboard');
+        }
+
         $criticalDevices = Devices::where('is_critical', true)
             ->select('device_id', 'ip_address', 'mac_address', 'status')
             ->get();
