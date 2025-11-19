@@ -1,0 +1,1040 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UPRM VoIP Monitoring System - Architecture Diagram</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #006747 0%, #004d35 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        h1 {
+            text-align: center;
+            color: #2d3748;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #718096;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9em;
+            color: #4a5568;
+        }
+
+        .legend-box {
+            width: 30px;
+            height: 20px;
+            border-radius: 4px;
+            border: 2px solid #333;
+        }
+
+        .architecture-diagram {
+            position: relative;
+            padding: 20px;
+        }
+
+        .layer {
+            margin-bottom: 40px;
+            position: relative;
+        }
+
+        .layer-title {
+            font-size: 1.3em;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #2d3748;
+            text-align: center;
+            padding: 10px;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #006747 0%, #004d35 100%);
+            color: white;
+        }
+
+        .components {
+            display: grid;
+            gap: 15px;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        }
+
+        .component {
+            background: white;
+            border: 3px solid;
+            border-radius: 10px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            position: relative;
+        }
+
+        .component:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 20px rgba(0,0,0,0.2);
+        }
+
+        .component.active {
+            box-shadow: 0 0 0 4px #FFD700;
+        }
+
+        .component-title {
+            font-weight: bold;
+            font-size: 1.1em;
+            margin-bottom: 8px;
+            color: #1a202c;
+        }
+
+        .component-description {
+            font-size: 0.85em;
+            color: #4a5568;
+            line-height: 1.4;
+        }
+
+        .component-items {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .component-item {
+            font-size: 0.8em;
+            color: #718096;
+            padding: 3px 0;
+        }
+
+        .component-item::before {
+            content: "▸ ";
+            color: #006747;
+        }
+
+        /* Color coding */
+        .external { border-color: #f56565; background: #fff5f5; }
+        .etl { border-color: #ed8936; background: #fffaf0; }
+        .database { border-color: #48bb78; background: #f0fff4; }
+        .application { border-color: #4299e1; background: #ebf8ff; }
+        .presentation { border-color: #9f7aea; background: #faf5ff; }
+        .infrastructure { border-color: #ed64a6; background: #fff5f7; }
+
+        .flow-arrow {
+            text-align: center;
+            font-size: 2em;
+            color: #006747;
+            margin: -10px 0;
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .info-panel {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 350px;
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            display: none;
+            z-index: 1000;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .info-panel.show {
+            display: block;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(400px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        .info-panel-title {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #2d3748;
+            margin-bottom: 10px;
+        }
+
+        .info-panel-content {
+            color: #4a5568;
+            line-height: 1.6;
+            font-size: 0.95em;
+        }
+
+        .close-panel {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: #e2e8f0;
+            border: none;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            cursor: pointer;
+            font-size: 1.2em;
+            line-height: 1;
+            transition: all 0.2s;
+        }
+
+        .close-panel:hover {
+            background: #cbd5e0;
+            transform: rotate(90deg);
+        }
+
+        .tech-stack {
+            margin-top: 15px;
+            padding: 10px;
+            background: #f7fafc;
+            border-radius: 6px;
+        }
+
+        .tech-stack-title {
+            font-weight: bold;
+            color: #2d3748;
+            margin-bottom: 5px;
+        }
+
+        .tech-item {
+            display: inline-block;
+            background: #006747;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.75em;
+            margin: 3px;
+        }
+
+        .data-flow {
+            margin: 20px 0;
+            padding: 15px;
+            background: #edf2f7;
+            border-left: 4px solid #006747;
+            border-radius: 4px;
+        }
+
+        .data-flow-title {
+            font-weight: bold;
+            color: #2d3748;
+            margin-bottom: 8px;
+        }
+
+        .data-flow-step {
+            font-size: 0.85em;
+            color: #4a5568;
+            padding: 4px 0;
+            padding-left: 20px;
+            position: relative;
+        }
+
+        .data-flow-step::before {
+            content: "→";
+            position: absolute;
+            left: 0;
+            color: #006747;
+        }
+
+        @media (max-width: 768px) {
+            .info-panel {
+                position: relative;
+                width: 100%;
+                margin-top: 20px;
+                right: 0;
+            }
+            
+            .components {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏗️ UPRM VoIP Monitoring System</h1>
+        <p class="subtitle">Interactive Architecture Diagram - Click components for details</p>
+        
+        <div style="text-align: center; margin-bottom: 20px; padding: 15px; background: #f7fafc; border-radius: 8px; border-left: 4px solid #006747;">
+            <div style="display: flex; justify-content: center; gap: 40px; flex-wrap: wrap; font-size: 0.95em;">
+                <div>
+                    <strong style="color: #2d3748;">📍 Application Server:</strong> 
+                    <span style="color: #4a5568;">Ubuntu Server (Laravel Application)</span>
+                </div>
+                <div>
+                    <strong style="color: #2d3748;">📍 SipXcom Platform:</strong> 
+                    <span style="color: #4a5568;">CentOS (VoIP Telephony System)</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-box external"></div>
+                <span>External Systems</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-box etl"></div>
+                <span>ETL Pipeline</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-box database"></div>
+                <span>Database Layer</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-box application"></div>
+                <span>Application Layer</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-box presentation"></div>
+                <span>Presentation Layer</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-box infrastructure"></div>
+                <span>Infrastructure</span>
+            </div>
+        </div>
+
+        <div class="architecture-diagram">
+            <!-- Layer 1: External Systems -->
+            <div class="layer">
+                <div class="layer-title">🌐 External Data Sources (SipXcom Platform - CentOS Server)</div>
+                <div class="components">
+                    <div class="component external" data-component="postgresql">
+                        <div class="component-title">📊 PostgreSQL Database</div>
+                        <div class="component-description">Phone definitions and configurations (CentOS)</div>
+                        <div class="component-items">
+                            <div class="component-item">phone table (device records)</div>
+                            <div class="component-item">users table (extension users)</div>
+                        </div>
+                    </div>
+                    <div class="component external" data-component="mongodb">
+                        <div class="component-title">🍃 MongoDB Database</div>
+                        <div class="component-description">Real-time registration status (CentOS)</div>
+                        <div class="component-items">
+                            <div class="component-item">registrar collection</div>
+                            <div class="component-item">Active device registrations</div>
+                            <div class="component-item">SIP binding information</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flow-arrow">↓</div>
+
+            <!-- Layer 2: ETL Pipeline -->
+            <div class="layer">
+                <div class="layer-title">⚙️ ETL Pipeline & Data Processing (Ubuntu Server)</div>
+                <div class="components">
+                    <div class="component etl" data-component="cron">
+                        <div class="component-title">⏰ Cron Job Scheduler</div>
+                        <div class="component-description">Automated data import every 5 minutes (Ubuntu)</div>
+                        <div class="component-items">
+                            <div class="component-item">SCP file transfer (SSH)</div>
+                            <div class="component-item">Archive extraction</div>
+                            <div class="component-item">Lock file management</div>
+                        </div>
+                    </div>
+                    <div class="component etl" data-component="etl">
+                        <div class="component-title">🔄 ETL Service</div>
+                        <div class="component-description">Extract, Transform, Load processing</div>
+                        <div class="component-items">
+                            <div class="component-item">Parse CSV/JSON files</div>
+                            <div class="component-item">Match devices with registrations</div>
+                            <div class="component-item">Calculate online/offline status</div>
+                            <div class="component-item">Network assignment by IP</div>
+                        </div>
+                    </div>
+                    <div class="component etl" data-component="notification">
+                        <div class="component-title">📧 Notification Service</div>
+                        <div class="component-description">Alert management and email delivery</div>
+                        <div class="component-items">
+                            <div class="component-item">Threshold monitoring</div>
+                            <div class="component-item">Critical device alerts</div>
+                            <div class="component-item">Building status notifications</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flow-arrow">↓</div>
+
+            <!-- Layer 3: Database -->
+            <div class="layer">
+                <div class="layer-title">💾 Application Database (MariaDB - Ubuntu Server)</div>
+                <div class="components">
+                    <div class="component database" data-component="mariadb">
+                        <div class="component-title">🗄️ MariaDB Tables</div>
+                        <div class="component-description">Primary data storage with Eloquent ORM (Ubuntu)</div>
+                        <div class="component-items">
+                            <div class="component-item">devices - VoIP phone records</div>
+                            <div class="component-item">extensions - User extensions</div>
+                            <div class="component-item">networks - Network subnets</div>
+                            <div class="component-item">buildings - Campus buildings</div>
+                            <div class="component-item">users - System users</div>
+                            <div class="component-item">alert_settings - Thresholds</div>
+                            <div class="component-item">device_activity - Historical data</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flow-arrow">↓</div>
+
+            <!-- Layer 4: Model (MVC) -->
+            <div class="layer">
+                <div class="layer-title">📊 Model Layer - Data & Business Logic (Ubuntu Server)</div>
+                <div class="components">
+                    <div class="component application" data-component="models">
+                        <div class="component-title">📦 Eloquent Models</div>
+                        <div class="component-description">ORM data models (M in MVC)</div>
+                        <div class="component-items">
+                            <div class="component-item">User</div>
+                            <div class="component-item">Devices</div>
+                            <div class="component-item">Extensions</div>
+                            <div class="component-item">Network</div>
+                            <div class="component-item">Building</div>
+                            <div class="component-item">AlertSettings</div>
+                            <div class="component-item">DeviceActivity</div>
+                        </div>
+                    </div>
+                    <div class="component application" data-component="services">
+                        <div class="component-title">⚡ Business Services</div>
+                        <div class="component-description">Core business logic layer</div>
+                        <div class="component-items">
+                            <div class="component-item">ETLService</div>
+                            <div class="component-item">NotificationService</div>
+                            <div class="component-item">BackupService</div>
+                            <div class="component-item">DataImportService</div>
+                            <div class="component-item">DeviceActivityService</div>
+                            <div class="component-item">FileCleanupService</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flow-arrow">↓</div>
+
+            <!-- Layer 5: Controller (MVC) -->
+            <div class="layer">
+                <div class="layer-title">🎮 Controller Layer - Request Orchestration (Ubuntu Server)</div>
+                <div class="components">
+                    <div class="component application" data-component="controllers">
+                        <div class="component-title">🎯 Controllers</div>
+                        <div class="component-description">Request handlers (C in MVC)</div>
+                        <div class="component-items">
+                            <div class="component-item">HomeController - Dashboard</div>
+                            <div class="component-item">DevicesController - Device views</div>
+                            <div class="component-item">AlertsController - Alert management</div>
+                            <div class="component-item">AdminController - System config</div>
+                            <div class="component-item">ReportsController - Reporting</div>
+                            <div class="component-item">BuildingController - Building mgmt</div>
+                        </div>
+                    </div>
+                    <div class="component application" data-component="middleware">
+                        <div class="component-title">🛡️ Middleware</div>
+                        <div class="component-description">Request filtering and security</div>
+                        <div class="component-items">
+                            <div class="component-item">auth - Authentication</div>
+                            <div class="component-item">admin - Role authorization</div>
+                            <div class="component-item">CSRF protection</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flow-arrow">↓</div>
+
+            <!-- Layer 6: View (MVC) -->
+            <div class="layer">
+                <div class="layer-title">👁️ View Layer - Presentation (Ubuntu Server)</div>
+                <div class="components">
+                    <div class="component presentation" data-component="views">
+                        <div class="component-title">🎨 Blade Templates</div>
+                        <div class="component-description">Server-side HTML generation (V in MVC)</div>
+                        <div class="component-items">
+                            <div class="component-item">Dashboard - Building status map</div>
+                            <div class="component-item">Devices - Device tables & filters</div>
+                            <div class="component-item">Alerts - Critical notifications</div>
+                            <div class="component-item">Reports - Search & analytics</div>
+                            <div class="component-item">Admin - System management</div>
+                            <div class="component-item">Profile - User settings</div>
+                        </div>
+                    </div>
+                    <div class="component presentation" data-component="frontend">
+                        <div class="component-title">💻 Client-Side Assets</div>
+                        <div class="component-description">CSS & JavaScript frameworks</div>
+                        <div class="component-items">
+                            <div class="component-item">Bootstrap 5 (landing page)</div>
+                            <div class="component-item">Tailwind CSS (app pages)</div>
+                            <div class="component-item">Alpine.js (interactivity)</div>
+                            <div class="component-item">Vite build system</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flow-arrow">↓</div>
+
+            <!-- Layer 7: Infrastructure -->
+            <div class="layer">
+                <div class="layer-title">🔧 Infrastructure & Supporting Systems (Ubuntu Server)</div>
+                <div class="components">
+                    <div class="component infrastructure" data-component="email">
+                        <div class="component-title">📮 Email System</div>
+                        <div class="component-description">SMTP mail delivery</div>
+                        <div class="component-items">
+                            <div class="component-item">Critical alerts</div>
+                            <div class="component-item">Password resets</div>
+                            <div class="component-item">System notifications</div>
+                        </div>
+                    </div>
+                    <div class="component infrastructure" data-component="storage">
+                        <div class="component-title">💿 File Storage</div>
+                        <div class="component-description">Local file system</div>
+                        <div class="component-items">
+                            <div class="component-item">Import archives</div>
+                            <div class="component-item">Database backups</div>
+                            <div class="component-item">Application logs</div>
+                        </div>
+                    </div>
+                    <div class="component infrastructure" data-component="scheduler">
+                        <div class="component-title">📅 Task Scheduler</div>
+                        <div class="component-description">Background jobs</div>
+                        <div class="component-items">
+                            <div class="component-item">ETL automation</div>
+                            <div class="component-item">File cleanup</div>
+                            <div class="component-item">Weekly backups</div>
+                            <div class="component-item">Activity rotation</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="info-panel" id="infoPanel">
+        <button class="close-panel" onclick="closePanel()">×</button>
+        <div class="info-panel-title" id="panelTitle"></div>
+        <div class="info-panel-content" id="panelContent"></div>
+    </div>
+
+    <script>
+        const componentDetails = {
+            postgresql: {
+                title: "PostgreSQL Database (SipXcom - CentOS)",
+                content: `
+                    <p>The PostgreSQL database runs on the SipXcom VoIP platform (CentOS server) and contains phone configuration data.</p>
+                    
+                    <div class="tech-stack">
+                        <div class="tech-stack-title">Server Environment:</div>
+                        <span class="tech-item">CentOS</span>
+                        <span class="tech-item">SipXcom Platform</span>
+                        <span class="tech-item">PostgreSQL</span>
+                    </div>
+                    
+                    <div class="tech-stack">
+                        <div class="tech-stack-title">Data Extracted:</div>
+                        <span class="tech-item">phone.csv</span>
+                        <span class="tech-item">users.csv</span>
+                    </div>
+
+                    <div class="data-flow">
+                        <div class="data-flow-title">Export Process:</div>
+                        <div class="data-flow-step">Data exported to CSV files</div>
+                        <div class="data-flow-step">Files archived on remote server</div>
+                        <div class="data-flow-step">Retrieved via SCP every 5 minutes</div>
+                    </div>
+
+                    <p><strong>Key Tables:</strong></p>
+                    <ul style="margin-left: 20px; margin-top: 10px;">
+                        <li><strong>phone:</strong> Device definitions (MAC, serial numbers)</li>
+                        <li><strong>users:</strong> Extension owners (names, extension numbers)</li>
+                    </ul>
+                `
+            },
+            mongodb: {
+                title: "MongoDB Database (SipXcom - CentOS)",
+                content: `
+                    <p>MongoDB runs on the SipXcom VoIP platform (CentOS server) and stores real-time SIP registration data from active VoIP devices on the network.</p>
+                    
+                    <div class="tech-stack">
+                        <div class="tech-stack-title">Server Environment:</div>
+                        <span class="tech-item">CentOS</span>
+                        <span class="tech-item">SipXcom Platform</span>
+                        <span class="tech-item">MongoDB</span>
+                    </div>
+                    
+                    <div class="tech-stack">
+                        <div class="tech-stack-title">Data Extracted:</div>
+                        <span class="tech-item">registrar.json</span>
+                    </div>
+
+                    <div class="data-flow">
+                        <div class="data-flow-title">Registration Data:</div>
+                        <div class="data-flow-step">Active device registrations</div>
+                        <div class="data-flow-step">SIP binding URIs (IP addresses)</div>
+                        <div class="data-flow-step">Extension identity mapping</div>
+                        <div class="data-flow-step">Expiration timestamps</div>
+                    </div>
+
+                    <p><strong>Purpose:</strong> Determines which devices are currently online and registered to the telephony system.</p>
+                `
+            },
+            cron: {
+                title: "Automated Cron Job Scheduler (Ubuntu Server)",
+                content: `
+                    <p>A cron job running every 5 minutes on Ubuntu Server as the www-data user handles automated data imports from the CentOS SipXcom server.</p>
+                    
+                    <div class="tech-stack">
+                        <div class="tech-stack-title">Server Environment:</div>
+                        <span class="tech-item">Ubuntu Server</span>
+                        <span class="tech-item">Cron Daemon</span>
+                        <span class="tech-item">www-data user</span>
+                    </div>
+                    
+                    <div class="tech-stack">
+                        <div class="tech-stack-title">Technologies:</div>
+                        <span class="tech-item">Bash Script</span>
+                        <span class="tech-item">SSH/SCP</span>
+                        <span class="tech-item">File Locking</span>
+                    </div>
+
+                    <div class="data-flow">
+                        <div class="data-flow-title">Import Workflow (Ubuntu → CentOS):</div>
+                        <div class="data-flow-step">Check for lock file (prevent concurrent runs)</div>
+                        <div class="data-flow-step">SSH from Ubuntu to remote CentOS SipXcom server</div>
+                        <div class="data-flow-step">Find latest archive file on CentOS</div>
+                        <div class="data-flow-step">Download via SCP to Ubuntu</div>
+                        <div class="data-flow-step">Verify archive integrity</div>
+                        <div class="data-flow-step">Extract files on Ubuntu</div>
+                        <div class="data-flow-step">Trigger ETL pipeline on Ubuntu</div>
+                        <div class="data-flow-step">Clean up and log results</div>
+                    </div>
+
+                    <p><strong>Schedule:</strong> */5 * * * * (every 5 minutes)<br>
+                    <strong>Server:</strong> Ubuntu Server<br>
+                    <strong>Remote Source:</strong> CentOS SipXcom Server<br>
+                    <strong>Log Location:</strong> /var/www/uprm_voip_monitoring_system/storage/logs/cron.log</p>
+                `
+            },
+            etl: {
+                title: "ETL Service - Data Processing Pipeline (Ubuntu)",
+                content: `
+                    <p>The ETLService runs on Ubuntu Server and handles extraction, transformation, and loading of VoIP data from CentOS into MariaDB.</p>
+                    
+                    <div class="tech-stack">
+                        <div class="tech-stack-title">Server Environment:</div>
+                        <span class="tech-item">Ubuntu Server</span>
+                        <span class="tech-item">PHP 8.x</span>
+                        <span class="tech-item">Laravel Framework</span>
+                    </div>
+                    
+                    <div class="tech-stack">
+                        <div class="tech-stack-title">Technologies:</div>
+                        <span class="tech-item">PHP</span>
+                        <span class="tech-item">Laravel</span>
+                        <span class="tech-item">Eloquent ORM</span>
+                    </div>
+
+                    <div class="data-flow">
+                        <div class="data-flow-title">ETL Process:</div>
+                        <div class="data-flow-step"><strong>Extract:</strong> Read phones.csv, users.csv, registrar.json</div>
+                        <div class="data-flow-step"><strong>Transform:</strong> Parse and normalize data</div>
+                        <div class="data-flow-step">Create all extensions from users</div>
+                        <div class="data-flow-step">Create all devices from phones</div>
+                        <div class="data-flow-step">Match registrations to determine online/offline status</div>
+                        <div class="data-flow-step">Extract IP addresses from SIP bindings</div>
+                        <div class="data-flow-step">Assign devices to /24 network subnets</div>
+                        <div class="data-flow-step">Link devices to extensions via pivot table</div>
+                        <div class="data-flow-step"><strong>Load:</strong> Update MariaDB tables</div>
+                        <div class="data-flow-step">Update network device counts</div>
+                    </div>
+
+                    <p><strong>Metrics Tracked:</strong> Devices created/updated, extensions created/updated, devices online/offline</p>
+                `
+            },
+            notification: {
+                title: "Notification Service - Alert Management",
+                content: `
+                    <p>Monitors system state and sends email alerts when critical thresholds are exceeded.</p>
+                    
+                    <div class="tech-stack">
+                        <div class="tech-stack-title">Technologies:</div>
+                        <span class="tech-item">Laravel Mail</span>
+                        <span class="tech-item">SMTP</span>
+                        <span class="tech-item">Blade Templates</span>
+                        <span class="tech-item">Cache System</span>
+                    </div>
+
+                    <div class="data-flow">
+                        <div class="data-flow-title">Alert Logic:</div>
+                        <div class="data-flow-step">Check alert settings (is_active, thresholds)</div>
+                        <div class="data-flow-step">Query all buildings with offline percentages</div>
+                        <div class="data-flow-step">Identify buildings in RED status (>= critical threshold)</div>
+                        <div class="data-flow-step">Find offline critical devices</div>
+                        <div class="data-flow-step">Send consolidated email to all recipients</div>
+                        <div class="data-flow-step">Log notification events</div>
+                    </div>
+
+                    <p><strong>Alert Types:</strong></p>
+                    <ul style="margin-left: 20px; margin-top: 10px;">
+                        <li>Building critical status (high offline percentage)</li>
+                        <li>Critical devices offline (marked as is_critical)</li>
+                        <li>Consolidated alerts (one email with all issues)</li>
+                    </ul>
+                `
+            },
+            mariadb: {
+                title: "MariaDB - Application Database (Ubuntu Server)",
+                content: `
+                    <p>Primary relational database running on Ubuntu Server, storing all processed VoIP monitoring data.</p>
+                    
+                    <div class="tech-stack">
+                        <div class="tech-stack-title">Server Environment:</div>
+                        <span class="tech-item">Ubuntu Server</span>
+                        <span class="tech-item">MariaDB 10.x</span>
+                        <span class="tech-item">InnoDB Engine</span>
+                    </div>
+                    
+                    <div class="tech-stack">
+                        <div class="tech-stack-title">Technologies:</div>
+                        <span class="tech-item">MariaDB 10.x</span>
+                        <span class="tech-item">InnoDB Engine</span>
+                        <span class="tech-item">Laravel Migrations</span>
+                    </div>
+
+                    <div class="data-flow">
+                        <div class="data-flow-title">Database Schema:</div>
+                        <div class="data-flow-step"><strong>devices:</strong> VoIP phones (MAC, IP, status, network)</div>
+                        <div class="data-flow-step"><strong>extensions:</strong> User extensions (number, name, device count)</div>
+                        <div class="data-flow-step"><strong>networks:</strong> /24 subnets with device counts</div>
+                        <div class="data-flow-step"><strong>buildings:</strong> Campus buildings with coordinates</div>
+                        <div class="data-flow-step"><strong>building_networks:</strong> Building-network relationships</div>
+                        <div class="data-flow-step"><strong>device_extensions:</strong> Device-extension pivot table</div>
+                        <div class="data-flow-step"><strong>users:</strong> System users with roles</div>
+                        <div class="data-flow-step"><strong>alert_settings:</strong> Threshold configurations</div>
+                        <div class="data-flow-step"><strong>device_activity:</strong> Historical activity tracking</div>
+                    </div>
+
+                    <p><strong>Access:</strong> Through Laravel's Eloquent ORM for type-safe queries and relationships</p>
+                `
+            },
+            controllers: {
+                title: "Controllers (Laravel MVC - 'C' Component)",
+                content: `
+                    <p>Controllers are the 'C' in MVC. They receive HTTP requests from routes, orchestrate business logic via Services, retrieve data via Models, and return Views or JSON responses.</p>
+                    
+                    <div class="tech-stack">
+                        <div class="tech-stack-title">Key Controllers:</div>
+                        <span class="tech-item">HomeController</span>
+                        <span class="tech-item">DevicesController</span>
+                        <span class="tech-item">AlertsController</span>
+                        <span class="tech-item">AdminController</span>
+                    </div>
+
+                    <div class="data-flow">
+                        <div class="data-flow-title">Controller Responsibilities:</div>
+                        <div class="data-flow-step"><strong>HomeController:</strong> Dashboard with building status map</div>
+                        <div class="data-flow-step"><strong>DevicesController:</strong> Device lists by building/network</div>
+                        <div class="data-flow-step"><strong>AlertsController:</strong> Critical alerts and offline device lists</div>
+                        <div class="data-flow-step"><strong>AdminController:</strong> Settings, backups, critical device management</div>
+                        <div class="data-flow-step"><strong>ReportsController:</strong> Search and filtering functionality</div>
+                        <div class="data-flow-step"><strong>BuildingController:</strong> Building and network CRUD</div>
+                        <div class="data-flow-step"><strong>ProfileController:</strong> User profile management</div>
+                    </div>
+
+                    <p><strong>Pattern:</strong> Thin controllers - delegate business logic to Services, focus on HTTP layer</p>
+                `
+            },
+            services: {
+                title: "Service Layer (Not Part of MVC - Additional Architecture)",
+                content: `
+                    <p>Services are an additional architectural layer (not part of traditional MVC). They encapsulate complex business logic, coordinate multiple Models, and keep Controllers thin.</p>
+                    
+                    <div class="tech-stack">
+                        <div class="tech-stack-title">Available Services:</div>
+                        <span class="tech-item">ETLService</span>
+                        <span class="tech-item">NotificationService</span>
+                        <span class="tech-item">BackupService</span>
+                        <span class="tech-item">DeviceActivityService</span>
+                    </div>
+
+                    <div class="data-flow">
+                        <div class="data-flow-title">Service Responsibilities:</div>
+                        <div class="data-flow-step"><strong>ETLService:</strong> Data import and transformation pipeline</div>
+                        <div class="data-flow-step"><strong>NotificationService:</strong> Email alerts and threshold monitoring</div>
+                        <div class="data-flow-step"><strong>BackupService:</strong> Database backup and restore operations</div>
+                        <div class="data-flow-step"><strong>DataImportService:</strong> Import file handling</div>
+                        <div class="data-flow-step"><strong>DeviceActivityService:</strong> Historical activity tracking</div>
+                        <div class="data-flow-step"><strong>FileCleanupService:</strong> Old file cleanup automation</div>
+                    </div>
+
+                    <p><strong>Benefits:</strong> Reusability, testability, separation of concerns, easier maintenance</p>
+                `
+            },
+            models: {
+                title: "Models (Laravel MVC - 'M' Component)",
+                content: `
+                    <p>Models are the 'M' in MVC. Using Laravel's Eloquent ORM (Active Record pattern), they represent database tables, define relationships, and handle data access logic.</p>
+                    
+                    <div class="tech-stack">
+                        <div class="tech-stack-title">Core Models:</div>
+                        <span class="tech-item">Devices</span>
+                        <span class="tech-item">Extensions</span>
+                        <span class="tech-item">Network</span>
+                        <span class="tech-item">Building</span>
+                        <span class="tech-item">User</span>
+                    </div>
+
+                    <div class="data-flow">
+                        <div class="data-flow-title">Model Relationships:</div>
+                        <div class="data-flow-step">Devices → belongsTo → Network</div>
+                        <div class="data-flow-step">Devices → belongsToMany → Extensions (pivot)</div>
+                        <div class="data-flow-step">Network → belongsToMany → Buildings</div>
+                        <div class="data-flow-step">Building → hasManyThrough → Devices</div>
+                        <div class="data-flow-step">Extensions → belongsToMany → Devices</div>
+                        <div class="data-flow-step">DeviceActivity → belongsTo → Devices</div>
+                    </div>
+
+                    <p><strong>Features:</strong> Eager loading, scopes, accessors/mutators, observers, soft deletes</p>
+                `
+            },
+            middleware: {
+                title: "Middleware - Request Pipeline",
+                content: `
+                    <p>Middleware filters HTTP requests before they reach controllers, handling authentication and authorization.</p>
+                    
+                    <div class="tech-stack">
+                        <div class="tech-stack-title">Active Middleware:</div>
+                        <span class="tech-item">auth</span>
+                        <span class="tech-item">admin</span>
+                        <span class="tech-item">CSRF</span>
+                        <span class="tech-item">web</span>
+                    </div>
+
+                    <div class="data-flow">
+                        <div class="data-flow-title">Middleware Flow:</div>
+                        <div class="data-flow-step"><strong>auth:</strong> Verify user is logged in</div>
+                        <div class="data-flow-step"><strong>admin:</strong> Verify user has admin/super_admin role</div>
+                        <div class="data-flow-step"><strong>web:</strong> Session, cookies, CSRF protection</div>
+                        <div class="data-flow-step">Route to controller if all checks pass</div>
+                        <div class="data-flow-step">Redirect to login or 403 if unauthorized</div>
+                    </div>
+
+                    <p><strong>Role Hierarchy:</strong> super_admin > admin > user</p>
+                    <p><strong>Protected Routes:</strong> Dashboard, alerts, devices, reports require 'auth'. Admin panel requires 'admin'.</p>
+                `
+            },
+            views: {
+                title: "Blade Templates (Laravel's View Component)",
+                content: `
+                    <p>Blade is Laravel's templating engine that compiles templates into plain PHP and renders HTML on the server with data from controllers. This is the 'V' in MVC.</p>
+                    
+                    <div class="tech-stack">
+                        <div class="tech-stack-title">Technologies:</div>
+                        <span class="tech-item">Blade Template Engine</span>
+                        <span class="tech-item">Tailwind CSS</span>
+                        <span class="tech-item">Alpine.js</span>
+                    </div>
+
+                    <div class="data-flow">
+                        <div class="data-flow-title">Blade Template Files:</div>
+                        <div class="data-flow-step"><strong>resources/views/pages/home.blade.php:</strong> Dashboard with campus map</div>
+                        <div class="data-flow-step"><strong>resources/views/pages/devices.blade.php:</strong> Device tables</div>
+                        <div class="data-flow-step"><strong>resources/views/pages/alerts.blade.php:</strong> Critical alerts</div>
+                        <div class="data-flow-step"><strong>resources/views/pages/reports.blade.php:</strong> Search interface</div>
+                        <div class="data-flow-step"><strong>resources/views/pages/admin.blade.php:</strong> Admin panel</div>
+                        <div class="data-flow-step"><strong>resources/views/auth/*.blade.php:</strong> Authentication forms</div>
+                    </div>
+
+                    <p><strong>Blade Features:</strong> @extends, @section, @include, @component, @if/@foreach directives, {{ }} for safe output</p>
+                `
+            },
+            frontend: {
+                title: "Client-Side Assets (Mixed Framework Stack)",
+                content: `
+                    <p>Your application uses different CSS frameworks depending on the page type.</p>
+                    
+                    <div class="tech-stack">
+                        <div class="tech-stack-title">Landing Page:</div>
+                        <span class="tech-item">Bootstrap 5.3.3</span>
+                        <span class="tech-item">Bootstrap Icons</span>
+                        <span class="tech-item">Loaded via CDN</span>
+                    </div>
+                    
+                    <div class="tech-stack">
+                        <div class="tech-stack-title">Application Pages:</div>
+                        <span class="tech-item">Tailwind CSS</span>
+                        <span class="tech-item">Alpine.js</span>
+                        <span class="tech-item">Compiled by Vite</span>
+                    </div>
+
+                    <div class="data-flow">
+                        <div class="data-flow-title">Asset Pipeline:</div>
+                        <div class="data-flow-step"><strong>Bootstrap:</strong> CDN links in welcome.blade.php (public landing page)</div>
+                        <div class="data-flow-step"><strong>Tailwind + Alpine:</strong> Source in resources/css/app.css & resources/js/app.js</div>
+                        <div class="data-flow-step">Vite compiles and bundles Tailwind/Alpine</div>
+                        <div class="data-flow-step">Output: public/build/*.css, public/build/*.js</div>
+                        <div class="data-flow-step">Authenticated pages load via @vite directive</div>
+                    </div>
+
+                    <p><strong>Why Both?</strong></p>
+                    <ul style="margin-left: 20px; margin-top: 10px;">
+                        <li><strong>Bootstrap:</strong> Used for the public welcome/landing page (quick, CDN-based)</li>
+                        <li><strong>Tailwind:</strong> Used for the authenticated application (dashboard, devices, alerts, admin)</li>
+                        <li><strong>Alpine.js:</strong> Adds reactivity (dropdowns, modals, tabs) without heavy frameworks</li>
+                    </ul>
+                `
+            },
+            email: {
+                title: "Email System - SMTP Delivery",
+                content: `
+                    <p>Laravel Mail system handles all email notifications using configured SMTP server.</p>
+                    
+                    <div class="tech-stack">
+                        <div class="tech-stack-title">Technologies:</div>
+                        <span class="tech-item">Laravel Mail</span>
+                        <span class="tech-item">SMTP</span>
+                        <span class="tech-item">Blade Email Templates</span>
+                    </div>
+
+                    <div class="data-flow">
+                        <div class="data-flow-title">Email Types:</div>
+                        <div class="data-flow-step"><strong>Critical Alerts:</strong> Building/device offline notifications</div>
+                        <div class="data-flow-step"><strong>Password Reset:</strong> Secure token links</div>
+                        <div class="data-flow-step"><strong>System Notifications:</strong> Backup completion, errors</div>
+                    </div>
+
+                    <p><strong>Configuration:</strong> MAIL_* environment variables for SMTP settings</p>
+                    <p><strong>Recipients:</strong> MAIL_ALERTS_TO (distribution list) or all admin users</p>
+                `
+            },
+            storage: {
+                title: "File Storage System",
+                content: `
+                    <p>Local file system storage for imports, backups, and logs.</p>
+                    
+                    <div class="tech-stack">
+                        <div class="tech-stack-title">Storage Areas:</div>
+                        <span class="tech-item">storage/app</span>
+                        <span class="tech-item">storage/logs</span>
+                        <span class="tech-item">storage/backups</span>
+                    </div>
+
+                    <div class="data-flow">
+                        <div class="data-flow-title">Storage Structure:</div>
+                        <div class="data-flow-step"><strong>storage/app/imports:</strong> Extracted data files</div>
+                        <div class="data-flow-step"><strong>storage/app/backups:</strong> Database SQL dumps</div>
+                        <div class="data-flow-step"><strong>storage/logs:</strong> Application and cron logs</div>
+                        <div class="data-flow-step"><strong>storage/framework:</strong> Cache, sessions, views</div>
+                    </div>
+
+                    <p><strong>Retention Policy:</strong> Import files cleaned after 30 days, backups kept for 4 weeks</p>
+                `
+            },
+            scheduler: {
+                title: "Task Scheduler - Background Jobs",
+                content: `
+                    <p>Laravel's task scheduler runs automated maintenance and processing jobs.</p>
+                    
+                    <div class="tech-stack">
+                        <div class="tech-stack-title">Scheduled Tasks:</div>
+                        <span class="tech-item">ETL Import</span>
+                        <span class="tech-item">File Cleanup</span>
+                        <span class="tech-item">Database Backup</span>
+                    </div>
+
+                    <div class="data-flow">
+                        <div class="data-flow-title">Schedule:</div>
+                        <div class="data-flow-step"><strong>Every 5 minutes:</strong> Auto-import cron (SCP + ETL)</div>
+                        <div class="data-flow-step"><strong>Daily:</strong> File cleanup (old imports)</div>
+                        <div class="data-flow-step"><strong>Weekly:</strong> Database backup (Sundays 2 AM)</div>
+                        <div class="data-flow-step"><strong>Daily:</strong> Activity data rotation</div>
+                    </div>
+
+                    <p><strong>Execution:</strong> Single cron entry runs Laravel's scheduler which manages all tasks</p>
+                    <p><strong>Monitoring:</strong> Logs written to storage/logs/ for auditing and debugging</p>
+                `
+            }
+        };
+
+        // Add click handlers to all components
+        document.querySelectorAll('.component').forEach(component => {
+            component.addEventListener('click', function() {
+                const componentKey = this.dataset.component;
+                const details = componentDetails[componentKey];
+                
+                if (details) {
+                    document.getElementById('panelTitle').textContent = details.title;
+                    document.getElementById('panelContent').innerHTML = details.content;
+                    document.getElementById('infoPanel').classList.add('show');
+                    
+                    // Highlight active component
+                    document.querySelectorAll('.component').forEach(c => c.classList.remove('active'));
+                    this.classList.add('active');
+                }
+            });
+        });
+
+        function closePanel() {
+            document.getElementById('infoPanel').classList.remove('show');
+            document.querySelectorAll('.component').forEach(c => c.classList.remove('active'));
+        }
+
+        // Close panel when clicking outside
+        document.addEventListener('click', function(event) {
+            const panel = document.getElementById('infoPanel');
+            const components = document.querySelectorAll('.component');
+            let clickedComponent = false;
+            
+            components.forEach(c => {
+                if (c.contains(event.target)) {
+                    clickedComponent = true;
+                }
+            });
+            
+            if (!panel.contains(event.target) && !clickedComponent) {
+                closePanel();
+            }
+        });
+    </script>
+</body>
+</html>
