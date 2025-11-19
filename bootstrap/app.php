@@ -16,8 +16,10 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
         // Mark authenticated users as online for a short TTL to display
         // online/offline status in the Admin -> Users table.
+        // CacheManager ensures logout is effective and back button won't show cached pages
         $middleware->appendToGroup('web', [
             \App\Http\Middleware\MarkUserOnline::class,
+            \App\Http\Middleware\CacheManager::class,
             // LogPageAccess removed - only logging important actions now
         ]);
     })
@@ -68,6 +70,16 @@ return Application::configure(basePath: dirname(__DIR__))
                         'trace' => $e->getTraceAsString()
                     ]
                 );
+            }
+        });
+        
+        // Handle 419 Page Expired (CSRF token expired) - redirect to login or home
+        $exceptions->render(function (\Symfony\Component\HttpKernel\Exception\HttpException $e, $request) {
+            if ($e->getStatusCode() === 419) {
+                if (auth()->check()) {
+                    return redirect()->route('dashboard')->with('error', 'Your session has expired. Please try again.');
+                }
+                return redirect()->route('login')->with('status', 'Your session has expired. Please login again.');
             }
         });
     })->create();
