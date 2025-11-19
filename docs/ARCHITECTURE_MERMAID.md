@@ -7,6 +7,7 @@ graph TB
     subgraph External["External Systems - SipXcom Platform (CentOS)"]
         PG[(PostgreSQL<br/>Phone Config)]
         MG[(MongoDB<br/>SIP Registrations)]
+        CENTOS_CRON[CentOS Cron Job<br/>Every 5 minutes]
         CSV[CSV Export<br/>phone.csv + users.csv]
     end
 
@@ -46,9 +47,11 @@ graph TB
     USER[End User<br/>Web Browser]
 
     %% External to ETL Flow
-    PG -->|Export| CSV
-    MG -->|Export| CSV
-    CSV -->|Trigger| CRON
+    CENTOS_CRON -->|Trigger| PG
+    CENTOS_CRON -->|Trigger| MG
+    PG -->|Export Query| CSV
+    MG -->|Export Query| CSV
+    CSV -->|File Ready| CRON
     CRON -->|Execute| SCP
     SCP -->|Download| ETL
     ETL -->|Parse| IMPORT
@@ -107,16 +110,23 @@ graph TB
 ### 1. Data Ingestion Flow
 ```mermaid
 sequenceDiagram
-    participant SipXcom as SipXcom (CentOS)
-    participant Cron as Cron Job
+    participant CentosCron as CentOS Cron Job
+    participant PG as PostgreSQL
+    participant MG as MongoDB
+    participant CSV as CSV Files
+    participant Cron as Ubuntu Cron Job
     participant SCP as SCP Transfer
     participant ETL as ETLService
     participant Import as DataImportService
     participant DB as MariaDB
 
-    SipXcom->>SipXcom: Export PostgreSQL/MongoDB to CSV
-    Note over SipXcom: phone.csv + users.csv
-    Cron->>Cron: Trigger every 5 minutes
+    Note over CentosCron: Every 5 minutes on CentOS
+    CentosCron->>PG: Query phone data
+    CentosCron->>MG: Query registration data
+    PG->>CSV: Export to phone.csv
+    MG->>CSV: Export to users.csv
+    Note over CSV: Files saved on CentOS server
+    Cron->>Cron: Trigger every 5 minutes on Ubuntu
     Cron->>SCP: Execute SCP command
     SCP->>SipXcom: Download CSV files
     SCP->>ETL: Pass file paths
@@ -370,11 +380,11 @@ mindmap
 - Admin routes: /admin, /admin/users, /admin/backup, etc.
 
 ### ETL Pipeline
-- Runs every 5 minutes via cron
-- Downloads CSV from SipXcom (CentOS)
+- **CentOS Server**: Cron job exports PostgreSQL/MongoDB to CSV every 5 minutes
+- **Ubuntu Server**: Cron job runs every 5 minutes, downloads CSV via SCP
 - Parses phone.csv and users.csv
 - Updates devices and extensions tables in MariaDB
-- Maintains data synchronization
+- Maintains data synchronization between SipXcom and monitoring system
 
 ### Cache Management
 - CacheManager middleware prevents browser caching
