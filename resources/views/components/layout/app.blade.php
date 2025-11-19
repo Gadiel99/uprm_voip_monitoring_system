@@ -161,6 +161,18 @@
             border: none;
         }
 
+        /* Consistent extension tag styling across tables */
+        .ext-badge {
+            background-color: #f8f9fa; /* light */
+            color: #212529;            /* dark */
+            border: 1px solid #dee2e6; /* light border */
+            border-radius: 10rem;      /* pill */
+            font-weight: 500;
+            font-size: 0.85rem;
+            padding: 0.35em 0.6em;
+            display: inline-block;
+        }
+
         .dropdown-header {
             font-size: 0.9rem;
             color: #333;
@@ -590,7 +602,13 @@ document.addEventListener('DOMContentLoaded', () => {
     // Function to check critical devices and update notifications from DATABASE
     async function updateCriticalDeviceNotifications() {
         try {
-            const response = await fetch('/api/critical-devices/status');
+            const response = await fetch('/api/critical-devices/status', {
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                credentials: 'same-origin'
+            });
             if (!response.ok) throw new Error('Failed to fetch critical devices');
             
             const criticalDevices = await response.json();
