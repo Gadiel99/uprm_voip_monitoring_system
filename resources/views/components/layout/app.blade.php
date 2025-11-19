@@ -473,13 +473,13 @@
 
                                 <div class="text-muted small d-block mb-2">
                                     Password requirements:
-                                    <ul class="small mb-0" id="accPasswordReqs">
+                                    <ul class="small mb-0" id="accPasswordReqs" style="list-style: none; padding-left: 0;">
                                         <li id="acc-req-length"><i class="bi bi-circle"></i> 8–64 characters</li>
                                         <li id="acc-req-case"><i class="bi bi-circle"></i> At least one uppercase and one lowercase letter</li>
                                         <li id="acc-req-number"><i class="bi bi-circle"></i> At least one number</li>
                                         <li id="acc-req-symbol"><i class="bi bi-circle"></i> At least one symbol (e.g., ! @ # $ %)</li>
+                                        <li id="acc-req-different"><i class="bi bi-circle"></i> Password must be different from your current password (validated on submit)</li>
                                     </ul>
-                                    <p class="small mb-0 mt-1"><i class="bi bi-info-circle"></i> Password must be different from your current password (validated on submit)</p>
                                 </div>
 
                                 <button class="btn btn-dark w-100" type="submit">Update Password</button>
@@ -512,30 +512,6 @@
                 }
             }
         @endif
-
-        // Password fields: show as text on focus, mask on blur
-        function autoShowPassword(inputId) {
-            const input = document.getElementById(inputId);
-            if (!input) return;
-            input.addEventListener('focus', function() {
-                input.type = 'text';
-            });
-            input.addEventListener('blur', function() {
-                input.type = 'password';
-            });
-        }
-        // Attach to all password fields in Account Settings modal
-        function attachAutoShowAll() {
-            autoShowPassword('acc_current_password');
-            autoShowPassword('acc_new_password');
-            autoShowPassword('acc_new_password_confirmation');
-        }
-        // Attach on page load and when modal is shown
-        attachAutoShowAll();
-        const modalEl2 = document.getElementById('accountSettingsModal');
-        if (modalEl2) {
-            modalEl2.addEventListener('shown.bs.modal', attachAutoShowAll);
-        }
     });
     </script>
 

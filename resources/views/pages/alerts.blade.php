@@ -78,9 +78,9 @@
                     $yellowCount = $buildings->where('alert_level', 'yellow')->count();
                     $redCount = $buildings->where('alert_level', 'red')->count();
                 @endphp
-                <span class="me-3"><strong class="text-danger">{{ $redCount }}</strong> <span class="text-muted">Critical</span></span>
-                <span class="me-3"><strong class="text-warning">{{ $yellowCount }}</strong> <span class="text-muted">Warning</span></span>
-                <span><strong class="text-success">{{ $greenCount }}</strong> <span class="text-muted">Normal</span></span>
+                <span class="me-3"><strong class="text-success">{{ $greenCount }}</strong> <span class="text-success">Normal</span></span>
+                <span class="me-3"><strong class="text-warning">{{ $yellowCount }}</strong> <span class="text-warning">Warning</span></span>
+                <span><strong class="text-danger">{{ $redCount }}</strong> <span class="text-danger">Critical</span></span>
             </div>
         </div>
 
@@ -92,11 +92,11 @@
                     <i class="bi bi-x-lg"></i>
                 </button>
             </div>
-            <div class="text-muted small">
+            <div class="small">
                 <strong>Thresholds:</strong>
-                <span class="badge bg-success ms-1">&lt;{{ $alertSettings->lower_threshold }}%</span>
-                <span class="badge bg-warning text-dark">{{ $alertSettings->lower_threshold }}-{{ $alertSettings->upper_threshold }}%</span>
-                <span class="badge bg-danger">&gt;{{ $alertSettings->upper_threshold }}%</span>
+                <span class="text-success fw-bold ms-2">&lt;{{ $alertSettings->lower_threshold }}%</span>
+                <span class="text-warning fw-bold ms-2">{{ $alertSettings->lower_threshold }}-{{ $alertSettings->upper_threshold }}%</span>
+                <span class="text-danger fw-bold ms-2">&gt;{{ $alertSettings->upper_threshold }}%</span>
             </div>
         </div>
 
@@ -144,16 +144,6 @@
                 </tr>
             </tbody>
         </table>
-        
-        <div class="mt-3">
-            <small class="text-muted">
-                <i class="bi bi-info-circle me-1"></i>
-                <strong>Thresholds:</strong>
-                Green &lt; {{ $alertSettings->lower_threshold }}% | 
-                Yellow {{ $alertSettings->lower_threshold }}%-{{ $alertSettings->upper_threshold }}% | 
-                Red &gt; {{ $alertSettings->upper_threshold }}%
-            </small>
-        </div>
     </div>
 
 </div>
