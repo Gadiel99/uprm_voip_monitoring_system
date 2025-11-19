@@ -18,7 +18,7 @@ class AdminOnly
     {
         $u = $request->user();
         if (!$u) {
-            abort(404); // Alternativa: abort(403) para "Prohibido"
+            return redirect()->route('dashboard')->with('error', 'You must be logged in to access this page.');
         }
 
         // Normaliza el rol a minúsculas sin guiones bajos
@@ -26,7 +26,7 @@ class AdminOnly
 
         // Acepta admin y superadmin (con y sin guion bajo)
         if (!in_array($role, ['admin', 'superadmin'])) {
-            abort(404); // Alternativa: abort(403)
+            return redirect()->route('dashboard')->with('error', 'You are not an admin. Access denied.');
         }
 
         return $next($request);
