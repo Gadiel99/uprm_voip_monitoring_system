@@ -473,7 +473,9 @@
                         <div class="component-description">Request filtering and security</div>
                         <div class="component-items">
                             <div class="component-item">auth - Authentication</div>
-                            <div class="component-item">admin - Role authorization</div>
+                            <div class="component-item">AdminOnly - Role authorization</div>
+                            <div class="component-item">CacheManager - Cache control</div>
+                            <div class="component-item">MarkUserOnline - Activity tracking</div>
                             <div class="component-item">CSRF protection</div>
                         </div>
                     </div>
@@ -840,27 +842,30 @@
             middleware: {
                 title: "Middleware - Request Pipeline",
                 content: `
-                    <p>Middleware filters HTTP requests before they reach controllers, handling authentication and authorization.</p>
+                    <p>Middleware filters HTTP requests before they reach controllers, handling authentication, authorization, and security.</p>
                     
                     <div class="tech-stack">
                         <div class="tech-stack-title">Active Middleware:</div>
                         <span class="tech-item">auth</span>
-                        <span class="tech-item">admin</span>
+                        <span class="tech-item">AdminOnly</span>
+                        <span class="tech-item">CacheManager</span>
+                        <span class="tech-item">MarkUserOnline</span>
                         <span class="tech-item">CSRF</span>
-                        <span class="tech-item">web</span>
                     </div>
 
                     <div class="data-flow">
                         <div class="data-flow-title">Middleware Flow:</div>
                         <div class="data-flow-step"><strong>auth:</strong> Verify user is logged in</div>
-                        <div class="data-flow-step"><strong>admin:</strong> Verify user has admin/super_admin role</div>
+                        <div class="data-flow-step"><strong>AdminOnly:</strong> Verify admin/super_admin role, redirect with message</div>
+                        <div class="data-flow-step"><strong>CacheManager:</strong> Prevent browser caching, block unauthenticated access</div>
+                        <div class="data-flow-step"><strong>MarkUserOnline:</strong> Track user activity timestamps</div>
                         <div class="data-flow-step"><strong>web:</strong> Session, cookies, CSRF protection</div>
                         <div class="data-flow-step">Route to controller if all checks pass</div>
-                        <div class="data-flow-step">Redirect to login or 403 if unauthorized</div>
                     </div>
 
                     <p><strong>Role Hierarchy:</strong> super_admin > admin > user</p>
-                    <p><strong>Protected Routes:</strong> Dashboard, alerts, devices, reports require 'auth'. Admin panel requires 'admin'.</p>
+                    <p><strong>Security Features:</strong> API endpoints protected from direct browser access, CSRF token validation, 419 page expired handler</p>
+                    <p><strong>Protected Routes:</strong> Dashboard, alerts, devices, reports require 'auth'. Admin panel requires 'AdminOnly'.</p>
                 `
             },
             views: {

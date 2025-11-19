@@ -47,6 +47,15 @@
 @extends('components.layout.app')
 
 @section('content')
+{{-- Error message display --}}
+@if(session('error'))
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+        <strong>Access Denied:</strong> {{ session('error') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+@endif
+
 {{-- Control buttons for map management --}}
 <div class="mb-3 d-flex align-items-center gap-3">
     {{-- Legend - inline with buttons --}}
