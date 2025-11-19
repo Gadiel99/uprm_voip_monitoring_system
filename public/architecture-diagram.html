@@ -502,9 +502,9 @@
                         <div class="component-title">💻 Client-Side Assets</div>
                         <div class="component-description">CSS & JavaScript frameworks</div>
                         <div class="component-items">
-                            <div class="component-item">Bootstrap 5 (landing page)</div>
-                            <div class="component-item">Tailwind CSS (app pages)</div>
-                            <div class="component-item">Alpine.js (interactivity)</div>
+                            <div class="component-item">Bootstrap 5 (primary framework)</div>
+                            <div class="component-item">Bootstrap Icons</div>
+                            <div class="component-item">Alpine.js (minimal usage)</div>
                             <div class="component-item">Vite build system</div>
                         </div>
                     </div>
@@ -889,38 +889,45 @@
                 `
             },
             frontend: {
-                title: "Client-Side Assets (Mixed Framework Stack)",
+                title: "Client-Side Assets (Bootstrap-Based)",
                 content: `
-                    <p>Your application uses different CSS frameworks depending on the page type.</p>
+                    <p>The application primarily uses Bootstrap 5 for styling across all pages, with minimal Alpine.js for interactivity.</p>
                     
                     <div class="tech-stack">
-                        <div class="tech-stack-title">Landing Page:</div>
+                        <div class="tech-stack-title">Primary CSS Framework:</div>
                         <span class="tech-item">Bootstrap 5.3.3</span>
-                        <span class="tech-item">Bootstrap Icons</span>
+                        <span class="tech-item">Bootstrap Icons 1.11.3</span>
                         <span class="tech-item">Loaded via CDN</span>
                     </div>
                     
                     <div class="tech-stack">
-                        <div class="tech-stack-title">Application Pages:</div>
-                        <span class="tech-item">Tailwind CSS</span>
+                        <div class="tech-stack-title">JavaScript:</div>
+                        <span class="tech-item">Bootstrap JS Bundle</span>
                         <span class="tech-item">Alpine.js</span>
                         <span class="tech-item">Compiled by Vite</span>
                     </div>
 
                     <div class="data-flow">
-                        <div class="data-flow-title">Asset Pipeline:</div>
-                        <div class="data-flow-step"><strong>Bootstrap:</strong> CDN links in welcome.blade.php (public landing page)</div>
-                        <div class="data-flow-step"><strong>Tailwind + Alpine:</strong> Source in resources/css/app.css & resources/js/app.js</div>
-                        <div class="data-flow-step">Vite compiles and bundles Tailwind/Alpine</div>
-                        <div class="data-flow-step">Output: public/build/*.css, public/build/*.js</div>
-                        <div class="data-flow-step">Authenticated pages load via @vite directive</div>
+                        <div class="data-flow-title">Asset Loading:</div>
+                        <div class="data-flow-step"><strong>Bootstrap CSS/JS:</strong> Loaded via CDN in all pages</div>
+                        <div class="data-flow-step"><strong>Alpine.js:</strong> Compiled by Vite from resources/js/app.js</div>
+                        <div class="data-flow-step"><strong>Custom styles:</strong> Inline styles and Bootstrap utilities</div>
+                        <div class="data-flow-step"><strong>Icons:</strong> Bootstrap Icons via CDN</div>
                     </div>
 
-                    <p><strong>Why Both?</strong></p>
+                    <div class="data-flow">
+                        <div class="data-flow-title">Pages Using Bootstrap:</div>
+                        <div class="data-flow-step">Login & Authentication pages (auth/login.blade.php)</div>
+                        <div class="data-flow-step">Dashboard/Home with campus map (pages/home.blade.php)</div>
+                        <div class="data-flow-step">Devices, Alerts, Reports pages (pages/*.blade.php)</div>
+                        <div class="data-flow-step">Admin panel (pages/admin.blade.php)</div>
+                    </div>
+
+                    <p><strong>Design Approach:</strong></p>
                     <ul style="margin-left: 20px; margin-top: 10px;">
-                        <li><strong>Bootstrap:</strong> Used for the public welcome/landing page (quick, CDN-based)</li>
-                        <li><strong>Tailwind:</strong> Used for the authenticated application (dashboard, devices, alerts, admin)</li>
-                        <li><strong>Alpine.js:</strong> Adds reactivity (dropdowns, modals, tabs) without heavy frameworks</li>
+                        <li><strong>Bootstrap Classes:</strong> btn, card, container, d-flex, nav-link, alert, etc.</li>
+                        <li><strong>Alpine.js:</strong> Used sparingly for profile forms and interactive components</li>
+                        <li><strong>Custom Styling:</strong> UPRM green theme (#006747) applied via custom CSS</li>
                     </ul>
                 `
             },
