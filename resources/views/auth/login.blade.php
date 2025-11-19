@@ -84,7 +84,7 @@
         <img src="{{ asset('images/logo-uprm.png') }}" alt="UPRM Logo" width="80" class="mb-3">
         <h5 class="fw-semibold mb-4">UPRM VoIP Monitoring System</h5>
 
-        {{-- Database Restore Notification --}}
+        {{-- Database Restore Success Notification --}}
         @if (Cache::has('database_restored'))
             @php
                 $restoreInfo = Cache::get('database_restored');
@@ -100,6 +100,26 @@
                             <li>Use the <a href="{{ route('password.request') }}" class="alert-link">Forgot Password</a> link below</li>
                             <li>Or contact an administrator for assistance</li>
                         </ul>
+                    </div>
+                </div>
+            </div>
+        @endif
+
+        {{-- Database Restore Failed Notification --}}
+        @if (Cache::has('database_restore_failed'))
+            @php
+                $failureInfo = Cache::get('database_restore_failed');
+            @endphp
+            <div class="alert alert-danger text-start">
+                <div class="d-flex align-items-start">
+                    <i class="bi bi-x-circle-fill me-2 mt-1"></i>
+                    <div>
+                        <strong>Database Restore Failed</strong>
+                        <p class="mb-2 small">A database restore was attempted on {{ $failureInfo['timestamp'] ?? 'recently' }} but failed.</p>
+                        @if (isset($failureInfo['error']))
+                            <p class="mb-2 small"><strong>Error:</strong> {{ $failureInfo['error'] }}</p>
+                        @endif
+                        <p class="mb-0 small">Please contact an administrator for assistance.</p>
                     </div>
                 </div>
             </div>
