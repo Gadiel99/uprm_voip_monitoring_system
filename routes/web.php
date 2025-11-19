@@ -56,6 +56,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/devices/building/{building}', [DevicesController::class, 'byBuilding'])->name('devices.byBuilding');
     Route::get('/devices/building/{building}/network/{network}', [DevicesController::class, 'byNetwork'])->name('devices.byNetwork');
 
+    // API: Get critical devices status (for notifications)
+    Route::get('/api/critical-devices/status', [AdminController::class, 'getCriticalDevicesStatus'])->name('api.critical-devices.status');
+
     // Reports: search and filtering
     Route::get('/reports', [ReportsController::class, 'index'])->name('reports');
     Route::get('/reports/search', [ReportsController::class, 'search'])->name('reports.search');
@@ -114,8 +117,6 @@ Route::middleware(['auth','admin'])->group(function () {
     Route::post('/admin/critical-devices', [AdminController::class, 'storeCriticalDevice'])->name('admin.critical-devices.store');
     Route::delete('/admin/critical-devices/{device}', [AdminController::class, 'destroyCriticalDevice'])->name('admin.critical-devices.destroy');
     
-    // API: Get critical devices status (for notifications)
-    Route::get('/api/critical-devices/status', [AdminController::class, 'getCriticalDevicesStatus'])->name('api.critical-devices.status');
     
     // Notification preferences
     Route::post('/admin/notification-preferences', [AdminController::class, 'updateNotificationPreferences'])->name('admin.notification-preferences.update');
