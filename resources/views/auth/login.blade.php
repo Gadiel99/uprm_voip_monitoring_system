@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - UPRM VoIP Monitoring System</title>
-    <link rel="icon" type="image/png" href="{{ asset('images/logo-uprm.png') }}">
 
     {{-- Bootstrap 5 --}}
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -14,11 +13,68 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
 
     <style>
-        body { background-color: #f8f9fa; font-family: 'Segoe UI', sans-serif; }
-        .login-container { min-height: 100vh; display: flex; align-items: center; justify-content: center; }
-        .login-card { background: #fff; border-radius: 16px; box-shadow: 0 0 15px rgba(0,0,0,0.1); padding: 2.5rem; width: 100%; max-width: 420px; }
-        .btn-success { background-color: #00844b; border-color: #00844b; }
-        .btn-success:hover { background-color: #006e3d; border-color: #006e3d; }
+        body { 
+            font-family: 'Segoe UI', sans-serif;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+        
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url('https://images.squarespace-cdn.com/content/v1/62b58bfd04a6df155f0b51ad/b614905f-e58f-42be-91cb-761d46ba944a/Portico-Simbolo-del-RUM.jpg?format=2500w');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            z-index: -2;
+        }
+        
+        body::after {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 103, 71, 0.85); /* UPRM green with 85% opacity */
+            z-index: -1;
+        }
+        
+        .login-container { 
+            min-height: 100vh; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .login-card { 
+            background: rgba(255, 255, 255, 0.98);
+            border-radius: 16px; 
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3); 
+            padding: 2.5rem; 
+            width: 100%; 
+            max-width: 420px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .btn-success { 
+            background-color: #00844b; 
+            border-color: #00844b; 
+        }
+        
+        .btn-success:hover { 
+            background-color: #006e3d; 
+            border-color: #006e3d; 
+        }
     </style>
 </head>
 
@@ -86,8 +142,8 @@
                     <span class="input-group-text bg-light"><i class="bi bi-lock"></i></span>
                     <input id="password" type="password" name="password" class="form-control"
                            placeholder="Enter your password" required>
-                    <button class="btn btn-outline-secondary" type="button" onclick="togglePasswordVisibility('password', this)">
-                        <i class="bi bi-eye"></i>
+                    <button class="btn btn-outline-secondary" type="button" onclick="togglePasswordVisibility()">
+                        <i class="bi bi-eye" id="toggleIcon"></i>
                     </button>
                 </div>
             </div>
@@ -108,18 +164,18 @@
 
 <script>
     // Toggle password visibility
-    function togglePasswordVisibility(inputId, button) {
-        const input = document.getElementById(inputId);
-        const icon = button.querySelector('i');
+    function togglePasswordVisibility() {
+        const passwordInput = document.getElementById('password');
+        const toggleIcon = document.getElementById('toggleIcon');
         
-        if (input.type === 'password') {
-            input.type = 'text';
-            icon.classList.remove('bi-eye');
-            icon.classList.add('bi-eye-slash');
+        if (passwordInput.type === 'password') {
+            passwordInput.type = 'text';
+            toggleIcon.classList.remove('bi-eye');
+            toggleIcon.classList.add('bi-eye-slash');
         } else {
-            input.type = 'password';
-            icon.classList.remove('bi-eye-slash');
-            icon.classList.add('bi-eye');
+            passwordInput.type = 'password';
+            toggleIcon.classList.remove('bi-eye-slash');
+            toggleIcon.classList.add('bi-eye');
         }
     }
 </script>
