@@ -85,7 +85,7 @@
          */
         .nav-tabs {
             border-bottom: 1px solid #dee2e6;
-            background-color: rgba(255, 255, 255, 0.95);
+            background-color: rgba(255, 255, 255, 0.85);
             backdrop-filter: blur(10px);
         }
 
@@ -103,8 +103,8 @@
 
         /* Tab hover effect */
         .nav-tabs .nav-link:hover {
-            background-color: rgba(25, 135, 84, 0.05);
-            color: #198754;
+            background-color: #f1f3f4;
+            color: #333;
             transition: all 0.2s ease;
         }
 
