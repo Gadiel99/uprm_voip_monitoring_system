@@ -16,12 +16,17 @@ class DeviceActivityController extends Controller
     }
 
     /**
-     * Get activity data for a specific device
+     * Get device activity for a specific day
      * 
      * GET /api/device-activity/{deviceId}?day=1
      */
     public function getActivity(Request $request, int $deviceId): JsonResponse
     {
+        // Prevent direct browser access - only allow AJAX requests
+        if (!$request->expectsJson() && !$request->ajax()) {
+            return response()->json(['error' => 'Unauthorized access'], 403);
+        }
+
         $dayNumber = $request->query('day', 1);
         
         // Validate day number
@@ -50,8 +55,13 @@ class DeviceActivityController extends Controller
      * @param int $deviceId
      * @return \Illuminate\Http\JsonResponse
      */
-    public function getBothDays(int $deviceId): JsonResponse
+    public function getBothDays(Request $request, int $deviceId): JsonResponse
     {
+        // Prevent direct browser access - only allow AJAX requests
+        if (!$request->expectsJson() && !$request->ajax()) {
+            return response()->json(['error' => 'Unauthorized access'], 403);
+        }
+
         $today = $this->activityService->getDeviceActivity($deviceId, 1);
         $yesterday = $this->activityService->getDeviceActivity($deviceId, 2);
         
