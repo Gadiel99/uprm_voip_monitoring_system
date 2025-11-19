@@ -56,13 +56,9 @@
                 @if($exts->isEmpty())
                   <span class="text-muted">—</span>
                 @else
-                  <div class="d-flex flex-wrap gap-1">
-                    @foreach($exts as $e)
-                      <span class="badge bg-light text-dark border">
-                        {{ $e->extension_number }}
-                      </span>
-                    @endforeach
-                  </div>
+                  @foreach($exts as $e)
+                    {{ $e->extension_number }}@if(!$loop->last), @endif
+                  @endforeach
                 @endif
               </td>
             </tr>
