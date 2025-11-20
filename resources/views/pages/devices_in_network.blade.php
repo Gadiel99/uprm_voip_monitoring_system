@@ -191,14 +191,8 @@ async function showDeviceGraph(ip, deviceId, building, network) {
     modal.show();
     
     try {
-        // Fetch both days of activity data (send AJAX headers and cookies)
-        const response = await fetch(`/api/device-activity/${deviceId}/both`, {
-            headers: {
-                'Accept': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest'
-            },
-            credentials: 'same-origin'
-        });
+        // Fetch both days of activity data
+        const response = await fetch(`/api/device-activity/${deviceId}/both`);
         console.log('[DEBUG] API fetch response:', response);
         let json = null;
         try {
