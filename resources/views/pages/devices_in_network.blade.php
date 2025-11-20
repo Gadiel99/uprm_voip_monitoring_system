@@ -191,23 +191,32 @@ async function showDeviceGraph(ip, deviceId, building, network) {
     modal.show();
     
     try {
-        // Fetch both days of activity data
-        const response = await fetch(`/api/device-activity/${deviceId}/both`);
-        
-        if (!response.ok) {
+        // Fetch both days of activity data (send AJAX headers and cookies)
+        const response = await fetch(`/api/device-activity/${deviceId}/both`, {
+            headers: {
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            credentials: 'same-origin'
+        });
+        console.log('[DEBUG] API fetch response:', response);
+        let json = null;
+        try {
+            json = await response.json();
+        } catch (jsonErr) {
+            console.error('[DEBUG] Error parsing JSON:', jsonErr);
+        }
+        console.log('[DEBUG] API JSON recibido:', json);
+        if (!response.ok || !json) {
             throw new Error('Failed to load activity data');
         }
-        
-        activityData = await response.json();
-        
+        activityData = json;
         // Restore canvas
         chartContainer.innerHTML = '<canvas id="activityChart" width="400" height="150"></canvas>';
-        
         // Show today's data by default
         showDay(1);
-        
     } catch (error) {
-        console.error('Error loading activity data:', error);
+        console.error('[DEBUG] Error loading activity data:', error);
         chartContainer.innerHTML = `
             <div class="alert alert-warning">
                 <i class="bi bi-exclamation-triangle me-2"></i>
@@ -233,22 +242,29 @@ function showDay(dayNumber) {
     }
     
     const data = dayNumber === 1 ? activityData.today : activityData.yesterday;
-    
-    if (!data) {
+    // Si no hay data o no hay samples, mostrar error. Si hay aunque sea un punto, mostrar la gráfica.
+    if (!data || !Array.isArray(data.samples) || data.samples.length === 0) {
         document.getElementById('chartContainer').innerHTML = `
             <div class="alert alert-info">
                 <i class="bi bi-info-circle me-2"></i>
                 No data available for ${dayNumber === 1 ? 'today' : 'yesterday'}.
             </div>
         `;
+        console.log('[DEBUG] No data for graph:', { dayNumber, data });
         return;
     }
-    
-    // Ensure canvas exists
+    // Debug: mostrar el contenido de samples y el objeto completo
+    console.log('[DEBUG] Mostrando gráfica:', {
+        dayNumber,
+        samples: data.samples,
+        samplesLength: data.samples.length,
+        first20: data.samples.slice(0, 20),
+        allData: data
+    });
+    // Asegura que el canvas exista
     if (!document.getElementById('activityChart')) {
         document.getElementById('chartContainer').innerHTML = '<canvas id="activityChart" width="400" height="150"></canvas>';
     }
-    
     renderChart(data);
 }
 
@@ -279,29 +295,20 @@ function renderChart(data) {
         labels.push(`${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`);
     }
     
-    // Process samples based on whether it's live (today) or historical (yesterday)
+    // Process samples for chart:
+    // - Today: show only points where val === 1 (recorded), use current status
+    // - Yesterday: show all points (1=online, 0=offline)
     const displaySamples = samples.map((val, index) => {
-        // Don't show future time slots
-        if (index > currentSampleIndex) {
+        if (isToday) {
+            // Don't show future time slots
+            if (index > currentSampleIndex) return null;
+            // Only show points where val === 1 (recorded)
+            if (val === 1) return currentStatus === 'online' ? 1 : 0;
             return null;
+        } else {
+            // Yesterday: show all points (historical)
+            return val;
         }
-        
-        // For today (live data): show current device status for all past times
-        if (isLive && currentStatus) {
-            // If this time slot was recorded (val === 1), use current device status
-            if (val === 1) {
-                return currentStatus === 'online' ? 1 : 0;
-            }
-            // If this time slot wasn't recorded yet (val === 0), assume offline
-            return 0;
-        }
-        
-        // For yesterday (historical): val already contains the status (1=online, 0=offline)
-        // If not recorded, don't show
-        if (val === 0) {
-            return null;
-        }
-        return val;
     });
     
     // Debug output
