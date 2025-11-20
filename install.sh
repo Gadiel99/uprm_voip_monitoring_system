@@ -32,9 +32,9 @@ APP_DIR="/var/www/uprm_voip_monitoring_system"
 WEB_USER="www-data"
 PHP_VERSION="8.3"
 NODE_VERSION="20"
-DB_NAME="voip_monitoring"
+DB_NAME="voip_monitoring_test"
 DB_USER="voip_app"
-DB_PASSWORD=""
+DB_PASSWORD="admin"
 
 ################################################################################
 # Helper Functions
@@ -358,7 +358,7 @@ step_8_setup_application() {
     
     # Create .env file if it doesn't exist
     if [[ ! -f .env ]]; then
-        print_info "Creating .env f`ile..."
+        print_info "Creating .env file..."
         if [[ -f .env.example ]]; then
             cp .env.example .env
         else
@@ -390,9 +390,20 @@ step_8_setup_application() {
         php artisan key:generate --force
     fi
     
-    # Install Node.js dependencies
-    print_info "Installing Node.js dependencies..."
-    sudo -u $WEB_USER npm install --silent
+        # Clean up possible npm/node_modules issues
+        print_info "Cleaning up possible npm/node_modules issues..."
+        if [ -d "$APP_DIR/node_modules/caniuse-lite" ]; then
+            sudo rm -rf "$APP_DIR/node_modules/caniuse-lite"
+        fi
+        sudo -u "$WEB_USER" npm cache clean --force
+        print_info "Installing Node.js dependencies..."
+        sudo -u $WEB_USER npm install
+        print_info "Running npm audit fix to address vulnerabilities..."
+        sudo -u $WEB_USER npm audit fix || print_warning "npm audit fix did not resolve all issues"
+        # Ensure vite binary is executable
+        if [ -f node_modules/.bin/vite ]; then
+            chmod +x node_modules/.bin/vite
+        fi
     
     # Build assets
     print_info "Building frontend assets..."
@@ -402,14 +413,13 @@ step_8_setup_application() {
 }
 
 step_9_run_migrations() {
-    print_header "STEP 9: Running Database Migrations"
-    
+    print_header "STEP 9: Preparing Database and Running Migrations with Seed"
     cd "$APP_DIR"
-    
-    print_info "Running migrations..."
-    php artisan migrate --force
-    
-    print_success "Database migrations completed"
+    print_info "Dropping and recreating database $DB_NAME..."
+    mysql -u "$DB_USER" -p"$DB_PASSWORD" -e "DROP DATABASE IF EXISTS $DB_NAME; CREATE DATABASE $DB_NAME CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+    print_info "Running migrations and seeding database..."
+    php artisan migrate --seed --force
+    print_success "Database migrations and seeding completed"
 }
 
 step_10_set_permissions() {
@@ -693,31 +703,6 @@ step_14_final_checks() {
     fi
 }
 
-step_15_create_admin() {
-    print_header "STEP 15: Create Admin User (Optional)"
-    
-    if prompt_yn "Create an admin user?"; then
-        cd "$APP_DIR"
-        
-        read -p "Admin name: " admin_name
-        read -p "Admin email: " admin_email
-        read -sp "Admin password: " admin_password
-        echo
-        
-        # Create admin user via tinker
-        php artisan tinker --execute="
-            \$user = new App\Models\User();
-            \$user->name = '$admin_name';
-            \$user->email = '$admin_email';
-            \$user->password = Hash::make('$admin_password');
-            \$user->role = 'super_admin';
-            \$user->save();
-            echo 'Admin user created successfully';
-        "
-        
-        print_success "Admin user created"
-    fi
-}
 
 installation_complete() {
     clear
@@ -794,7 +779,7 @@ main() {
     step_12_optimize
     step_13_install_apache
     step_14_final_checks
-    step_15_create_admin
+    # step_15_create_admin (removed, handled by seeder)
     
     installation_complete
 }
