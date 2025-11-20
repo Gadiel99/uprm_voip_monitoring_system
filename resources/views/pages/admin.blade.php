@@ -659,7 +659,7 @@
                 @endif
                 <div class="text-muted small mt-2">
                     Password requirements:
-                    <ul class="small mb-0" id="addUserPasswordReqs">
+                    <ul class="small mb-0" id="addUserPasswordReqs" style="list-style: none; padding-left: 0;">
                         <li id="req-length"><i class="bi bi-circle"></i> 8–64 characters</li>
                         <li id="req-case"><i class="bi bi-circle"></i> At least one uppercase and one lowercase letter</li>
                         <li id="req-number"><i class="bi bi-circle"></i> At least one number</li>

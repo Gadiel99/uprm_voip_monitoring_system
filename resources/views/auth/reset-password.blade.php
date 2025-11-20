@@ -86,7 +86,7 @@
             {{-- Password Requirements --}}
             <div class="mb-4 text-start">
                 <p class="small text-muted mb-2 fw-semibold">Password requirements:</p>
-                <ul class="small text-muted mb-0" id="resetPasswordReqs" style="line-height: 1.8;">
+                <ul class="small text-muted mb-0" id="resetPasswordReqs" style="line-height: 1.8; list-style: none; padding-left: 0;">
                     <li id="reset-req-length"><i class="bi bi-circle"></i> 8-64 characters</li>
                     <li id="reset-req-case"><i class="bi bi-circle"></i> At least one uppercase and one lowercase letter</li>
                     <li id="reset-req-number"><i class="bi bi-circle"></i> At least one number</li>
