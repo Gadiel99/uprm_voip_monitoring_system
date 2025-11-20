@@ -19,8 +19,25 @@ class CacheManager
 {
     public function handle(Request $request, Closure $next)
     {
-        // If trying to access authenticated routes without being logged in, redirect to login
-        if (!Auth::check() && !$request->is('login', 'register', 'forgot-password', 'reset-password/*')) {
+        // Allow all authentication-related routes without redirect
+        $authRoutes = [
+            'login', 'register', 'logout',
+            'forgot-password', 'reset-password', 'reset-password/*',
+            'verify-email', 'verify-email/*', 'email/verification-notification',
+            'confirm-password'
+        ];
+        
+        // Check if current route matches any auth route patterns
+        $isAuthRoute = false;
+        foreach ($authRoutes as $route) {
+            if ($request->is($route)) {
+                $isAuthRoute = true;
+                break;
+            }
+        }
+        
+        // If trying to access non-auth routes without being logged in, redirect to login
+        if (!Auth::check() && !$isAuthRoute) {
             return redirect()->route('login')->with('status', 'Please login to continue.');
         }
         

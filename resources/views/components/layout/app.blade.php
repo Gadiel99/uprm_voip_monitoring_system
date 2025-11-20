@@ -63,10 +63,9 @@
          *   - Text: #333 (Dark gray)
          */
 
-        /* Global body styling - UPRM Green Theme */
+        /* Global body styling */
         body {
-            background: linear-gradient(135deg, #198754 0%, #157347 100%);
-            min-height: 100vh;
+            background-color: #f8f9fa;
             font-family: 'Segoe UI', sans-serif;
         }
 
@@ -85,8 +84,7 @@
          */
         .nav-tabs {
             border-bottom: 1px solid #dee2e6;
-            background-color: rgba(255, 255, 255, 0.85);
-            backdrop-filter: blur(10px);
+            background-color: #fff;
         }
 
         /* Default tab color */
@@ -96,15 +94,15 @@
 
         /* Active tab indicator with UPRM green underline */
         .nav-tabs .nav-link.active {
-            border-bottom: 3px solid #198754;
-            color: #198754 !important;
+            border-bottom: 3px solid #00844b;
+            color: #00844b !important;
             font-weight: 600;
         }
 
         /* Tab hover effect */
         .nav-tabs .nav-link:hover {
             background-color: #f1f3f4;
-            color: #333;
+            color: #00844b;
             transition: all 0.2s ease;
         }
 
@@ -113,12 +111,10 @@
          * Purpose: Container for page-specific content
          */
         main {
-            background-color: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            border-radius: 12px;
+            background-color: #fff;
+            border-radius: 8px;
             padding: 1.5rem;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 0 8px rgba(0, 0, 0, 0.05);
         }
 
         /* 
@@ -134,14 +130,14 @@
 
         /* Active pill tab with UPRM green background */
         .nav-pills .nav-link.active {
-            background-color: #198754 !important;
+            background-color: #00844b !important;
             color: #fff !important;
         }
 
         /* Nav pills hover effect */
         .nav-pills .nav-link:hover {
-            background-color: rgba(25, 135, 84, 0.1);
-            color: #198754;
+            background-color: rgba(0, 132, 75, 0.1);
+            color: #00844b;
         }
 
         /* Modal dialog styling */
