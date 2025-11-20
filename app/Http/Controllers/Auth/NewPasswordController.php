@@ -36,9 +36,23 @@ class NewPasswordController extends Controller
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
         ]);
 
+        // Log the password reset attempt
+        \App\Helpers\SystemLogger::logInfo(
+            'Password reset attempt',
+            [
+                'email' => $request->email, 
+                'token_prefix' => substr($request->token, 0, 8) . '...',
+                'ip' => $request->ip()
+            ]
+        );
+
         // Check if the new password is different from the current one
         $user = User::where('email', $request->email)->first();
         if ($user && Hash::check($request->password, $user->password)) {
+            \App\Helpers\SystemLogger::logWarning(
+                'Password reset failed: new password same as current',
+                ['email' => $request->email]
+            );
             return back()->withInput($request->only('email'))
                 ->withErrors(['password' => 'The new password must be different from your current password.']);
         }
@@ -54,9 +68,36 @@ class NewPasswordController extends Controller
                     'remember_token' => Str::random(60),
                 ])->save();
 
+                // Log successful password reset
+                \App\Helpers\SystemLogger::logInfo(
+                    'Password reset completed successfully',
+                    [
+                        'user_id' => $user->id,
+                        'email' => $user->email,
+                        'ip' => $request->ip()
+                    ]
+                );
+
                 event(new PasswordReset($user));
             }
         );
+
+        // Log the final result
+        if ($status == Password::PASSWORD_RESET) {
+            \App\Helpers\SystemLogger::logInfo(
+                'Password reset successful - user redirected to login',
+                ['email' => $request->email]
+            );
+        } else {
+            \App\Helpers\SystemLogger::logWarning(
+                'Password reset failed',
+                [
+                    'email' => $request->email,
+                    'status' => $status,
+                    'possible_cause' => $status == 'passwords.token' ? 'Invalid or expired token' : 'Other validation error'
+                ]
+            );
+        }
 
         // If the password was successfully reset, we will redirect the user back to
         // the application's home authenticated view. If there is an error we can

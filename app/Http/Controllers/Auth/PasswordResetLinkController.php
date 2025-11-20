@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Services\PasswordResetService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Password;
@@ -10,6 +11,13 @@ use Illuminate\View\View;
 
 class PasswordResetLinkController extends Controller
 {
+    protected $passwordResetService;
+
+    public function __construct(PasswordResetService $passwordResetService)
+    {
+        $this->passwordResetService = $passwordResetService;
+    }
+
     /**
      * Display the password reset link request view.
      */
@@ -29,12 +37,33 @@ class PasswordResetLinkController extends Controller
             'email' => ['required', 'email'],
         ]);
 
-        // We will send the password reset link to this user. Once we have attempted
-        // to send the link, we will examine the response then see the message we
-        // need to show to the user. Finally, we'll send out a proper response.
-        $status = Password::sendResetLink(
-            $request->only('email')
+        // Log the password reset attempt
+        \App\Helpers\SystemLogger::logInfo(
+            'Password reset link requested',
+            ['email' => $request->email, 'ip' => $request->ip()]
         );
+
+        // Use enhanced password reset service with explicit token invalidation
+        $status = $this->passwordResetService->sendResetLinkWithInvalidation($request->email);
+
+        // Validate that token invalidation worked correctly
+        $validation = $this->passwordResetService->validateTokenUniqueness($request->email);
+        
+        if (!$validation['is_unique']) {
+            \App\Helpers\SystemLogger::logError(
+                'Token invalidation failed - multiple tokens exist',
+                [
+                    'email' => $request->email,
+                    'token_count' => $validation['token_count'],
+                    'tokens' => $validation['tokens']
+                ]
+            );
+        } else {
+            \App\Helpers\SystemLogger::logInfo(
+                'Token invalidation successful - only one token exists',
+                ['email' => $request->email]
+            );
+        }
 
         return $status == Password::RESET_LINK_SENT
                     ? back()->with('status', __($status))

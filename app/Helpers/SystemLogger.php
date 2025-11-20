@@ -146,4 +146,22 @@ class SystemLogger
     {
         self::log(self::ERROR, $message, null, $context);
     }
+
+    /**
+     * Log informational message
+     */
+    public static function logInfo(string $message, array $context = [])
+    {
+        // Use general log method for info messages
+        self::log('INFO', $message, null, $context);
+    }
+
+    /**
+     * Log warning message
+     */
+    public static function logWarning(string $message, array $context = [])
+    {
+        // Use general log method for warning messages
+        self::log('WARNING', $message, null, $context);
+    }
 }
