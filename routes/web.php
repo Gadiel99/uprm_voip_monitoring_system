@@ -56,6 +56,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/devices/building/{building}', [DevicesController::class, 'byBuilding'])->name('devices.byBuilding');
     Route::get('/devices/building/{building}/network/{network}', [DevicesController::class, 'byNetwork'])->name('devices.byNetwork');
 
+    // Device Activity API (AJAX) - allow any authenticated user to request device activity
+    Route::get('/api/device-activity/{deviceId}', [DeviceActivityController::class, 'getActivity'])->name('api.device-activity');
+    Route::get('/api/device-activity/{deviceId}/both', [DeviceActivityController::class, 'getBothDays'])->name('api.device-activity.both');
+
     // API: Get critical devices status (for notifications)
     Route::get('/api/critical-devices/status', [AdminController::class, 'getCriticalDevicesStatus'])->name('api.critical-devices.status');
 
@@ -127,8 +131,7 @@ Route::middleware(['auth','admin'])->group(function () {
     Route::post('/admin/backup/restore', [AdminController::class, 'restoreBackup'])->name('admin.backup.restore');
     
     // Device Activity API
-    Route::get('/api/device-activity/{deviceId}', [DeviceActivityController::class, 'getActivity'])->name('api.device-activity');
-    Route::get('/api/device-activity/{deviceId}/both', [DeviceActivityController::class, 'getBothDays'])->name('api.device-activity.both');
+    // (moved to auth group to allow authenticated users to fetch activity via AJAX)
 });
 
 /*
