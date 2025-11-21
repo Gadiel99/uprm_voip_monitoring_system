@@ -28,10 +28,9 @@ BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 # Configuration Variables
-APP_DIR="/var/www/uprm_voip_monitoring_system"
+APP_DIR="/var/www/"
 WEB_USER="www-data"
 PHP_VERSION="8.3"
-NODE_VERSION="20"
 DB_NAME="voip_monitoring_test"
 DB_USER="voip_app"
 DB_PASSWORD="admin"
@@ -98,16 +97,16 @@ step_0_welcome() {
     
     cat << "EOF"
     ╔═══════════════════════════════════════════════════════════════╗
-    ║           UPRM VoIP Monitoring System Installer              ║
+    ║           UPRM VoIP Monitoring System Installer               ║
     ║                                                               ║
-    ║  This script will install and configure:                     ║
-    ║  • PHP 8.3 with required extensions                          ║
-    ║  • MariaDB 11.x                                              ║
-    ║  • Node.js 20.x & NPM                                        ║
-    ║  • Composer                                                  ║
-    ║  • Laravel application dependencies                          ║
-    ║  • Automated cron jobs for ETL & notifications               ║
-    ║  • Apache web server (optional)                              ║
+    ║  This script will install and configure:                      ║
+    ║  • PHP 8.3 with required extensions                           ║
+    ║  • MariaDB 11.x                                               ║
+    ║                                                               ║
+    ║  • Composer                                                   ║
+    ║  • Laravel application dependencies                           ║
+    ║  • Automated cron jobs for ETL & notifications                ║
+    ║  • Apache web server (optional)                               ║
     ╚═══════════════════════════════════════════════════════════════╝
 EOF
     
@@ -151,43 +150,43 @@ step_1_check_system() {
     fi
 }
 
-step_2_install_dependencies() {
-    print_header "STEP 2: Installing System Dependencies"
-    
-    print_info "Updating package lists..."
-    apt-get update -qq
-    
-    print_info "Installing base packages..."
-    apt-get install -y -qq \
-        software-properties-common \
-        curl \
-        wget \
-        git \
-        unzip \
-        zip \
-        ca-certificates \
-        apt-transport-https \
-        gnupg \
-        lsb-release \
-        supervisor \
-        cron
-    
-    print_success "System dependencies installed"
+step_2_install_apache(){
+    print_header "STEP 2: Installing Apache2"
+
+    sudo apt-get install apache2
+    sudo ufw app list
+    sudo ufw allow 'Apache Full'
+    if sudo ufw status | grep -q "Status: active"; then
+        print_success "Apache2 installed and firewall configured"
+    else
+        sudo ufw enable
+        print_success "Apache2 installed and firewall enabled"
+    fi
+
+    print_success "Apache2 installation complete"
+
 }
 
-step_3_install_php() {
-    print_header "STEP 3: Installing PHP $PHP_VERSION"
-    
-    # Add PHP repository
-    if ! grep -q "ondrej/php" /etc/apt/sources.list /etc/apt/sources.list.d/*; then
-        print_info "Adding PHP repository..."
-        add-apt-repository ppa:ondrej/php -y
-        apt-get update -qq
+step_3_install_mariadb() {
+    print_header "STEP 3: Installing MariaDB"
+
+    if command -v mariadb &> /dev/null || command -v mysql &> /dev/null; then
+        print_info "MariaDB/MySQL already installed"
+    else
+        print_info "Installing MariaDB server..."
+        apt-get install mariadb-server mariadb-client
+        sudo mariadb-secure-installation
+        print_success "MariaDB installation complete"
     fi
+
+}
+
+step_4_install_php_extensions() {
+    print_header "STEP 4: Installing PHP $PHP_VERSION Extensions"
     
     print_info "Installing PHP and extensions..."
-    apt-get install -y -qq \
-        php${PHP_VERSION} \
+    sudo apt install php libapache2-mod-php 
+    apt-get install\
         php${PHP_VERSION}-cli \
         php${PHP_VERSION}-fpm \
         php${PHP_VERSION}-mysql \
@@ -207,6 +206,33 @@ step_3_install_php() {
     else
         print_error "PHP installation failed"
         exit 1
+    fi
+}
+
+step_4_clone_repository() {
+    print_header "STEP 4: Cloning Application Repository"
+    
+     # Check if app directory exists, if not clone it
+    if [[ ! -d "$APP_DIR" ]]; then
+        print_info "Application directory not found, cloning repository..."
+        
+        sudo mkdir -p $APP_DIR
+
+        read -p "Enter GitHub repository URL [https://github.com/Gadiel99/uprm_voip_monitoring_system.git]: " repo_url
+        repo_url=${repo_url:-https://github.com/Gadiel99/uprm_voip_monitoring_system.git} voip_mon/
+        
+        # Create parent directory
+        mkdir -p /var/www
+        
+        # Clone repository
+        if git clone "$repo_url" "$APP_DIR"; then
+            print_success "Repository cloned successfully"
+        else
+            print_error "Failed to clone repository"
+            exit 1
+        fi
+    else
+        print_info "Application directory already exists"
     fi
 }
 
@@ -241,50 +267,8 @@ step_4_install_composer() {
     fi
 }
 
-step_5_install_nodejs() {
-    print_header "STEP 5: Installing Node.js $NODE_VERSION"
-    
-    if ! command -v node &> /dev/null || [[ $(node -v | cut -d'v' -f2 | cut -d'.' -f1) -lt $NODE_VERSION ]]; then
-        print_info "Installing Node.js $NODE_VERSION..."
-        curl -fsSL https://deb.nodesource.com/setup_${NODE_VERSION}.x | bash -
-        apt-get install -y -qq nodejs
-    else
-        print_info "Node.js already installed"
-    fi
-    
-    if command -v node &> /dev/null; then
-        NODE_INSTALLED_VERSION=$(node -v)
-        NPM_INSTALLED_VERSION=$(npm -v)
-        print_success "Node.js $NODE_INSTALLED_VERSION installed"
-        print_success "NPM $NPM_INSTALLED_VERSION installed"
-    else
-        print_error "Node.js installation failed"
-        exit 1
-    fi
-}
-
-step_6_install_mariadb() {
-    print_header "STEP 6: Installing MariaDB"
-    
-    if command -v mariadb &> /dev/null || command -v mysql &> /dev/null; then
-        print_info "MariaDB/MySQL already installed"
-    else
-        print_info "Installing MariaDB server..."
-        apt-get install -y -qq mariadb-server mariadb-client
-        systemctl start mariadb
-        systemctl enable mariadb
-    fi
-    
-    if systemctl is-active --quiet mariadb || systemctl is-active --quiet mysql; then
-        print_success "MariaDB service is running"
-    else
-        print_error "MariaDB service failed to start"
-        exit 1
-    fi
-}
-
-step_7_setup_database() {
-    print_header "STEP 7: Configuring Database"
+step_5_setup_database() {
+    print_header "STEP 5: Configuring Database"
     
     # Check if database already exists and is accessible
     if mariadb -e "USE ${DB_NAME};" 2>/dev/null; then
@@ -333,26 +317,7 @@ step_7_setup_database() {
 step_8_setup_application() {
     print_header "STEP 8: Setting Up Laravel Application"
     
-    # Check if app directory exists, if not clone it
-    if [[ ! -d "$APP_DIR" ]]; then
-        print_info "Application directory not found, cloning repository..."
-        
-        read -p "Enter GitHub repository URL [https://github.com/Gadiel99/uprm_voip_monitoring_system.git]: " repo_url
-        repo_url=${repo_url:-https://github.com/Gadiel99/uprm_voip_monitoring_system.git}
-        
-        # Create parent directory
-        mkdir -p /var/www
-        
-        # Clone repository
-        if git clone "$repo_url" "$APP_DIR"; then
-            print_success "Repository cloned successfully"
-        else
-            print_error "Failed to clone repository"
-            exit 1
-        fi
-    else
-        print_info "Application directory already exists"
-    fi
+
     
     cd "$APP_DIR"
     
@@ -389,21 +354,7 @@ step_8_setup_application() {
         print_info "Generating application key..."
         php artisan key:generate --force
     fi
-    
-        # Clean up possible npm/node_modules issues
-        print_info "Cleaning up possible npm/node_modules issues..."
-        if [ -d "$APP_DIR/node_modules/caniuse-lite" ]; then
-            sudo rm -rf "$APP_DIR/node_modules/caniuse-lite"
-        fi
-        sudo -u "$WEB_USER" npm cache clean --force
-        print_info "Installing Node.js dependencies..."
-        sudo -u $WEB_USER npm install
-        print_info "Running npm audit fix to address vulnerabilities..."
-        sudo -u $WEB_USER npm audit fix || print_warning "npm audit fix did not resolve all issues"
-        # Ensure vite binary is executable
-        if [ -f node_modules/.bin/vite ]; then
-            chmod +x node_modules/.bin/vite
-        fi
+
     
     # Build assets
     print_info "Building frontend assets..."
@@ -762,24 +713,26 @@ EOF
 ################################################################################
 
 main() {
-    check_root
+
+    sudo apt update && sudo apt upgrade 
+
+    # check_root
     
-    step_0_welcome
-    step_1_check_system
-    step_2_install_dependencies
-    step_3_install_php
-    step_4_install_composer
-    step_5_install_nodejs
-    step_6_install_mariadb
-    step_7_setup_database
-    step_8_setup_application
-    step_9_run_migrations
-    step_10_set_permissions
-    step_11_setup_cron
-    step_12_optimize
-    step_13_install_apache
-    step_14_final_checks
-    # step_15_create_admin (removed, handled by seeder)
+    # step_0_welcome
+    # step_1_check_system
+    # step_2_install_dependencies
+    # step_3_install_php
+    # step_4_install_composer
+    # step_6_install_mariadb
+    # step_7_setup_database
+    # step_8_setup_application
+    # step_9_run_migrations
+    # step_10_set_permissions
+    # step_11_setup_cron
+    # step_12_optimize
+    # step_13_install_apache
+    # step_14_final_checks
+   
     
     installation_complete
 }
