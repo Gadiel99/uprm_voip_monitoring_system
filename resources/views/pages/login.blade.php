@@ -52,8 +52,24 @@
     <style>
         /* Body background and font */
         body {
-            background-color: #f8f9fa;
+            background-image: url('{{ asset('images/rum-background.jpg') }}');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
             font-family: 'Segoe UI', sans-serif;
+        }
+        
+        /* Overlay for better card visibility */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 132, 75, 0.7);
+            z-index: -1;
         }
 
         /* Center the login container vertically & horizontally */
