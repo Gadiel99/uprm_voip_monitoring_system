@@ -105,7 +105,7 @@
             color: #00844b;
             font-weight: 600;
             transform: translateY(-2px);
-            border-bottom: 2px solid rgba(0, 132, 75, 0.4);
+            border-bottom: 3px solid #00844b !important;
             transition: all 0.2s ease;
         }
 
