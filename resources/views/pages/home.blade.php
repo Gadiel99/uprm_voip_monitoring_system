@@ -98,20 +98,20 @@
 </div>
 
 {{-- Main card container for the map --}}
-<div class="card border-0 shadow-sm p-4 mb-4" style="position: relative;">
-
-    {{-- Zoom controls - positioned outside to the left --}}
-    <div class="zoom-controls">
-        <button id="zoomInBtn" class="btn btn-sm btn-light mb-1" title="Zoom In">
-            <i class="bi bi-plus-lg"></i>
-        </button>
-        <button id="zoomOutBtn" class="btn btn-sm btn-light" title="Zoom Out">
-            <i class="bi bi-dash-lg"></i>
-        </button>
-    </div>
+<div class="card border-0 shadow-sm p-4 mb-4">
 
     {{-- === RESPONSIVE MAP WRAPPER WITH ZOOM/PAN === --}}
     <div class="map-container" id="mapContainer">
+        
+        {{-- Zoom controls - positioned at left edge --}}
+        <div class="zoom-controls">
+            <button id="zoomInBtn" class="btn btn-sm btn-light mb-1" title="Zoom In">
+                <i class="bi bi-plus-lg"></i>
+            </button>
+            <button id="zoomOutBtn" class="btn btn-sm btn-light" title="Zoom Out">
+                <i class="bi bi-dash-lg"></i>
+            </button>
+        </div>
         
         {{-- Map wrapper that scales --}}
         <div class="map-wrapper" id="mapWrapper">
@@ -333,11 +333,11 @@
     white-space: nowrap;
 }
 
-/* Zoom controls - positioned at top-left corner */
+/* Zoom controls - positioned at left edge of map */
 .zoom-controls {
     position: absolute;
-    top: 30px;
-    left:240px;
+    top: 10px;
+    left: 10px;
     display: flex;
     flex-direction: column;
     gap: 5px;
