@@ -65,7 +65,7 @@
 
         /* Global body styling */
         body {
-            background-color: #f8f9fa;
+            background-color: #00844b;
             font-family: 'Segoe UI', sans-serif;
         }
 
@@ -84,7 +84,7 @@
          */
         .nav-tabs {
             border-bottom: 1px solid #dee2e6;
-            background-color: #fff;
+            background-color: rgba(255, 255, 255, 0.9);
         }
 
         /* Default tab color */
@@ -101,8 +101,11 @@
 
         /* Tab hover effect */
         .nav-tabs .nav-link:hover {
-            background-color: #f1f3f4;
+            background-color: rgba(0, 132, 75, 0.2);
             color: #00844b;
+            font-weight: 600;
+            transform: translateY(-2px);
+            border-bottom: 2px solid rgba(0, 132, 75, 0.4);
             transition: all 0.2s ease;
         }
 
