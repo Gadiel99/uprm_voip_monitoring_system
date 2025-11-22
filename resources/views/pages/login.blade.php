@@ -154,27 +154,8 @@ function togglePasswordVisibility(inputId, button) {
     }
 }
 
-// Log login attempt
-document.querySelector('form').addEventListener('submit', function(e) {
-    const email = document.querySelector('input[name="email"]').value;
-    
-    // Add log entry
-    const logs = JSON.parse(localStorage.getItem('systemLogs') || '[]');
-    const timestamp = new Date().toISOString().replace('T', ' ').substring(0, 19);
-    
-    logs.unshift({
-        timestamp: timestamp,
-        type: 'INFO',
-        message: `User login attempt with email: ${email}`,
-        user: email,
-        id: Date.now()
-    });
-    
-    // Keep only last 500 logs
-    if (logs.length > 500) logs.pop();
-    
-    localStorage.setItem('systemLogs', JSON.stringify(logs));
-});
+// Login attempts are now logged by backend controller via SystemLogger
+// No need for frontend logging
 </script>
 </body>
 </html>
