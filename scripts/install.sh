@@ -52,6 +52,9 @@ SSH_KEY="${SSH_DIR}/id_rsa_voip_auto"
 REMOTE_USER="estudiante"   
 REMOTE_HOST="sipxcom.uprm.edu"   
 
+# Backup Directory
+BACKUP_DIR="/var/backups/monitoring"
+
 
 ################################################################################
 # Helper Functions
@@ -510,7 +513,7 @@ step_14_setup_ssh_key(){
 }
 
 step_15_optimize() {
-    print_header "STEP 12: Optimizing Application"
+    print_header "STEP 15: Optimizing Application"
     
     cd "$APP_DIR"
     
@@ -527,7 +530,7 @@ step_15_optimize() {
 }
 
 step_16_final_checks() {
-    print_header "STEP 14: Final System Checks"
+    print_header "STEP 16: Final System Checks"
     
     cd "$APP_DIR"
     
@@ -560,6 +563,20 @@ step_16_final_checks() {
         print_info "Web server: Not detected"
     fi
 }
+
+step_17_create_backup_dir() {
+    print_header "STEP 17: Creating backup directory /var/backups/monitoring"
+    
+    if [[ -d "$BACKUP_DIR" ]]; then
+        print_info "Backup directory already exists: $BACKUP_DIR"
+    else
+        mkdir -p "$BACKUP_DIR"
+        chown $WEB_USER:$WEB_USER "$BACKUP_DIR"
+        chmod 750 "$BACKUP_DIR"
+        print_success "Created $BACKUP_DIR and set ownership to $WEB_USER"
+    fi
+}
+
 
 
 installation_complete() {
@@ -612,8 +629,8 @@ main() {
     step_14_setup_ssh_key "$REMOTE_USER" "$REMOTE_HOST"
     step_15_optimize
     step_16_final_checks
+    step_17_create_backup_dir
 
-    
     installation_complete
 }
 
