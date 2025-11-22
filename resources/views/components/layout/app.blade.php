@@ -657,64 +657,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
 {{-- Global logging for navigation and important actions --}}
 <script>
-// Helper function to add log (same as in admin page)
+// Helper function stub (logs now handled by backend SystemLogger)
 if (typeof window.addLog === 'undefined') {
     window.addLog = function(type, message, user = 'Admin') {
-        const logs = JSON.parse(localStorage.getItem('systemLogs') || '[]');
-        const timestamp = new Date().toISOString().replace('T', ' ').substring(0, 19);
-        
-        logs.unshift({
-            timestamp: timestamp,
-            type: type,
-            message: message,
-            user: user,
-            id: Date.now()
-        });
-        
-        if (logs.length > 500) logs.pop();
-        localStorage.setItem('systemLogs', JSON.stringify(logs));
+        // Logs are now written to database by backend only
+        console.log('Log (backend only):', type, message, user);
     }
 }
 
-// Log page navigation
-document.addEventListener('DOMContentLoaded', function() {
-    const currentPage = window.location.pathname.split('/').pop() || 'home';
-    const pageNames = {
-        '': 'Home',
-        'alerts': 'Alerts',
-        'devices': 'Devices',
-        'reports': 'Reports',
-        'admin': 'Admin',
-        'settings': 'Settings',
-        'help': 'Help'
-    };
-    
-    const pageName = pageNames[currentPage] || currentPage;
-    addLog('INFO', `Navigated to ${pageName} page`);
-});
+// Page navigation is now tracked by backend middleware
 
 // Log logout action and submit form
 function logLogoutAndSubmit() {
-    const userEmail = '{{ Auth::user()->email ?? "Unknown" }}';
-    
-    // Add logout log to localStorage
-    const logs = JSON.parse(localStorage.getItem('systemLogs') || '[]');
-    const timestamp = new Date().toISOString().replace('T', ' ').substring(0, 19);
-    
-    logs.unshift({
-        timestamp: timestamp,
-        type: 'INFO',
-        message: 'User logged out from system',
-        user: userEmail,
-        id: Date.now()
-    });
-    
-    // Keep only last 500 logs
-    if (logs.length > 500) logs.pop();
-    
-    localStorage.setItem('systemLogs', JSON.stringify(logs));
-    
-    // Submit the logout form
+    // Logout is now logged by backend controller
+    // Just submit the form
     document.getElementById('logoutForm').submit();
 }
 </script>
