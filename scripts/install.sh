@@ -7,14 +7,14 @@
 # System on Ubuntu servers.
 #
 # Requirements:
-# - Ubuntu 20.04+ / Debian 11+
+# - Ubuntu 24.04+ / Debian 11+
 # - Root or sudo access
 # - Internet connection
 #
 # Usage:
 #   sudo bash install.sh
 #
-# Author: UPRM VoIP Monitoring System Team
+# Author: TRIATEK TEAM
 # Date: November 2025
 ################################################################################
 
