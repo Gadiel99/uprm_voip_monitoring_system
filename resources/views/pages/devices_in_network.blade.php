@@ -192,7 +192,12 @@ async function showDeviceGraph(ip, deviceId, building, network) {
     
     try {
         // Fetch both days of activity data
-        const response = await fetch(`/api/device-activity/${deviceId}/both`);
+        const response = await fetch(`/api/device-activity/${deviceId}/both`, {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
+            }
+        });
         console.log('[DEBUG] API fetch response:', response);
         let json = null;
         try {
