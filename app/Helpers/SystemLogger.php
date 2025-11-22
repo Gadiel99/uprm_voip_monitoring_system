@@ -30,16 +30,20 @@ class SystemLogger
      * 
      * @param string $action Action type (LOGIN, LOGOUT, ADD, EDIT, DELETE, ERROR)
      * @param string $comment Description of the action
-     * @param string|null $user User who performed the action
+     * @param string|null $user User who performed the action (email for login, or null for auto-detect)
      * @param array $context Additional context data
      */
     public static function log(string $action, string $comment, ?string $user = null, array $context = [])
     {
-        // Get user if not provided
+        // Get user display name if not provided
+        $userName = 'System';
         if (!$user && Auth::check()) {
-            $user = Auth::user()->email;
-        } elseif (!$user) {
-            $user = 'System';
+            // Use authenticated user's name
+            $userName = Auth::user()->name;
+        } elseif ($user) {
+            // If email provided, try to find user's name
+            $userModel = \App\Models\User::where('email', $user)->first();
+            $userName = $userModel ? $userModel->name : $user;
         }
 
         // Prepare log entry
@@ -47,7 +51,7 @@ class SystemLogger
             'timestamp' => now()->format('Y-m-d H:i:s'),
             'action' => $action,
             'comment' => $comment,
-            'user' => $user,
+            'user' => $userName,
             'ip' => request()->ip(),
             'context' => $context
         ];
@@ -58,7 +62,7 @@ class SystemLogger
             $logEntry['timestamp'],
             $action,
             $comment,
-            $user,
+            $userName,
             $logEntry['ip']
         );
 
@@ -67,6 +71,21 @@ class SystemLogger
             Log::error($logMessage, $context);
         } else {
             Log::info($logMessage, $context);
+        }
+
+        // Store in database table
+        try {
+            \Illuminate\Support\Facades\DB::table('system_logs')->insert([
+                'created_at' => now(),
+                'action' => $action,
+                'comment' => $comment,
+                'user' => $userName,
+                'ip' => request()->ip(),
+                'context' => json_encode($context)
+            ]);
+        } catch (\Exception $e) {
+            // If database insert fails, log error but don't break execution
+            Log::error('Failed to insert system log to database: ' . $e->getMessage());
         }
 
         // Store in session for frontend access
@@ -86,12 +105,16 @@ class SystemLogger
      */
     public static function logLoginAttempt(string $email, bool $success, array $context = [])
     {
+        // Get user's name for display
+        $userModel = \App\Models\User::where('email', $email)->first();
+        $userName = $userModel ? $userModel->name : $email;
+        
         if ($success) {
-            self::log(self::LOGIN, "User logged in successfully", $email, $context);
+            self::log(self::LOGIN, "{$userName} logged in successfully", $email, $context);
         } else {
             // Failed login includes reason if available
             $reason = $context['reason'] ?? 'Invalid credentials';
-            self::log(self::ERROR, "Failed login attempt: {$reason}", $email, $context);
+            self::log(self::ERROR, "Failed login attempt by {$userName}: {$reason}", $email, $context);
         }
     }
 
@@ -100,7 +123,11 @@ class SystemLogger
      */
     public static function logLogout(string $email)
     {
-        self::log(self::LOGOUT, "User logged out", $email);
+        // Get user's name for display
+        $userModel = \App\Models\User::where('email', $email)->first();
+        $userName = $userModel ? $userModel->name : $email;
+        
+        self::log(self::LOGOUT, "{$userName} logged out", $email);
     }
 
     /**
