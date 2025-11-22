@@ -19,7 +19,7 @@ class SuperAdminSeeder extends Seeder
             [
                 'name' => 'superadmin',
                 'password' => Hash::make('SuperAdmin2025!'),
-                'role' => 'superadmin'
+                'role' => 'admin'
             ]
         );
 
