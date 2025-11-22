@@ -51,8 +51,22 @@ class AdminController extends Controller
         // Try to read last ~100 lines of the laravel.log for the "Logs" tab
         $logLines = $this->tailLaravelLog(100);
         
-        // Get system logs from session
-        $systemLogs = session()->get('system_logs', []);
+        // Get system logs from database (most recent 500)
+        $systemLogs = DB::table('system_logs')
+            ->orderBy('id', 'desc')
+            ->limit(500)
+            ->get()
+            ->map(function($log) {
+                return [
+                    'timestamp' => $log->created_at,
+                    'action' => $log->action,
+                    'comment' => $log->comment,
+                    'user' => $log->user,
+                    'ip' => $log->ip,
+                    'context' => json_decode($log->context, true) ?? []
+                ];
+            })
+            ->toArray();
         
         // Get alert settings for Settings tab
         $alertSettings = AlertSettings::current();
