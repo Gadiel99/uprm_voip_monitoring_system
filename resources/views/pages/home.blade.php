@@ -98,7 +98,17 @@
 </div>
 
 {{-- Main card container for the map --}}
-<div class="card border-0 shadow-sm p-4 mb-4">
+<div class="card border-0 shadow-sm p-4 mb-4" style="position: relative;">
+
+    {{-- Zoom controls - positioned outside to the left --}}
+    <div class="zoom-controls">
+        <button id="zoomInBtn" class="btn btn-sm btn-light mb-1" title="Zoom In">
+            <i class="bi bi-plus-lg"></i>
+        </button>
+        <button id="zoomOutBtn" class="btn btn-sm btn-light" title="Zoom Out">
+            <i class="bi bi-dash-lg"></i>
+        </button>
+    </div>
 
     {{-- === RESPONSIVE MAP WRAPPER WITH ZOOM/PAN === --}}
     <div class="map-container" id="mapContainer">
@@ -113,16 +123,6 @@
             <div class="markers-layer" id="markersLayer">
                 {{-- Markers will be added dynamically via JavaScript --}}
             </div>
-        </div>
-
-        {{-- Zoom controls --}}
-        <div class="zoom-controls">
-            <button id="zoomInBtn" class="btn btn-sm btn-light mb-1" title="Zoom In">
-                <i class="bi bi-plus-lg"></i>
-            </button>
-            <button id="zoomOutBtn" class="btn btn-sm btn-light" title="Zoom Out">
-                <i class="bi bi-dash-lg"></i>
-            </button>
         </div>
     </div>
 </div>
@@ -333,11 +333,11 @@
     white-space: nowrap;
 }
 
-/* Zoom controls - ABSOLUTE position within map container */
+/* Zoom controls - positioned at top-left corner */
 .zoom-controls {
     position: absolute;
-    top: 10px;
-    left: 10px;
+    top: 30px;
+    left:240px;
     display: flex;
     flex-direction: column;
     gap: 5px;
@@ -345,12 +345,19 @@
 }
 
 .zoom-controls button {
-    width: 36px;
-    height: 36px;
+    width: 40px;
+    height: 40px;
     display: flex;
     align-items: center;
     justify-content: center;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+    border: 1px solid #dee2e6;
+}
+
+.zoom-controls button:hover {
+    background-color: #00844b;
+    color: white;
+    border-color: #00844b;
 }
 
 /* Responsive adjustments */
