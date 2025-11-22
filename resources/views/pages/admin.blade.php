@@ -977,20 +977,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // No need to sync to localStorage anymore
     
     // ===== Logs Tab =====
+    // Store backend logs directly (from database) - don't merge with localStorage
     const backendLogs = @json($systemLogs ?? []);
     if (backendLogs.length > 0) {
-        let frontendLogs = getLogs();
-        const mergedLogs = [...backendLogs, ...frontendLogs];
-        const uniqueLogs = mergedLogs.reduce((acc, log) => {
-            const key = `${log.timestamp}-${log.action}-${log.comment}`;
-            if (!acc.some(l => `${l.timestamp}-${l.action}-${l.comment}` === key)) {
-                acc.push(log);
-            }
-            return acc;
-        }, []);
-        uniqueLogs.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-        if (uniqueLogs.length > 500) uniqueLogs.length = 500;
-        localStorage.setItem('systemLogs', JSON.stringify(uniqueLogs));
+        localStorage.setItem('systemLogs', JSON.stringify(backendLogs));
     }
     
     updateLogsDisplay();
@@ -1167,28 +1157,12 @@ function saveLogs(logs) {
     updateLogsDisplay();
 }
 
-// Add a new log entry (updated for new format)
+// Add a new log entry (deprecated - logs now handled by backend SystemLogger)
+// This function is kept for backwards compatibility but does nothing
 window.addLog = function(action, comment, user = 'Admin') {
-    const logs = getLogs();
-    const timestamp = new Date().toISOString().replace('T', ' ').substring(0, 19);
-    
-    const newLog = {
-        timestamp: timestamp,
-        action: action, // LOGIN, LOGOUT, ADD, EDIT, DELETE, ERROR
-        comment: comment,
-        user: user,
-        ip: 'N/A', // Will be populated by backend
-        id: Date.now()
-    };
-    
-    logs.unshift(newLog); // Add to beginning
-    
-    // Keep only last 500 logs
-    if (logs.length > 500) {
-        logs.pop();
-    }
-    
-    saveLogs(logs);
+    // Logs are now written to database by backend only
+    // Frontend actions that need logging should make API calls or refresh the page
+    console.log('Log action (backend only):', action, comment, user);
 }
 
 // Display logs in string format
