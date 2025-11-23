@@ -452,7 +452,7 @@ class AdminController extends Controller
             // Download the backup file
             return response()->download($result['path'], $result['file'], [
                 'Content-Type' => 'application/zip',
-            ])->deleteFileAfterSend(false);
+            ]);
         } else {
             $this->addSystemLog('ERROR', 'Backup creation failed: ' . $result['message']);
             
