@@ -186,7 +186,7 @@
 
                 <div class="mb-3">
                     <label class="form-label fw-semibold">Storage Location</label>
-                    <input type="text" class="form-control bg-light" value="/tmp/voip_backups" readonly>
+                    <input type="text" class="form-control bg-light" value="{{ config('backup.path', storage_path('app/backups')) }}" readonly>
                     <small class="text-muted">Backups are automatically created weekly and stored in this directory.</small>
                 </div>
 
