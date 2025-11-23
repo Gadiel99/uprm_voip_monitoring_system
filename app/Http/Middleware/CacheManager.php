@@ -45,9 +45,17 @@ class CacheManager
         
         // Prevent caching for authenticated pages
         if (Auth::check()) {
-            return $response->header('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0')
-                            ->header('Pragma', 'no-cache')
-                            ->header('Expires', 'Sat, 01 Jan 2000 00:00:00 GMT');
+            // BinaryFileResponse (file downloads) uses headers differently
+            if ($response instanceof \Symfony\Component\HttpFoundation\BinaryFileResponse) {
+                $response->headers->set('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
+                $response->headers->set('Pragma', 'no-cache');
+                $response->headers->set('Expires', 'Sat, 01 Jan 2000 00:00:00 GMT');
+            } else {
+                // Regular responses can use the chainable header method
+                $response->header('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0')
+                         ->header('Pragma', 'no-cache')
+                         ->header('Expires', 'Sat, 01 Jan 2000 00:00:00 GMT');
+            }
         }
         
         return $response;
