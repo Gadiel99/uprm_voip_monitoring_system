@@ -136,9 +136,17 @@ class SystemLogger
     public static function logAdd(string $entity, $entityId = null, array $context = [])
     {
         $comment = "Added {$entity}";
+        
+        // Try to add entity name if available in context
+        $name = $context['name'] ?? null;
+        if ($name) {
+            $comment .= " '{$name}'";
+        }
+        
         if ($entityId) {
             $comment .= " (ID: {$entityId})";
         }
+        
         self::log(self::ADD, $comment, null, $context);
     }
 
@@ -148,9 +156,23 @@ class SystemLogger
     public static function logEdit(string $entity, $entityId = null, array $context = [])
     {
         $comment = "Edited {$entity}";
+        
+        // Try to add entity name if available in context
+        $name = null;
+        if (isset($context['new']['name'])) {
+            $name = $context['new']['name'];
+        } elseif (isset($context['name'])) {
+            $name = $context['name'];
+        }
+        
+        if ($name) {
+            $comment .= " '{$name}'";
+        }
+        
         if ($entityId) {
             $comment .= " (ID: {$entityId})";
         }
+        
         self::log(self::EDIT, $comment, null, $context);
     }
 
@@ -160,9 +182,17 @@ class SystemLogger
     public static function logDelete(string $entity, $entityId = null, array $context = [])
     {
         $comment = "Deleted {$entity}";
+        
+        // Try to add entity name if available in context
+        $name = $context['name'] ?? null;
+        if ($name) {
+            $comment .= " '{$name}'";
+        }
+        
         if ($entityId) {
             $comment .= " (ID: {$entityId})";
         }
+        
         self::log(self::DELETE, $comment, null, $context);
     }
 
