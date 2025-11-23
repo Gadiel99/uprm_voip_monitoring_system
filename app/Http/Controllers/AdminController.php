@@ -63,7 +63,6 @@ class AdminController extends Controller
                     'comment' => $log->comment,
                     'user' => $log->user,
                     'ip' => $log->ip,
-                    'context' => json_decode($log->context, true) ?? []
                 ];
             })
             ->toArray();
@@ -94,14 +93,21 @@ class AdminController extends Controller
             ->get();
         
         // Get backup info
-        $latestBackup = $backupService->getLatestBackup();
+        $latestBackup = null;
         $backupStats = null;
+        $allBackups = [];
         try {
+            $latestBackup = $backupService->getLatestBackup();
             $backupStats = $backupService->getBackupStats();
+            $allBackups = $backupService->getAllBackups();
+            Log::info('Backup info loaded successfully', [
+                'has_latest' => !is_null($latestBackup),
+                'stats' => $backupStats,
+                'backup_count' => count($allBackups)
+            ]);
         } catch (\Throwable $e) {
-            Log::warning('Could not get backup stats: '.$e->getMessage());
+            Log::error('Could not get backup info: '.$e->getMessage(), ['exception' => $e]);
         }
-        $allBackups = $backupService->getAllBackups();
         
         // Exclude the latest backup from the list (since it's shown separately)
         if ($latestBackup && !empty($allBackups)) {
