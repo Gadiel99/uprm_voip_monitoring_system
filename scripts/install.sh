@@ -251,10 +251,6 @@ step_5_clone_repository() {
 
 step_6_configure_apache(){
     print_header "STEP 6: Configuring Apache2 for Laravel Application"
-
-       sudo a2ensite voip-mon
-    sudo systemctl reload apache2
-    sudo a2dissite 000-default
     
     # Create Apache config file
     cat > /etc/apache2/sites-available/voip-mon.conf << EOF
@@ -265,15 +261,14 @@ step_6_configure_apache(){
     ErrorLog \${APACHE_LOG_DIR}/error.log
     CustomLog \${APACHE_LOG_DIR}/access.log combined
 
-    RewriteEngine on
-    RewriteCond %{SERVER_NAME} =voipmonitor.uprm.edu
-    RewriteRule ^ https://%{SERVER_NAME}%{REQUEST_URI} [END,NE,R=permanent]
 </VirtualHost>
 EOF
-    sudo systemctl reload apache2
     sudo a2enmod rewrite
+    sudo a2ensite voip-mon
+    sudo a2dissite 000-default
+    sudo systemctl reload apache2
 
- 
+ print_success "Apache configured (HTTP only - HTTPS will be configured after SSL certificate)"
 
 }
 
