@@ -28,16 +28,26 @@ use ZipArchive;
 class BackupService
 {
     /**
-     * @brief Backup storage directory
-     * @var string
-     */
-    private const BACKUP_PATH = '/var/backups/monitoring';
-
-    /**
      * @brief Number of weeks to retain backups
      * @var int
      */
     private const RETENTION_WEEKS = 4; // Keep 4 weeks (1 month)
+
+    /**
+     * @brief Get configured backup storage path
+     */
+    public function getStoragePath(): string
+    {
+        return $this->backupPath();
+    }
+
+    /**
+     * @brief Resolve backup storage path
+     */
+    private function backupPath(): string
+    {
+        return config('backup.path', storage_path('app/backups'));
+    }
 
     /**
      * @brief Create a new database backup
@@ -52,7 +62,7 @@ class BackupService
     {
         try {
             // Create backup directory if it doesn't exist
-            $backupDir = self::BACKUP_PATH;
+            $backupDir = $this->backupPath();
             if (!File::isDirectory($backupDir)) {
                 File::makeDirectory($backupDir, 0755, true);
             }
@@ -145,7 +155,7 @@ class BackupService
      */
     public function getLatestBackup(): ?array
     {
-        $backupDir = self::BACKUP_PATH;
+        $backupDir = $this->backupPath();
         
         if (!File::isDirectory($backupDir)) {
             return null;
@@ -187,7 +197,7 @@ class BackupService
      */
     public function getAllBackups(): array
     {
-        $backupDir = self::BACKUP_PATH;
+        $backupDir = $this->backupPath();
         
         if (!File::isDirectory($backupDir)) {
             return [];
@@ -232,7 +242,7 @@ class BackupService
     public function restoreBackup(string $filename): array
     {
         try {
-            $backupDir = self::BACKUP_PATH;
+            $backupDir = $this->backupPath();
             $zipFile = $backupDir . '/' . $filename;
 
             // Verify file exists
@@ -322,7 +332,7 @@ class BackupService
      */
     private function cleanOldBackups(): int
     {
-        $backupDir = self::BACKUP_PATH;
+        $backupDir = $this->backupPath();
         $deleted = 0;
 
         if (!File::isDirectory($backupDir)) {
