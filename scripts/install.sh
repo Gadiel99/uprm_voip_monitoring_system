@@ -252,9 +252,13 @@ step_5_clone_repository() {
 step_6_configure_apache(){
     print_header "STEP 6: Configuring Apache2 for Laravel Application"
 
+       sudo a2ensite voip-mon
+    sudo systemctl reload apache2
+    sudo a2dissite 000-default
+    
     # Create Apache config file
     cat > /etc/apache2/sites-available/voip-mon.conf << EOF
-<VirtualHost *:80>
+<VirtualHost *:80> << 'EOF'
     ServerName voipmonitor.uprm.edu
     ServerAdmin webmaster@uprm.edu
     DocumentRoot /var/www/voip_mon/public
@@ -266,12 +270,11 @@ step_6_configure_apache(){
     RewriteRule ^ https://%{SERVER_NAME}%{REQUEST_URI} [END,NE,R=permanent]
 </VirtualHost>
 EOF
-
-    sudo a2ensite voip-mon
-    sudo systemctl reload apache2
-    sudo a2dissite 000-default
     sudo systemctl reload apache2
     sudo a2enmod rewrite
+
+ 
+
 }
 
 step_7_configure_mariadb(){
