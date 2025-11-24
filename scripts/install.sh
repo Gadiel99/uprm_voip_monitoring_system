@@ -8,7 +8,6 @@
 #
 # Requirements:
 # - Ubuntu 24.04+ / Debian 11+
-# - Root or sudo access
 # - Internet connection
 #
 # Usage:
