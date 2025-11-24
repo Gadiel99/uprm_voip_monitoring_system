@@ -370,7 +370,7 @@ step_9_setup_application() {
     # Update .env with database credentials
     print_info "Configuring environment variables..."
     sed -i "s/^DB_CONNECTION=.*/DB_CONNECTION=mariadb/" .env
-    sed -i "s/^DB_HOST=.*/DB_HOST=localhost/" .env
+    sed -i "s/^DB_HOST=.*/DB_HOST=127.0.0.1/" .env
     sed -i "s/^DB_PORT=.*/DB_PORT=3306/" .env
     sed -i "s/^DB_DATABASE=.*/DB_DATABASE=${DB_NAME}/" .env
     sed -i "s/^DB_USERNAME=.*/DB_USERNAME=${DB_USER}/" .env
