@@ -312,11 +312,10 @@ step_7_configure_mariadb(){
     mariadb -e "FLUSH PRIVILEGES;" 2>/dev/null || true
     
     # Test connection
-    if mariadb -u"${DB_USER}" -p"${DB_PASSWORD}" -e "USE ${DB_NAME};" 2>/dev/null; then
+    if mariadb -u"${DB_USER}" -p"${DB_PASSWORD}" -e "USE ${DB_NAME} -h 127.0.0.1; " 2>/dev/null; then
         print_success "Database '$DB_NAME' created and accessible"
     else
         print_error "Database connection test failed"
-        print_warning "If database already exists with different credentials, please update DB_PASSWORD in .env"
         exit 1
     fi
 }
@@ -624,7 +623,7 @@ main() {
     step_9_setup_application
     step_10_run_migrations
     step_11_install_postfix_and_setup
-    step_12_install_certbot
+    #step_12_install_certbot
     step_13_setup_cron
     step_14_setup_ssh_key "$REMOTE_USER" "$REMOTE_HOST"
     step_15_optimize
