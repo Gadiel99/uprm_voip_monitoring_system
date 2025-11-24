@@ -318,7 +318,7 @@ step_7_configure_mariadb(){
     mariadb -e "FLUSH PRIVILEGES;" 2>/dev/null || true
     
     # Test connection
-    if mariadb -u"${DB_USER}" -p"${DB_PASSWORD}" -e "USE ${DB_NAME};" -h 127.0.0.1; 2>/dev/null; then
+    if mariadb -u"${DB_USER}" -p"${DB_PASSWORD}" -e "USE ${DB_NAME};" -h 127.0.0.1 2>/dev/null; then
         print_success "Database '$DB_NAME' created and accessible"
     else
         print_error "Database connection test failed"
