@@ -381,6 +381,11 @@ step_9_setup_application() {
     sed -i "s/^DB_DATABASE=.*/DB_DATABASE=${DB_NAME}/" .env
     sed -i "s/^DB_USERNAME=.*/DB_USERNAME=${DB_USER}/" .env
     sed -i "s/^DB_PASSWORD=.*/DB_PASSWORD=${DB_PASSWORD}/" .env
+    
+    # Set backup directory path
+    if ! grep -q "^BACKUP_PATH=" .env; then
+        echo "BACKUP_PATH=/var/backups/monitoring" >> .env
+    fi
 
     # Set ownership BEFORE installing dependencies (avoids composer root warning)
     print_info "Setting directory ownership to $WEB_USER..."
@@ -445,9 +450,9 @@ step_12_install_certbot() {
         print_success "Certbot installed"
     fi
 
-    print_info "Obtaining SSL certificate for voipmonitor.uprm.edu..."
-    sudo ln -s /snap/bin/certbot /usr/bin/certbot
-    sudo certbot --apache
+    # print_info "Obtaining SSL certificate for voipmonitor.uprm.edu..."
+    # sudo ln -s /snap/bin/certbot /usr/bin/certbot
+    # sudo certbot --apache
 }
 
 
