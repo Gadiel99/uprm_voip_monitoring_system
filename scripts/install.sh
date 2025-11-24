@@ -292,7 +292,7 @@ step_7_configure_mariadb(){
         fi
         
         # Test connection with existing credentials
-        if [[ -n "$DB_PASSWORD" ]] && mariadb -u"${DB_USER}" -p"${DB_PASSWORD}" -e "USE ${DB_NAME};" 2>/dev/null; then
+        if [[ -n "$DB_PASSWORD" ]] && mariadb -u"${DB_USER}" -p"${DB_PASSWORD}" -e "USE ${DB_NAME} -h 127.0.0.1;" 2>/dev/null; then
             print_success "Database connection verified with existing credentials"
             return 0
         fi
@@ -307,7 +307,7 @@ step_7_configure_mariadb(){
     print_info "Creating database and user..."
     
     # Create database and user (IF NOT EXISTS handles re-runs)
-    mariadb -e "CREATE DATABASE IF NOT EXISTS ${DB_NAME} CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;" 2>/dev/null || true
+    mariadb -e "CREATE DATABASE IF NOT EXISTS ${DB_NAME};" 2>/dev/null || true
     mariadb -e "CREATE USER IF NOT EXISTS '${DB_USER}'@'127.0.0.1' IDENTIFIED BY '${DB_PASSWORD}';" 2>/dev/null || true
     mariadb -e "GRANT ALL PRIVILEGES ON ${DB_NAME}.* TO '${DB_USER}'@'127.0.0.1';" 2>/dev/null || true
     mariadb -e "FLUSH PRIVILEGES;" 2>/dev/null || true
@@ -325,12 +325,12 @@ step_7_configure_mariadb(){
 step_8_install_composer() {
     print_header "STEP 8: Installing Composer"
 
-    EXPECTED_CHECKSUM="$(php -r 'copy(\"https://composer.github.io/installer.sig\", \"php://stdout\");')"
+    EXPECTED_CHECKSUM="$(php -r 'copy("https://composer.github.io/installer.sig", "php://stdout");')"
     php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
     ACTUAL_CHECKSUM="$(php -r "echo hash_file('sha384', 'composer-setup.php');")"
 
     if [ "$EXPECTED_CHECKSUM" != "$ACTUAL_CHECKSUM" ]; then
-        >&2 echo 'ERROR: Invalid installer checksum'
+        print_error "Invalid installer checksum"
         rm composer-setup.php
         exit 1
     fi
