@@ -577,8 +577,40 @@ step_17_create_backup_dir() {
     print_success "Set ownership to $WEB_USER with permissions 750"
 }
 
+step_18_verify_webapp() {
+    print_header "STEP 18: Verifying Web Application"
+    
+    # Check Apache is running
+    if systemctl is-active --quiet apache2; then
+        print_success "Apache2 is running"
+    else
+        print_error "Apache2 is not running"
+        return 1
+    fi
+    
+    # Test local HTTP response
+    if curl -s -o /dev/null -w "%{http_code}" http://localhost | grep -q "200\|302"; then
+        print_success "Web server responding to requests"
+    else
+        print_warning "Web server not responding correctly"
+    fi
+    
+    # Check if site is enabled
+    if [[ -L /etc/apache2/sites-enabled/voip-mon.conf ]]; then
+        print_success "Site configuration enabled"
+    else
+        print_warning "Site configuration not enabled"
+    fi
+    
+    # Display access URL
+    server_ip=$(hostname -I | awk '{print $1}')
+    echo ""
+    print_info "Access your application at:"
+    echo "  → http://${server_ip}"
+    echo "  → http://voipmonitor.uprm.edu (if DNS configured)"
+}
+
 installation_complete() {
-    clear
     print_header "✅ Installation Complete!"
     
     cat << EOF
@@ -629,6 +661,7 @@ main() {
     step_15_optimize
     step_16_final_checks
     step_17_create_backup_dir
+    step_18_verify_webapp
 
     installation_complete
 }
