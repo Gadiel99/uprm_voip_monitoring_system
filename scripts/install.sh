@@ -382,17 +382,17 @@ step_9_setup_application() {
     sed -i "s/^DB_USERNAME=.*/DB_USERNAME=${DB_USER}/" .env
     sed -i "s/^DB_PASSWORD=.*/DB_PASSWORD=${DB_PASSWORD}/" .env
 
-    # Set ownership after dependencies are installed
+    # Set ownership BEFORE installing dependencies (avoids composer root warning)
     print_info "Setting directory ownership to $WEB_USER..."
     chown -R $WEB_USER:$WEB_USER "$APP_DIR"
 
-    # Install PHP dependencies (run as root first to create vendor directory)
+    # Install PHP dependencies as web user (prevents root warning and prompt)
     print_info "Installing PHP dependencies (this may take a few minutes)..."
-    composer install --optimize-autoloader
+    sudo -u $WEB_USER composer install --optimize-autoloader 
     
-    chgrp -R $WEB_USER storage
-    sudo chgrp -R $WEB_USER storage
-    sudo chgrp -R $WEB_USER bootstrap/cache/
+    # Set additional permissions for Laravel
+    chgrp -R $WEB_USER storage bootstrap/cache
+    chmod -R ug+rwx storage bootstrap/cache
 
     print_success "Application dependencies installed"
 }
