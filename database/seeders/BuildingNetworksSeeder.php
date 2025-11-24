@@ -42,7 +42,7 @@ class BuildingNetworksSeeder extends Seeder
             ['name' => 'Decanato de Estudiantes', 'map_x' => 80.5, 'map_y' => 79, 'networks' => ['10.100.142.0']],
             ['name' => 'Enfermeria', 'map_x' => 59, 'map_y' => 51.5, 'networks' => ['10.100.143.0']],
             ['name' => 'Chardon', 'map_x' => 75.9, 'map_y' => 58.3, 'networks' => ['10.100.144.0']],
-            ['name' => 'Darlington', 'map_x' => 2.4, 'map_y' => 31.2, 'networks' => ['10.100.146.0']],
+            ['name' => 'Darlington', 'map_x' => 36, 'map_y' => 90.3, 'networks' => ['10.100.146.0']],
             ['name' => 'Central Telefonica', 'map_x' => 53.3, 'map_y' => 50.2, 'networks' => ['10.100.147.0']],
             ['name' => 'Banda y Orquesta', 'map_x' => 84.4, 'map_y' => 82.0, 'networks' => ['10.100.147.32']],
             ['name' => 'Taller de Arte', 'map_x' => 54.7, 'map_y' => 40.7, 'networks' => ['10.100.147.64']],
