@@ -388,7 +388,7 @@ step_9_setup_application() {
 
     # Install PHP dependencies as web user (prevents root warning and prompt)
     print_info "Installing PHP dependencies (this may take a few minutes)..."
-    sudo -u $WEB_USER composer install --optimize-autoloader 
+    sudo -u $WEB_USER composer install --no-interaction --optimize-autoloader 
     
     # Set additional permissions for Laravel
     chgrp -R $WEB_USER storage bootstrap/cache
