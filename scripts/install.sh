@@ -261,6 +261,12 @@ step_6_configure_apache(){
     CustomLog \${APACHE_LOG_DIR}/access.log combined
 
 </VirtualHost>
+
+<Directory /var/www/voip_mon/public>
+    Options Indexes FollowSymLinks
+    AllowOverride All
+    Require all granted
+</Directory>
 EOF
     sudo a2enmod rewrite
     sudo a2ensite voip-mon
