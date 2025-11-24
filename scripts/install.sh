@@ -449,10 +449,6 @@ step_12_install_certbot() {
         sudo snap install --classic certbot
         print_success "Certbot installed"
     fi
-
-    # print_info "Obtaining SSL certificate for voipmonitor.uprm.edu..."
-    # sudo ln -s /snap/bin/certbot /usr/bin/certbot
-    # sudo certbot --apache
 }
 
 
@@ -640,6 +636,12 @@ installation_complete() {
 ╚════════════════════════════════════════════════════════════════╝
 
 $(print_info "Save the database credentials in a secure location!")
+$(print_info "next steps:")
+    • Configure SSL with Certbot
+        - sudo certbot --apache
+        - sudo ln -s /snap/bin/certbot /usr/bin/certbot
+    • Point your DNS to this server's IP address
+    • Access the application via web browser
 
 EOF
 }
@@ -666,7 +668,7 @@ main() {
     step_9_setup_application
     step_10_run_migrations
     step_11_install_postfix_and_setup
-    #step_12_install_certbot
+    step_12_install_certbot
     step_13_setup_cron
     step_14_setup_ssh_key "$REMOTE_USER" "$REMOTE_HOST"
     step_15_optimize
