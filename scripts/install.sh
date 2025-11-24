@@ -377,14 +377,14 @@ step_9_setup_application() {
     sed -i "s/^DB_DATABASE=.*/DB_DATABASE=${DB_NAME}/" .env
     sed -i "s/^DB_USERNAME=.*/DB_USERNAME=${DB_USER}/" .env
     sed -i "s/^DB_PASSWORD=.*/DB_PASSWORD=${DB_PASSWORD}/" .env
-    
-    # Install PHP dependencies (run as root first to create vendor directory)
-    print_info "Installing PHP dependencies (this may take a few minutes)..."
-    composer install --optimize-autoloader
-    
+
     # Set ownership after dependencies are installed
     print_info "Setting directory ownership to $WEB_USER..."
     chown -R $WEB_USER:$WEB_USER "$APP_DIR"
+
+    # Install PHP dependencies (run as root first to create vendor directory)
+    print_info "Installing PHP dependencies (this may take a few minutes)..."
+    composer install --optimize-autoloader
     
     chgrp -R $WEB_USER storage
     sudo chgrp -R $WEB_USER storage
@@ -484,6 +484,7 @@ step_14_setup_ssh_key(){
     if [[ -f "$SSH_KEY" ]]; then
         print_info "SSH key already exists: $SSH_KEY"
     else
+        print_warning "Generating 4096-bit RSA key... This may take 30-60 seconds"
         print_info "Generating SSH key at $SSH_KEY (no passphrase)"
         sudo -u $WEB_USER ssh-keygen -t rsa -b 4096 -N "" -f "$SSH_KEY" || { print_error "ssh-keygen failed"; return 1; }
         chown $WEB_USER:$WEB_USER "$SSH_KEY" "$SSH_KEY.pub"
@@ -569,13 +570,14 @@ step_17_create_backup_dir() {
         print_info "Backup directory already exists: $BACKUP_DIR"
     else
         mkdir -p "$BACKUP_DIR"
-        chown $WEB_USER:$WEB_USER "$BACKUP_DIR"
-        chmod 750 "$BACKUP_DIR"
-        print_success "Created $BACKUP_DIR and set ownership to $WEB_USER"
+        print_success "Created $BACKUP_DIR"
     fi
+    
+    # Set ownership and permissions (always, even if dir exists)
+    chown -R $WEB_USER:$WEB_USER "$BACKUP_DIR"
+    chmod -R 750 "$BACKUP_DIR"
+    print_success "Set ownership to $WEB_USER with permissions 750"
 }
-
-
 
 installation_complete() {
     clear
@@ -586,13 +588,14 @@ installation_complete() {
 ╔════════════════════════════════════════════════════════════════╗
 ║                    Installation Summary                        ║
 ╠════════════════════════════════════════════════════════════════╣
-║  Application Path: ${APP_DIR}
-║  Database Name:    ${DB_NAME}
-║  Database User:    ${DB_USER}
-║  Database Pass:    ${DB_PASSWORD}
-║
-║  PHP Version:      $(php -r "echo PHP_VERSION;")
-║  Composer:         $(composer --version | grep -oP '\d+\.\d+\.\d+' | head -1)
+║  Application Path: ${APP_DIR}                                  ║
+║  Database Name:    ${DB_NAME}                                  ║
+║  Database User:    ${DB_USER}                                  ║
+║  Database Pass:    ${DB_PASSWORD}                              ║
+║                                                                ║
+║  PHP Version:      $(php -r "echo PHP_VERSION;")               ║
+║  Web Server:       Apache2                                     ║
+║  SSL:              Enabled with Certbot                        ║
 ╚════════════════════════════════════════════════════════════════╝
 
 $(print_info "Save the database credentials in a secure location!")
