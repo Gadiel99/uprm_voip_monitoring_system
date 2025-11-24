@@ -297,7 +297,7 @@ step_7_configure_mariadb(){
         fi
         
         # Test connection with existing credentials
-        if [[ -n "$DB_PASSWORD" ]] && mariadb -u"${DB_USER}" -p"${DB_PASSWORD}" -e "USE ${DB_NAME} -h 127.0.0.1;" 2>/dev/null; then
+        if [[ -n "$DB_PASSWORD" ]] && mariadb -u"${DB_USER}" -p"${DB_PASSWORD}" -e "USE ${DB_NAME};" -h 127.0.0.1 2>/dev/null; then
             print_success "Database connection verified with existing credentials"
             return 0
         fi
