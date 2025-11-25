@@ -462,20 +462,31 @@ step_13_setup_cron() {
     sudo mkdir -p /var/www/voip_mon/storage/logs
     sudo chown -R www-data:www-data /var/www/voip_mon/storage/logs
 
-    # Install the crontab entry for www-data (runs every 5 minutes)
-    ( sudo crontab -u www-data -l 2>/dev/null; \
-    echo "*/5 * * * * /var/www/voip_mon/scripts/auto-import-voip-cron.sh >> /var/www/voip_mon/storage/logs/auto-import-cron.log 2>&1" ) \
-    | sudo crontab -u $WEB_USER -
+    # Get existing crontab (if any), suppress error if none exists
+    existing_cron=$(sudo crontab -u $WEB_USER -l 2>/dev/null || true)
+    
+    # Check if cron entry already exists
+    if echo "$existing_cron" | grep -q "auto-import-voip-cron.sh"; then
+        print_info "Cron job already exists for $WEB_USER"
+    else
+        # Add the new cron job
+        ( echo "$existing_cron"; \
+        echo "*/5 * * * * /var/www/voip_mon/scripts/auto-import-voip-cron.sh >> /var/www/voip_mon/storage/logs/auto-import-cron.log 2>&1" ) \
+        | sudo crontab -u $WEB_USER -
+        print_success "Cron job added for $WEB_USER"
+    fi
 
     # Ensure cron is enabled and running
     sudo systemctl enable --now cron
     sudo systemctl restart cron
 
-    # Verify the entry
-    sudo -u $WEB_USER crontab -l
+    # Verify and display the crontab
+    print_info "Current crontab for $WEB_USER:"
+    sudo -u $WEB_USER crontab -l 2>/dev/null || print_warning "No crontab entries found"
     
     print_success "Cron service enabled"
 }
+
 
 step_14_setup_ssh_key(){
     print_header "STEP 14: Setting up SSH key for auto-import"
