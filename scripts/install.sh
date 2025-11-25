@@ -462,19 +462,29 @@ step_13_setup_cron() {
     sudo mkdir -p /var/www/voip_mon/storage/logs
     sudo chown -R www-data:www-data /var/www/voip_mon/storage/logs
 
+    # Create temporary file with all cron entries
+    temp_cron="/tmp/www-data-cron.txt"
+    
     # Get existing crontab (if any), suppress error if none exists
     existing_cron=$(sudo crontab -u $WEB_USER -l 2>/dev/null || true)
     
-    # Check if cron entry already exists
-    if echo "$existing_cron" | grep -q "auto-import-voip-cron.sh"; then
-        print_info "Cron job already exists for $WEB_USER"
-    else
-        # Add the new cron job
-        ( echo "$existing_cron"; \
-        echo "*/5 * * * * /var/www/voip_mon/scripts/auto-import-voip-cron.sh >> /var/www/voip_mon/storage/logs/auto-import-cron.log 2>&1" ) \
-        | sudo crontab -u $WEB_USER -
-        print_success "Cron job added for $WEB_USER"
-    fi
+    # Initialize with existing entries (excluding our managed entries)
+    echo "$existing_cron" | grep -v "auto-import-voip-cron.sh" | grep -v "artisan schedule:run" > "$temp_cron" 2>/dev/null || true
+    
+    # Add Laravel scheduler (runs every minute to check scheduled tasks)
+    echo "# Laravel Task Scheduler - runs every minute" >> "$temp_cron"
+    echo "* * * * * cd /var/www/voip_mon && php artisan schedule:run >> /dev/null 2>&1" >> "$temp_cron"
+    echo "" >> "$temp_cron"
+    
+    # Add auto-import script (runs every 5 minutes)
+    echo "# Auto-import VoIP data every 5 minutes" >> "$temp_cron"
+    echo "*/5 * * * * /var/www/voip_mon/scripts/auto-import-voip-cron.sh >> /var/www/voip_mon/storage/logs/auto-import-cron.log 2>&1" >> "$temp_cron"
+    
+    # Install the crontab
+    sudo crontab -u $WEB_USER "$temp_cron"
+    rm "$temp_cron"
+    
+    print_success "Cron jobs installed for $WEB_USER"
 
     # Ensure cron is enabled and running
     sudo systemctl enable --now cron
@@ -564,11 +574,19 @@ step_16_final_checks() {
     print_info "Scheduled tasks:"
     php artisan schedule:list 2>/dev/null || print_warning "Could not list scheduled tasks"
     
-    # Check cron job (fix: check for the actual cron job we installed)
+    # Check cron jobs
+    cron_status=""
+    if sudo -u $WEB_USER crontab -l 2>/dev/null | grep -q "artisan schedule:run"; then
+        cron_status="${cron_status}Laravel Scheduler ✓ "
+    fi
     if sudo -u $WEB_USER crontab -l 2>/dev/null | grep -q "auto-import-voip-cron.sh"; then
-        print_success "Cron job: Installed"
+        cron_status="${cron_status}Auto-Import ✓"
+    fi
+    
+    if [[ -n "$cron_status" ]]; then
+        print_success "Cron jobs: $cron_status"
     else
-        print_warning "Cron job: Not installed"
+        print_warning "Cron jobs: Not installed"
     fi
     
     # Check web server
