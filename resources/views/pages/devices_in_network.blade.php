@@ -295,17 +295,14 @@ function renderChart(data) {
     }
     
     // Process samples for chart:
-    // - Today: show only points where val === 1 (recorded), use current status
-    // - Yesterday: show all points (1=online, 0=offline)
+    // Samples now contain actual historical status (1=online, 0=offline)
     const displaySamples = samples.map((val, index) => {
         if (isToday) {
-            // Don't show future time slots
+            // For today, don't show future time slots
             if (index > currentSampleIndex) return null;
-            // Only show points where val === 1 (recorded)
-            if (val === 1) return currentStatus === 'online' ? 1 : 0;
-            return null;
+            return val;
         } else {
-            // Yesterday: show all points (historical)
+            // For yesterday, show all points (historical)
             return val;
         }
     });
