@@ -58,8 +58,13 @@ REMOTE_ARCHIVES=$(ssh -i "${SSH_KEY}" \
 
 if [ -z "${REMOTE_ARCHIVES}" ]; then
     log "⚠️  No archives found on remote server"
-    log "📧 Running notification check with existing data..."
+    log "📊 Recording device activity for current interval..."
     cd "${APP_PATH}"
+    
+    # Always record device activity even if no new data
+    php artisan activity:record
+    
+    log "📧 Running notification check with existing data..."
     php artisan notifications:check
     if [ $? -ne 0 ]; then
         log "⚠️  Notification check encountered an error"
@@ -73,19 +78,11 @@ fi
 ARCHIVE_NAME=$(basename "${REMOTE_ARCHIVES}")
 DEST_ARCHIVE="${IMPORT_DIR}/${ARCHIVE_NAME}"
 
-# Check if already processed
+# Check if already processed - if so, remove it to get fresh data
 if [ -f "${DEST_ARCHIVE}" ]; then
-    log "ℹ️  Archive already processed: ${ARCHIVE_NAME}"
-    log "📧 Running notification check with existing data..."
-    cd "${APP_PATH}"
-    php artisan notifications:check
-    if [ $? -ne 0 ]; then
-        log "⚠️  Notification check encountered an error"
-    else
-        log "✅ Notification check completed"
-    fi
-    log "🎉 Notification check finished (no new data to import)"
-    exit 0
+    log "ℹ️  Archive already exists locally: ${ARCHIVE_NAME}"
+    log "🗑️  Removing old archive to fetch fresh data..."
+    rm -f "${DEST_ARCHIVE}"
 fi
 
 # Download archive via SCP
