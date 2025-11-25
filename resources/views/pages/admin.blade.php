@@ -533,9 +533,9 @@
             <div class="mb-3">
                 <label class="form-label fw-semibold">Select Device</label>
                 <select class="form-select @error('device_id') is-invalid @enderror" name="device_id" id="device_select" required size="8" style="font-family: monospace; font-size: 0.9rem;">
-                    <option value="">-- Select an existing device --</option>
+                    <option value="">-- Start typing to search devices --</option>
                     @foreach($availableDevices ?? [] as $device)
-                        <option value="{{ $device->device_id }}" data-searchable="{{ strtolower($device->ip_address . ' ' . $device->mac_address . ' ' . ($device->owner ?? '')) }}" {{ old('device_id') == $device->device_id ? 'selected' : '' }}>
+                        <option value="{{ $device->device_id }}" data-searchable="{{ strtolower($device->ip_address . ' ' . $device->mac_address . ' ' . ($device->owner ?? '')) }}" style="display: none;" {{ old('device_id') == $device->device_id ? 'selected' : '' }}>
                             {{ $device->ip_address }} | {{ $device->mac_address }} @if($device->owner) | {{ $device->owner }} @endif
                         </option>
                     @endforeach
@@ -829,6 +829,22 @@ document.addEventListener('DOMContentLoaded', () => {
             const options = deviceSelect.querySelectorAll('option');
             let visibleCount = 0;
             
+            // If search is empty, hide all devices
+            if (searchTermRaw === '') {
+                options.forEach(option => {
+                    if (option.value === '') {
+                        option.style.display = '';
+                    } else {
+                        option.style.display = 'none';
+                    }
+                });
+                if (deviceCountSpan) {
+                    deviceCountSpan.textContent = '0';
+                }
+                deviceSelect.value = '';
+                return;
+            }
+            
             options.forEach(option => {
                 if (option.value === '') {
                     // Keep the placeholder option visible
@@ -865,13 +881,18 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
         
-        // Clear search when modal closes
+        // Clear search when modal closes and hide all options
         document.getElementById('addCriticalModal').addEventListener('hidden.bs.modal', function() {
             deviceSearchInput.value = '';
-            deviceSelect.querySelectorAll('option').forEach(opt => opt.style.display = '');
+            deviceSelect.querySelectorAll('option').forEach(opt => {
+                if (opt.value === '') {
+                    opt.style.display = '';
+                } else {
+                    opt.style.display = 'none';
+                }
+            });
             if (deviceCountSpan) {
-                const totalDevices = deviceSelect.querySelectorAll('option[value!=""]').length;
-                deviceCountSpan.textContent = totalDevices;
+                deviceCountSpan.textContent = '0';
             }
             deviceSelect.value = '';
         });
