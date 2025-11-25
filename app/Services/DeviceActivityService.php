@@ -39,10 +39,6 @@ class DeviceActivityService
         $devices = Devices::all();
         
         foreach ($devices as $device) {
-            // For day 1 (today): just mark that this time slot was recorded (1)
-            // The actual status is always fetched live from devices table
-            // For day 2 (yesterday): we'll store the actual historical status
-            
             // Get or create today's activity record (day_number = 1)
             $activity = DeviceActivity::firstOrCreate(
                 [
@@ -55,9 +51,12 @@ class DeviceActivityService
                 ]
             );
             
-            // Mark this time slot as recorded
+            // Always update activity_date to ensure it's current
+            $activity->activity_date = $today;
+            
+            // Record actual device status: 1 = online, 0 = offline
             $samples = $activity->samples;
-            $samples[$sampleIndex] = 1; // Just mark as "recorded", not the status
+            $samples[$sampleIndex] = ($device->status === 'online') ? 1 : 0;
             $activity->samples = $samples;
             $activity->updated_at = $now;
             $activity->save();
@@ -90,22 +89,10 @@ class DeviceActivityService
             $deleted = DeviceActivity::where('day_number', 2)->delete();
             Log::info('Deleted old day 2 records', ['count' => $deleted]);
             
-            // Step 2: Convert day 1 samples to historical status before moving to day 2
-            // Day 1 samples are just markers (1=recorded), need to convert to actual status
-            $day1Records = DeviceActivity::where('day_number', 1)->get();
-            foreach ($day1Records as $activity) {
-                $device = Devices::find($activity->device_id);
-                if ($device) {
-                    $historicalStatus = ($device->status === 'online') ? 1 : 0;
-                    // Convert recorded markers to historical status
-                    $samples = array_map(function($sample) use ($historicalStatus) {
-                        return $sample === 1 ? $historicalStatus : 0;
-                    }, $activity->samples);
-                    $activity->samples = $samples;
-                    $activity->save();
-                }
-            }
-            Log::info('Converted day 1 to historical status', ['count' => $day1Records->count()]);
+            // Step 2: Update activity_date for day 1 records before moving to day 2
+            DeviceActivity::where('day_number', 1)
+                ->update(['activity_date' => $yesterday]);
+            Log::info('Updated activity_date for day 1 records');
             
             // Step 3: Move day_number = 1 to day_number = 2
             $updated = DeviceActivity::where('day_number', 1)
