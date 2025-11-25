@@ -65,19 +65,13 @@ class DeviceActivityController extends Controller
         $today = $this->activityService->getDeviceActivity($deviceId, 1);
         $yesterday = $this->activityService->getDeviceActivity($deviceId, 2);
         
-        // For today (day 1), get current live device status
-        // Samples just indicate which time slots have been recorded
+        // For today (day 1), samples now contain actual historical status
+        // Calculate current sample index on server side to avoid timezone issues
         if ($today) {
-            $device = \App\Models\Devices::find($deviceId);
-            if ($device) {
-                $today['current_status'] = $device->status; // online/offline
-                $today['is_live'] = true;
-                
-                // Calculate current sample index on server side to avoid timezone issues
-                $now = \Carbon\Carbon::now();
-                $minutesSinceMidnight = ($now->hour * 60) + $now->minute;
-                $today['current_sample_index'] = floor($minutesSinceMidnight / 5);
-            }
+            $now = \Carbon\Carbon::now();
+            $minutesSinceMidnight = ($now->hour * 60) + $now->minute;
+            $today['current_sample_index'] = floor($minutesSinceMidnight / 5);
+            $today['is_live'] = true;
         }
         
         // For yesterday (day 2), samples contain the historical status
