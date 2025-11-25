@@ -564,8 +564,8 @@ step_16_final_checks() {
     print_info "Scheduled tasks:"
     php artisan schedule:list 2>/dev/null || print_warning "Could not list scheduled tasks"
     
-    # Check cron job
-    if sudo -u $WEB_USER crontab -l 2>/dev/null | grep -q "schedule:run"; then
+    # Check cron job (fix: check for the actual cron job we installed)
+    if sudo -u $WEB_USER crontab -l 2>/dev/null | grep -q "auto-import-voip-cron.sh"; then
         print_success "Cron job: Installed"
     else
         print_warning "Cron job: Not installed"
