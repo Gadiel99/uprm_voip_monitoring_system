@@ -625,14 +625,14 @@ installation_complete() {
 ╔════════════════════════════════════════════════════════════════╗
 ║                    Installation Summary                        ║
 ╠════════════════════════════════════════════════════════════════╣
-║  Application Path: ${APP_DIR}                                  ║
-║  Database Name:    ${DB_NAME}                                  ║
-║  Database User:    ${DB_USER}                                  ║
-║  Database Pass:    ${DB_PASSWORD}                              ║
-║                                                                ║
-║  PHP Version:      $(php -r "echo PHP_VERSION;")               ║
-║  Web Server:       Apache2                                     ║
-║  SSL:              Enabled with Certbot                        ║
+║  Application Path: ${APP_DIR}                                  
+║  Database Name:    ${DB_NAME}                                  
+║  Database User:    ${DB_USER}                                  
+║  Database Pass:    ${DB_PASSWORD}                              
+║                                                                
+║  PHP Version:      $(php -r "echo PHP_VERSION;")               
+║  Web Server:       Apache2                                     
+║  
 ╚════════════════════════════════════════════════════════════════╝
 
 $(print_info "Save the database credentials in a secure location!")
