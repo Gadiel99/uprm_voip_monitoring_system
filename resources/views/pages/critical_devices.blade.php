@@ -177,7 +177,6 @@ function renderChart(data) {
 
   const samples = data.samples;
   const isToday = data.day_number === 1;
-  const currentStatus = data.current_status || 'offline';
 
   let currentSampleIndex = 287;
   if (isToday && data.current_sample_index !== undefined) currentSampleIndex = data.current_sample_index;
@@ -191,10 +190,11 @@ function renderChart(data) {
 
   const displaySamples = samples.map((val, index) => {
     if (isToday) {
+      // For today, only show samples up to current time
       if (index > currentSampleIndex) return null;
-      if (val === 1) return currentStatus === 'online' ? 1 : 0;
-      return null;
+      return val;
     } else {
+      // For yesterday, show all samples
       return val;
     }
   });
