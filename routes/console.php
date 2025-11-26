@@ -26,9 +26,9 @@ use App\Models\AlertSettings;
 // Removed duplicate scheduler entry to prevent double emails
 
 
-// Rotate device activity data every 2 days at midnight
+// Rotate device activity data daily at midnight (maintains 2-day rolling window)
 Schedule::command('activity:rotate')
-    ->cron('1 0 */2 * *') // Run at 00:01 every 2 days
+    ->dailyAt('00:01') // Run at 12:01 AM every day
     ->withoutOverlapping()
     ->onFailure(function () {
        Log::error('Activity data rotation failed');
