@@ -150,6 +150,21 @@ fi
 
 log "✅ ETL completed"
 
+# Cleanup: Delete archive and extracted files after successful ETL
+log "🗑️  Cleaning up import files..."
+
+if [ -f "${DEST_ARCHIVE}" ]; then
+    rm -f "${DEST_ARCHIVE}"
+    log "✓ Deleted archive: ${ARCHIVE_NAME}"
+fi
+
+if [ -n "${LATEST_EXTRACT}" ] && [ -d "${LATEST_EXTRACT}" ]; then
+    rm -rf "${LATEST_EXTRACT}"
+    log "✓ Deleted extracted directory: $(basename ${LATEST_EXTRACT})"
+fi
+
+log "✅ Cleanup completed"
+
 # Notification sending is handled inside the ETL command (RunETL) to avoid duplicate emails.
 log "📧 Skipping external notifications:check (handled by etl:run)"
 
