@@ -25,16 +25,6 @@ use App\Models\AlertSettings;
 // which runs after ETL completes to ensure fresh data is checked
 // Removed duplicate scheduler entry to prevent double emails
 
-// Clean up old import files every 30 days at 2:00 AM
-Schedule::command('imports:cleanup')
-    ->dailyAt('02:00')
-    ->withoutOverlapping()
-    ->onFailure(function () {
-       Log::error('Import file cleanup failed');
-    })
-    ->onSuccess(function () {
-       Log::info('Import file cleanup completed successfully');
-    });
 
 // Rotate device activity data every 2 days at midnight
 Schedule::command('activity:rotate')
