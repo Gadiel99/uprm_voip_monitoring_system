@@ -73,11 +73,20 @@ class HomeController extends Controller
             'red' => $buildings->where('alert_level', 'red')->count(),
         ];
 
+        // Prepare stats array for System Overview
+        $stats = [
+            'total_devices' => $systemSummary->total_devices ?? 0,
+            'active_devices' => $systemSummary->online_devices ?? 0,
+            'inactive_devices' => $systemSummary->offline_devices ?? 0,
+            'total_buildings' => $buildings->count(),
+        ];
+
         return view('pages.home', [
             'buildings' => $buildings,
             'systemSummary' => $systemSummary,
             'buildingCounts' => $buildingCounts,
             'alertSettings' => $alertSettings,
+            'stats' => $stats,
         ]);
     }
 }
