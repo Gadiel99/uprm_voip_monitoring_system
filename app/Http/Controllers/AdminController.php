@@ -13,6 +13,7 @@ use App\Models\Network;
 use App\Models\Devices;
 use App\Models\AlertSettings;
 use App\Services\BackupService;
+use App\Helpers\SystemLogger;
 
 /**
  * Controlador del panel de administración (dashboard).
@@ -210,14 +211,14 @@ class AdminController extends Controller
         
         // Check if already critical
         if ($device->is_critical) {
-            $this->addSystemLog('WARNING', "Attempted to add device {$device->ip_address} to critical list, but it's already marked as critical");
+            SystemLogger::log(SystemLogger::ERROR, "Attempted to add device {$device->ip_address} to critical list, but it's already marked as critical");
             return redirect()->route('admin', ['tab' => 'settings'])
                 ->with('error', 'Device is already marked as critical.');
         }
 
         $device->update(['is_critical' => true]);
         
-        $this->addSystemLog('SUCCESS', "Device added to critical list: {$device->ip_address} ({$device->mac_address})");
+        SystemLogger::log(SystemLogger::ADD, "Device added to critical list: {$device->ip_address} ({$device->mac_address})");
 
         return redirect()->route('admin', ['tab' => 'settings'])
             ->with('alert_settings_status', 'Device added to critical list successfully.');
@@ -235,7 +236,7 @@ class AdminController extends Controller
         
         // Only allow removal if device is currently critical
         if (!$device->is_critical) {
-            $this->addSystemLog('WARNING', "Attempted to remove device {$device->ip_address} from critical list, but it's not marked as critical");
+            SystemLogger::log(SystemLogger::ERROR, "Attempted to remove device {$device->ip_address} from critical list, but it's not marked as critical");
             return redirect()->route('admin', ['tab' => 'settings'])
                 ->with('error', 'Device is not marked as critical.');
         }
@@ -243,7 +244,7 @@ class AdminController extends Controller
         // Set is_critical to false instead of deleting
         $device->update(['is_critical' => false]);
         
-        $this->addSystemLog('INFO', "Device removed from critical list: {$device->ip_address} ({$device->mac_address})");
+        SystemLogger::log(SystemLogger::DELETE, "Device removed from critical list: {$device->ip_address} ({$device->mac_address})");
 
         return redirect()->route('admin', ['tab' => 'settings'])
             ->with('alert_settings_status', 'Device removed from critical list successfully.');
