@@ -23,9 +23,8 @@ class ReportsController extends Controller
      */
     public function index(Request $request)
     {
-        // Always load dropdown data + stats
+        // Always load dropdown data
         $buildings = Building::orderBy('name')->get(['building_id', 'name']);
-        $stats = $this->getSystemStats();
 
         // If any filter present, perform search logic (delegate to shared builder)
         $devices = [];
@@ -38,7 +37,6 @@ class ReportsController extends Controller
 
         return view('pages.reports', [
             'buildings' => $buildings,
-            'stats' => $stats,
             'devices' => $devices,
             'filters' => $filters,
         ]);
@@ -54,26 +52,6 @@ class ReportsController extends Controller
     {
         // Legacy route: redirect to unified index with query params
         return redirect()->route('reports', $request->only(['query']));
-    }
-    
-    /**
-     * Get system overview statistics.
-     *
-     * @return array
-     */
-    private function getSystemStats(): array
-    {
-        $totalDevices = Devices::count();
-        $activeDevices = Devices::where('status', 'online')->count();
-        $inactiveDevices = Devices::where('status', 'offline')->count();
-        $totalBuildings = Building::count();
-        
-        return [
-            'total_devices' => $totalDevices,
-            'active_devices' => $activeDevices,
-            'inactive_devices' => $inactiveDevices,
-            'total_buildings' => $totalBuildings,
-        ];
     }
     
     /**
