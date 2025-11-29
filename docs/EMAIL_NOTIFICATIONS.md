@@ -8,6 +8,21 @@ The VoIP Monitoring System includes automated email notifications for critical c
 
 This consolidated approach provides a complete snapshot of all critical issues in one message.
 
+### Progressive Notification Frequency
+
+The system uses **progressive notification frequency** to balance rapid response with notification fatigue:
+
+- **First 3 emails**: Sent every **5 minutes** (15 minutes total)
+  - Ensures immediate awareness of critical conditions
+  
+- **After 3rd email**: Frequency reduces to **1 hour**
+  - Maintains ongoing monitoring without overwhelming recipients
+  - Continues hourly as long as conditions remain critical
+
+- **Automatic Reset**: When all critical conditions are resolved, tracking resets and the next critical event starts fresh with 5-minute frequency
+
+📖 **For detailed information**, see [PROGRESSIVE_NOTIFICATION_FREQUENCY.md](PROGRESSIVE_NOTIFICATION_FREQUENCY.md)
+
 ## Configuration
 
 ### 1. Mail Settings (.env)

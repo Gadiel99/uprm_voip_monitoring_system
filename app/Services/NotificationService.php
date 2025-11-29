@@ -14,15 +14,26 @@ use Illuminate\Support\Facades\Log;
  * Notification Service
  * 
  * Handles email notifications for critical building states and offline critical devices.
- * Uses caching to prevent duplicate notifications within a cooldown period.
+ * Progressive notification frequency:
+ * - First 3 emails: Every 5 minutes (15 minutes total)
+ * - After 3rd email: Every 1 hour
  */
 class NotificationService
 {
     /**
-     * Cooldown period for notifications in minutes.
-     * Prevents spam by not sending duplicate notifications for the same issue.
+     * Initial notification frequency (first 3 emails) in minutes.
      */
-    protected int $notificationCooldown = 30;
+    protected int $initialFrequency = 5;
+
+    /**
+     * Reduced notification frequency (after 3rd email) in minutes.
+     */
+    protected int $reducedFrequency = 60;
+
+    /**
+     * Number of initial frequent notifications before reducing frequency.
+     */
+    protected int $initialNotificationCount = 3;
 
     /**
      * Whether to automatically reset notification states when conditions recover.
@@ -74,6 +85,7 @@ class NotificationService
     /**
      * Check and send consolidated notification for all critical conditions.
      * Sends a single email with all critical buildings and offline critical devices.
+     * Uses progressive frequency: 5 minutes for first 3 emails, then hourly.
      * 
      * @return void
      */
@@ -113,9 +125,15 @@ class NotificationService
                 return $device;
             });
 
-        // Send consolidated notification every time if there are any critical conditions
+        // Send consolidated notification if there are any critical conditions
+        // and if enough time has passed based on progressive frequency
         if ($criticalBuildings->isNotEmpty() || $offlineDevices->isNotEmpty()) {
-            $this->sendConsolidatedNotification($criticalBuildings, $offlineDevices, $alertSettings);
+            if ($this->shouldSendNotification()) {
+                $this->sendConsolidatedNotification($criticalBuildings, $offlineDevices, $alertSettings);
+            }
+        } else {
+            // Reset notification tracking when no critical conditions exist
+            $this->resetNotificationTracking();
         }
     }
 
@@ -150,6 +168,95 @@ class NotificationService
     }
 
     /**
+     * Determine if notification should be sent based on progressive frequency.
+     * - First 3 emails: Every 5 minutes
+     * - After 3rd email: Every 1 hour
+     * 
+     * @return bool
+     */
+    protected function shouldSendNotification(): bool
+    {
+        $cacheKey = 'notification_tracking';
+        $tracking = Cache::get($cacheKey, [
+            'count' => 0,
+            'last_sent' => null,
+            'first_sent' => null,
+        ]);
+
+        $now = now();
+        
+        // First notification - always send
+        if ($tracking['count'] === 0 || $tracking['last_sent'] === null) {
+            return true;
+        }
+
+        $lastSent = \Carbon\Carbon::parse($tracking['last_sent']);
+        // Use absolute difference to avoid timezone issues
+        $minutesSinceLastSent = abs($now->diffInMinutes($lastSent, false));
+
+        // Determine required frequency based on count
+        if ($tracking['count'] < $this->initialNotificationCount) {
+            // First 3 emails: check if 5 minutes have passed
+            $requiredFrequency = $this->initialFrequency;
+        } else {
+            // After 3rd email: check if 1 hour has passed
+            $requiredFrequency = $this->reducedFrequency;
+        }
+
+        return $minutesSinceLastSent >= $requiredFrequency;
+    }
+
+    /**
+     * Update notification tracking after sending an email.
+     * 
+     * @return void
+     */
+    protected function updateNotificationTracking(): void
+    {
+        $cacheKey = 'notification_tracking';
+        $tracking = Cache::get($cacheKey, [
+            'count' => 0,
+            'last_sent' => null,
+            'first_sent' => null,
+        ]);
+
+        $now = now();
+        
+        $tracking['count']++;
+        $tracking['last_sent'] = $now->toDateTimeString();
+        
+        if ($tracking['first_sent'] === null) {
+            $tracking['first_sent'] = $now->toDateTimeString();
+        }
+
+        // Store indefinitely until conditions clear
+        Cache::forever($cacheKey, $tracking);
+        
+        Log::info('Notification tracking updated', [
+            'count' => $tracking['count'],
+            'last_sent' => $tracking['last_sent'],
+            'next_frequency' => $tracking['count'] >= $this->initialNotificationCount 
+                ? "{$this->reducedFrequency} minutes" 
+                : "{$this->initialFrequency} minutes",
+        ]);
+    }
+
+    /**
+     * Reset notification tracking when conditions are no longer critical.
+     * 
+     * @return void
+     */
+    protected function resetNotificationTracking(): void
+    {
+        $cacheKey = 'notification_tracking';
+        
+        if (Cache::has($cacheKey)) {
+            Cache::forget($cacheKey);
+            Log::info('Notification tracking reset - no critical conditions');
+        }
+    }
+
+    /**
      * Send consolidated notification with all critical buildings and offline devices.
      * 
      * @param \Illuminate\Support\Collection $criticalBuildings
@@ -174,8 +281,16 @@ class NotificationService
                 }
                 $subject .= implode(', ', $parts);
 
+                // Get notification tracking info for logging
+                $tracking = Cache::get('notification_tracking', ['count' => 0]);
+                $notificationNumber = $tracking['count'] + 1;
+
                 // Send ONE email with all recipients in a single transaction
-                Log::info('Sending consolidated alert to all recipients', ['recipients' => $recipients]);
+                Log::info('Sending consolidated alert to all recipients', [
+                    'recipients' => $recipients,
+                    'notification_number' => $notificationNumber,
+                ]);
+                
                 Mail::send('emails.critical-alert', [
                     'criticalBuildings' => $criticalBuildings,
                     'offlineDevices' => $offlineDevices,
@@ -184,10 +299,14 @@ class NotificationService
                     $message->to($recipients)->subject($subject);
                 });
                 
+                // Update tracking after successful send
+                $this->updateNotificationTracking();
+                
                 Log::info("Consolidated critical alert sent", [
                     'critical_buildings_count' => $criticalBuildings->count(),
                     'offline_devices_count' => $offlineDevices->count(),
                     'recipients_count' => count($recipients),
+                    'notification_number' => $notificationNumber,
                 ]);
             }
         } catch (\Exception $e) {
@@ -199,6 +318,7 @@ class NotificationService
 
     /**
      * Reset all cached notification states for buildings and devices.
+     * Also resets the progressive notification tracking.
      * Returns summary counts of cleared states.
      *
      * @return array{buildings:int,devices:int}
@@ -223,6 +343,9 @@ class NotificationService
             }
             Cache::forget("notification_device_{$did}");
         }
+
+        // Reset progressive notification tracking
+        $this->resetNotificationTracking();
 
         Log::info('Notification states reset', [
             'buildings_cleared' => $clearedBuildings,
