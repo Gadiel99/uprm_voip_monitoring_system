@@ -11,6 +11,15 @@
         background-color: #f1f3f4;
         cursor: pointer;
     }
+
+    /* Remove borders from extension column */
+    .extension-column {
+        border: none !important;
+        background: transparent !important;
+        color: #212529;
+        font-weight: normal;
+        padding-left: 0.75rem !important;
+    }
 </style>
 
 <div class="container-fluid py-4">
@@ -52,7 +61,7 @@
                   <span class="text-muted">N/A</span>
                 @endif
               </td>
-              <td>
+              <td class="extension-column">
                 @if($exts->isEmpty())
                   <span class="text-muted">—</span>
                 @else
