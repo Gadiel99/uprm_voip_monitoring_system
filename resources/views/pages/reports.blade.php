@@ -175,13 +175,9 @@
                                     </td>
                                     <td>
                                         @if(count($device->extensions) > 0)
-                                            <div class="d-flex flex-wrap gap-1">
-                                                @foreach($device->extensions as $ext)
-                                                    <span class="badge bg-light text-dark border">
-                                                        {{ $ext['number'] ?? 'N/A' }}
-                                                    </span>
-                                                @endforeach
-                                            </div>
+                                            @foreach($device->extensions as $ext)
+                                                {{ $ext['number'] ?? 'N/A' }}@if(!$loop->last), @endif
+                                            @endforeach
                                         @else
                                             <span class="text-muted">—</span>
                                         @endif
