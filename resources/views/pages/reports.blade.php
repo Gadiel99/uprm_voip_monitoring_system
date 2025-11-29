@@ -131,42 +131,6 @@
 
 <div class="container-fluid">
     <div class="card border-0 shadow-sm p-4 reports-wrapper-card">
-        {{-- SYSTEM OVERVIEW --}}
-        <div class="mb-3" id="reportsOverviewCard">
-            <div class="d-flex justify-content-between align-items-center py-2">
-                <div class="d-flex align-items-center gap-2">
-                    <i class="bi bi-hdd-network text-primary" style="font-size: 1.5rem;"></i>
-                    <div>
-                        <small class="text-muted d-block" style="font-size: 0.7rem;">Total Devices</small>
-                        <strong class="text-primary">{{ $stats['total_devices'] }}</strong>
-                    </div>
-                </div>
-                
-                <div class="d-flex align-items-center gap-2">
-                    <i class="bi bi-check-circle text-success" style="font-size: 1.5rem;"></i>
-                    <div>
-                        <small class="text-muted d-block" style="font-size: 0.7rem;">Active Now</small>
-                        <strong class="text-success">{{ $stats['active_devices'] }}</strong>
-                    </div>
-                </div>
-                
-                <div class="d-flex align-items-center gap-2">
-                    <i class="bi bi-x-circle text-danger" style="font-size: 1.5rem;"></i>
-                    <div>
-                        <small class="text-muted d-block" style="font-size: 0.7rem;">Inactive</small>
-                        <strong class="text-danger">{{ $stats['inactive_devices'] }}</strong>
-                    </div>
-                </div>
-                
-                <div class="d-flex align-items-center gap-2">
-                    <i class="bi bi-building text-info" style="font-size: 1.5rem;"></i>
-                    <div>
-                        <small class="text-muted d-block" style="font-size: 0.7rem;">Buildings</small>
-                        <strong class="text-info">{{ $stats['total_buildings'] }}</strong>
-                    </div>
-                </div>
-            </div>
-        </div>
 
         {{-- DEVICE REPORTS SEARCH --}}
         <div class="mb-4" id="reportsSearchCard">
