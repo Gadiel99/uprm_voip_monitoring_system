@@ -56,8 +56,45 @@
     </div>
 @endif
 
+{{-- SYSTEM OVERVIEW --}}
+<div class="card border-0 shadow-sm py-3 mb-4" style="max-width: min(1200px, 100%); margin: 0 auto;">
+    <div class="d-flex justify-content-center align-items-center flex-wrap" style="gap: clamp(3rem, 6vw, 20rem);">
+        <div class="d-flex align-items-center gap-2">
+            <i class="bi bi-hdd-network text-primary" style="font-size: 1.5rem;"></i>
+            <div>
+                <small class="text-muted d-block" style="font-size: 0.7rem;">Total Devices</small>
+                <strong class="text-primary fs-4">{{ $stats['total_devices'] }}</strong>
+            </div>
+        </div>
+        
+        <div class="d-flex align-items-center gap-2">
+            <i class="bi bi-check-circle text-success" style="font-size: 1.5rem;"></i>
+            <div>
+                <small class="text-muted d-block" style="font-size: 0.7rem;">Active Now</small>
+                <strong class="text-success fs-4">{{ $stats['active_devices'] }}</strong>
+            </div>
+        </div>
+        
+        <div class="d-flex align-items-center gap-2">
+            <i class="bi bi-x-circle text-danger" style="font-size: 1.5rem;"></i>
+            <div>
+                <small class="text-muted d-block" style="font-size: 0.7rem;">Inactive</small>
+                <strong class="text-danger fs-4">{{ $stats['inactive_devices'] }}</strong>
+            </div>
+        </div>
+        
+        <div class="d-flex align-items-center gap-2">
+            <i class="bi bi-building text-info" style="font-size: 1.5rem;"></i>
+            <div>
+                <small class="text-muted d-block" style="font-size: 0.7rem;">Buildings</small>
+                <strong class="text-info fs-4">{{ $stats['total_buildings'] }}</strong>
+            </div>
+        </div>
+    </div>
+</div>
+
 {{-- Control buttons for map management --}}
-<div class="mb-3 d-flex align-items-center gap-3">
+<div class="mb-3 d-flex justify-content-center align-items-center gap-3">
     {{-- Legend - inline with buttons --}}
     <div class="map-legend-inline">
         <strong class="text-dark">Map Legend:</strong>
