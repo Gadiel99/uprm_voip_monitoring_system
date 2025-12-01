@@ -154,7 +154,7 @@ class DevicesController extends Controller
         // Decode network parameter (in case it's URL encoded)
         $network = urldecode($network);
 
-        // Get devices for this specific network in this building
+        // Get devices for this specific network in this building (paginated)
         $devices = DB::table('devices as d')
             ->join('networks as n', 'n.network_id', '=', 'd.network_id')
             ->join('building_networks as bn', 'bn.network_id', '=', 'n.network_id')
@@ -162,7 +162,7 @@ class DevicesController extends Controller
             ->where('n.subnet', $network)
             ->orderBy('d.ip_address')
             ->select('d.device_id', 'd.ip_address', 'd.mac_address', 'd.status', 'd.is_critical', 'd.network_id')
-            ->get();
+            ->paginate(10);
 
         // Get extensions for these devices
         $extByDevice = $devices->isEmpty()
@@ -278,12 +278,12 @@ class DevicesController extends Controller
 
         abort_if(!$networkRecord, 404, 'Network not found or already assigned to a building');
 
-        // Get devices for this network
+        // Get devices for this network (paginated)
         $devices = DB::table('devices as d')
             ->where('d.network_id', $networkRecord->network_id)
             ->orderBy('d.ip_address')
             ->select('d.device_id', 'd.ip_address', 'd.mac_address', 'd.status', 'd.is_critical', 'd.network_id')
-            ->get();
+            ->paginate(10);
 
         // Get extensions for these devices
         $extByDevice = $devices->isEmpty()
