@@ -489,8 +489,8 @@
                                         <li id="acc-req-case"><i class="bi bi-circle"></i> At least one uppercase and one lowercase letter</li>
                                         <li id="acc-req-number"><i class="bi bi-circle"></i> At least one number</li>
                                         <li id="acc-req-symbol"><i class="bi bi-circle"></i> At least one symbol (e.g., ! @ # $ %)</li>
-                                        <li id="acc-req-different"><i class="bi bi-circle"></i> Password must be different from your current password (validated on submit)</li>
                                     </ul>
+                                    <p class="small text-muted mb-0 mt-1"><i class="bi bi-lightbulb"></i> <em>Suggestion: Use a different password from your current one</em></p>
                                 </div>
 
                                 <button class="btn btn-dark w-100" type="submit">Update Password</button>
