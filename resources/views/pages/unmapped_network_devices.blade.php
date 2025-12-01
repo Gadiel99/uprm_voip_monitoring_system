@@ -110,7 +110,7 @@
     {{-- Pagination Links --}}
     @if($devices->hasPages())
       <div class="mt-4">
-        {{ $devices->links('vendor.pagination.custom-bootstrap-5') }}
+        {{ $devices->links('vendor.pagination.custom-pagination') }}
       </div>
     @endif
   </div>
