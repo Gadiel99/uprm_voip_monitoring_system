@@ -490,7 +490,10 @@
                                         <li id="acc-req-number"><i class="bi bi-circle"></i> At least one number</li>
                                         <li id="acc-req-symbol"><i class="bi bi-circle"></i> At least one symbol (e.g., ! @ # $ %)</li>
                                     </ul>
-                                    <p class="small text-muted mb-0 mt-1"><i class="bi bi-lightbulb"></i> <em>Suggestion: Use a different password from your current one</em></p>
+                                    <div class="d-flex align-items-start gap-2 mt-2 text-muted small">
+                                        <i class="bi bi-info-circle"></i>
+                                        <span>Password must be different from your current password (validated on submit)</span>
+                                    </div>
                                 </div>
 
                                 <button class="btn btn-dark w-100" type="submit">Update Password</button>
