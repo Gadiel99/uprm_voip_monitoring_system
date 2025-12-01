@@ -487,6 +487,36 @@ class AdminController extends Controller
     }
 
     /**
+     * Download a specific backup file
+     *
+     * @param  string  $filename
+     * @param  BackupService  $backupService
+     * @return \Symfony\Component\HttpFoundation\BinaryFileResponse|\Illuminate\Http\RedirectResponse
+     */
+    public function downloadBackup(string $filename, BackupService $backupService)
+    {
+        // Sanitize filename to prevent directory traversal
+        $filename = basename($filename);
+        
+        // Use the configured backup path
+        $backupDir = config('backup.path', storage_path('app/backups'));
+        $backupPath = $backupDir . '/' . $filename;
+
+        if (!File::exists($backupPath)) {
+            $this->addSystemLog('ERROR', 'Attempted to download non-existent backup: ' . $filename);
+            
+            return redirect()->route('admin', ['tab' => 'backup'])
+                ->with('error', 'Backup file not found');
+        }
+
+        $this->addSystemLog('INFO', 'Downloaded backup: ' . $filename);
+
+        return response()->download($backupPath, $filename, [
+            'Content-Type' => 'application/zip',
+        ]);
+    }
+
+    /**
      * Show restore confirmation page with file upload
      *
      * @return \Illuminate\Contracts\View\View
