@@ -66,6 +66,7 @@ Route::middleware('auth')->group(function () {
     // Reports: search and filtering
     Route::get('/reports', [ReportsController::class, 'index'])->name('reports');
     Route::get('/reports/search', [ReportsController::class, 'search'])->name('reports.search');
+    Route::get('/reports/export/csv', [ReportsController::class, 'exportCsv'])->name('reports.export.csv');
 
     // Deprecated: standalone Settings page (Admin->Settings mock-up remains within Admin)
     // Route::view('/settings', 'pages.settings')->name('settings');
