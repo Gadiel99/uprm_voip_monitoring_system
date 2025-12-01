@@ -719,6 +719,17 @@ function validatePasswordRequirementsWithElement(password, reqPrefix) {
     password.dataset.validationInitialized = 'true';
     
     password.addEventListener('input', function() {
+        // Ensure input stays as password type
+        if (this.type !== 'password') {
+            const eyeButton = this.parentElement.querySelector('button[onclick*="togglePasswordVisibility"]');
+            const eyeIcon = eyeButton ? eyeButton.querySelector('i') : null;
+            const isVisible = eyeIcon && eyeIcon.classList.contains('bi-eye-slash');
+            
+            if (!isVisible) {
+                this.type = 'password';
+            }
+        }
+        
         const value = this.value;
         
         // Length check (8-64 characters)
@@ -773,11 +784,27 @@ document.addEventListener('DOMContentLoaded', () => {
     const addUserModalEl = document.getElementById('addUserModal');
     
     if (addUserModalEl) {
+        // Ensure password is hidden when modal opens
+        addUserModalEl.addEventListener('show.bs.modal', function() {
+            const passwordInput = addUserModalEl.querySelector('#addUserPassword');
+            const eyeButton = addUserModalEl.querySelector('button[onclick*="togglePasswordVisibility"]');
+            const eyeIcon = eyeButton ? eyeButton.querySelector('i') : null;
+            
+            if (passwordInput) {
+                passwordInput.type = 'password';
+            }
+            if (eyeIcon) {
+                eyeIcon.classList.remove('bi-eye-slash');
+                eyeIcon.classList.add('bi-eye');
+            }
+        });
+        
         // Listen for Bootstrap modal shown event
         addUserModalEl.addEventListener('shown.bs.modal', function() {
             setTimeout(() => {
                 const passwordInput = addUserModalEl.querySelector('#addUserPassword');
                 if (passwordInput) {
+                    passwordInput.type = 'password';
                     validatePasswordRequirementsWithElement(passwordInput, 'req');
                 }
             }, 200);
