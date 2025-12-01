@@ -45,8 +45,9 @@ class CacheManager
         
         // Prevent caching for authenticated pages
         if (Auth::check()) {
-            // BinaryFileResponse (file downloads) uses headers differently
-            if ($response instanceof \Symfony\Component\HttpFoundation\BinaryFileResponse) {
+            // BinaryFileResponse and StreamedResponse (file downloads) use headers differently
+            if ($response instanceof \Symfony\Component\HttpFoundation\BinaryFileResponse || 
+                $response instanceof \Symfony\Component\HttpFoundation\StreamedResponse) {
                 $response->headers->set('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
                 $response->headers->set('Pragma', 'no-cache');
                 $response->headers->set('Expires', 'Sat, 01 Jan 2000 00:00:00 GMT');
