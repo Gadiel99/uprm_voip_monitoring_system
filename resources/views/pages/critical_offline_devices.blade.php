@@ -10,6 +10,28 @@
     .table-hover tbody tr:hover {
         background-color: #f1f3f4;
     }
+
+    /* Pagination theme styling */
+    .pagination .page-link {
+        color: #00844b;
+        border-color: #dee2e6;
+    }
+
+    .pagination .page-link:hover {
+        color: #006f3f;
+        background-color: #e6f9ed;
+        border-color: #00844b;
+    }
+
+    .pagination .page-item.active .page-link {
+        background-color: #00844b;
+        border-color: #00844b;
+        color: white;
+    }
+
+    .pagination .page-item.disabled .page-link {
+        color: #6c757d;
+    }
 </style>
 
 <div class="container-fluid py-4">
@@ -19,7 +41,7 @@
         <h5 class="fw-semibold mb-0">
           <i class="bi bi-exclamation-triangle-fill text-danger me-2"></i>Critical Devices - Offline Only
         </h5>
-        <small class="text-muted">{{ $devices->count() }} offline critical device(s) requiring attention</small>
+        <small class="text-muted">{{ $devices->total() }} offline critical device(s) requiring attention</small>
       </div>
       <a href="{{ route('alerts') }}" class="btn btn-outline-secondary btn-sm">
         <i class="bi bi-arrow-left me-1"></i> Back to Alerts
@@ -75,6 +97,13 @@
         </tbody>
       </table>
     </div>
+
+    {{-- Pagination Links --}}
+    @if($devices->hasPages())
+      <div class="mt-4">
+        {{ $devices->links('vendor.pagination.custom-pagination') }}
+      </div>
+    @endif
   </div>
 </div>
 
