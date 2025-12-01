@@ -113,7 +113,7 @@ class AlertsController extends Controller
         $building = DB::table('buildings')->where('building_id', $buildingId)->first();
         abort_if(!$building, 404);
 
-        // Get offline devices for this building with network subnet
+        // Get offline devices for this building with network subnet (paginated)
         $devices = DB::table('devices as d')
             ->join('networks as n', 'n.network_id', '=', 'd.network_id')
             ->join('building_networks as bn', 'bn.network_id', '=', 'n.network_id')
@@ -122,7 +122,7 @@ class AlertsController extends Controller
             ->orderBy('n.subnet')
             ->orderBy('d.ip_address')
             ->select('d.device_id', 'd.ip_address', 'd.mac_address', 'n.subnet')
-            ->get();
+            ->paginate(10);
 
         // Get extensions for these offline devices
         $extByDevice = $devices->isEmpty()
@@ -148,14 +148,14 @@ class AlertsController extends Controller
      */
     public function criticalOffline()
     {
-        // Get only offline critical devices
+        // Get only offline critical devices (paginated)
         $devices = DB::table('devices as d')
             ->where('d.is_critical', true)
             ->where('d.status', 'offline')
             ->leftJoin('networks as n', 'n.network_id', '=', 'd.network_id')
             ->orderBy('d.ip_address')
             ->select('d.device_id', 'd.ip_address', 'd.mac_address', 'd.status', 'd.owner', 'n.subnet')
-            ->get();
+            ->paginate(10);
 
         // Get extensions for these devices
         $extByDevice = $devices->isEmpty()
