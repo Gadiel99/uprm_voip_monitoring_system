@@ -128,6 +128,7 @@ Route::middleware(['auth','admin'])->group(function () {
     // Backup management
     Route::post('/admin/backup/create', [AdminController::class, 'createBackup'])->name('admin.backup.create');
     Route::get('/admin/backup/download', [AdminController::class, 'downloadLatestBackup'])->name('admin.backup.download');
+    Route::get('/admin/backup/download/{filename}', [AdminController::class, 'downloadBackup'])->name('admin.backup.download.file');
     Route::post('/admin/backup/restore', [AdminController::class, 'restoreBackup'])->name('admin.backup.restore');
     
     // Device Activity API
