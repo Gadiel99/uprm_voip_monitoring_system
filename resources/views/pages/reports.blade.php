@@ -147,7 +147,18 @@
 
         {{-- SEARCH RESULTS --}}
         <div class="mb-4" id="reportsResultsCard">
-            <h6 class="fw-semibold mb-3">Search Results</h6>
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h6 class="fw-semibold mb-0">Search Results</h6>
+                @if(isset($devices) && count($devices) > 0)
+                    <a href="{{ route('reports.export.csv', ['query' => $filters['query'] ?? '']) }}" class="btn btn-success btn-sm">
+                        <i class="bi bi-download me-1"></i>Download CSV
+                    </a>
+                @else
+                    <button class="btn btn-secondary btn-sm" disabled>
+                        <i class="bi bi-download me-1"></i>Download CSV
+                    </button>
+                @endif
+            </div>
             @if(isset($devices) && count($devices) > 0)
                 <div class="table-responsive">
                     <table class="table table-bordered table-hover align-middle results-table">
