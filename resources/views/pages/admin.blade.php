@@ -229,6 +229,10 @@
                                         <td>{{ $backup['created_at'] }}</td>
                                         <td>{{ $backup['age'] }}</td>
                                         <td>
+                                            <a href="{{ route('admin.backup.download.file', ['filename' => $backup['filename']]) }}" 
+                                               class="btn btn-sm btn-outline-success me-1">
+                                                <i class="bi bi-download me-1"></i>Download
+                                            </a>
                                             <button type="button" class="btn btn-sm btn-outline-primary" 
                                                     onclick="restoreBackup('{{ $backup['filename'] }}')">
                                                 <i class="bi bi-arrow-counterclockwise me-1"></i>Restore
