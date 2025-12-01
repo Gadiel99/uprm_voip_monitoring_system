@@ -168,4 +168,59 @@ class ReportsController extends Controller
 
         return [$devices, $validated];
     }
+
+    /**
+     * Export search results to CSV.
+     *
+     * @param  Request  $request
+     * @return \Symfony\Component\HttpFoundation\StreamedResponse
+     */
+    public function exportCsv(Request $request)
+    {
+        [$devices, $filters] = $this->buildDevicesQuery($request);
+
+        $filename = 'device_reports_' . date('Y-m-d_His') . '.csv';
+
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+            'Pragma' => 'no-cache',
+            'Cache-Control' => 'must-revalidate, post-check=0, pre-check=0',
+            'Expires' => '0',
+        ];
+
+        $callback = function() use ($devices) {
+            $file = fopen('php://output', 'w');
+            
+            // CSV Header
+            fputcsv($file, ['User', 'Extension', 'MAC Address', 'IP Address', 'Status', 'Building']);
+            
+            // CSV Rows
+            foreach ($devices as $device) {
+                // Collect user names and extensions
+                $users = [];
+                $extensions = [];
+                
+                if (count($device->extensions) > 0) {
+                    foreach ($device->extensions as $ext) {
+                        $users[] = $ext['name'];
+                        $extensions[] = $ext['number'] ?? 'N/A';
+                    }
+                }
+                
+                fputcsv($file, [
+                    !empty($users) ? implode(', ', $users) : 'N/A',
+                    !empty($extensions) ? implode(', ', $extensions) : '—',
+                    $device->mac_address,
+                    $device->ip_address,
+                    ucfirst($device->status),
+                    $device->building_name,
+                ]);
+            }
+            
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
 }
