@@ -635,6 +635,9 @@
                         </ul>
                     </div>
                 @endif
+                <small class="text-muted d-block mt-1">
+                    <i class="bi bi-info-circle me-1"></i>A welcome email with login credentials will be sent to this address. Please verify the email is correct.
+                </small>
             </div>
             <div class="mb-3">
                 <label class="form-label fw-semibold">Password</label>
