@@ -523,10 +523,10 @@
                     type="text" 
                     class="form-control" 
                     id="deviceSearchInput" 
-                    placeholder="Type IP, MAC (e.g. 4aba), or Owner name..."
+                    placeholder="Type IP, MAC, Owner, Extension, or User name..."
                     autocomplete="off"
                 >
-                <small class="text-muted">No need for colons in MAC or dots in IP - just type the numbers/letters</small>
+                <small class="text-muted">Search by IP, MAC address, owner name, extension number, or user name</small>
             </div>
 
             {{-- Device Select --}}
@@ -535,8 +535,39 @@
                 <select class="form-select @error('device_id') is-invalid @enderror" name="device_id" id="device_select" required size="8" style="font-family: monospace; font-size: 0.9rem;">
                     <option value="">-- Start typing to search devices --</option>
                     @foreach($availableDevices ?? [] as $device)
-                        <option value="{{ $device->device_id }}" data-searchable="{{ strtolower($device->ip_address . ' ' . $device->mac_address . ' ' . ($device->owner ?? '')) }}" style="display: none;" {{ old('device_id') == $device->device_id ? 'selected' : '' }}>
-                            {{ $device->ip_address }} | {{ $device->mac_address }} @if($device->owner) | {{ $device->owner }} @endif
+                        @php
+                            $exts = ($extensionsByAvailableDevice ?? collect())->get($device->device_id) ?? collect();
+                            $searchableText = strtolower($device->ip_address . ' ' . $device->mac_address . ' ' . ($device->owner ?? ''));
+                            $extensionNumbers = [];
+                            $userNames = [];
+                            
+                            foreach ($exts as $ext) {
+                                $extensionNumbers[] = $ext->extension_number;
+                                $userName = trim($ext->user_first_name . ' ' . $ext->user_last_name);
+                                if ($userName) {
+                                    $userNames[] = $userName;
+                                }
+                            }
+                            
+                            if (!empty($extensionNumbers)) {
+                                $searchableText .= ' ' . implode(' ', $extensionNumbers);
+                            }
+                            if (!empty($userNames)) {
+                                $searchableText .= ' ' . strtolower(implode(' ', $userNames));
+                            }
+                            
+                            // Determine what to display for owner/user
+                            $ownerDisplay = '';
+                            if ($device->owner) {
+                                $ownerDisplay = $device->owner;
+                            } elseif (!empty($userNames)) {
+                                $ownerDisplay = $userNames[0]; // Use first user name if no owner set
+                            }
+                            
+                            $displayExtensions = !empty($extensionNumbers) ? ' | Ext: ' . implode(', ', $extensionNumbers) : '';
+                        @endphp
+                        <option value="{{ $device->device_id }}" data-searchable="{{ $searchableText }}" style="display: none;" {{ old('device_id') == $device->device_id ? 'selected' : '' }}>
+                            {{ $device->ip_address }} | {{ $device->mac_address }} @if($ownerDisplay) | {{ $ownerDisplay }} @endif{{ $displayExtensions }}
                         </option>
                     @endforeach
                 </select>
