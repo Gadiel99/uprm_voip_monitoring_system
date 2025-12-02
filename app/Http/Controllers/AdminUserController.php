@@ -127,7 +127,13 @@ class AdminUserController extends Controller
     {
         $request->validate([
             'name'     => ['required','string','min:2','max:255','regex:/\S/'],
-            'email'    => ['required','string','email:rfc','max:255','unique:users,email'],
+            'email'    => [
+                'required',
+                'string',
+                'email:rfc,dns', // Validates email format AND checks DNS records
+                'max:255',
+                'unique:users,email'
+            ],
             'password' => ['required', Password::min(8)->max(64)->mixedCase()->letters()->numbers()->symbols()->uncompromised()],
             'role'     => ['nullable','in:user,admin'],
         ]);
@@ -138,6 +144,9 @@ class AdminUserController extends Controller
         $name = strip_tags($request->name);
         $name = preg_replace('/[;\'"]/', '', $name); // Remove semicolons and quotes
         $email = filter_var($request->email, FILTER_SANITIZE_EMAIL);
+        
+        // Store the plain password temporarily to send in email
+        $plainPassword = $request->password;
 
         $newUser = User::create([
             'name'     => $name,
@@ -152,9 +161,18 @@ class AdminUserController extends Controller
             "Created user: {$newUser->name} ({$newUser->email}) with role '{$role}'",
             $request->user()->email
         );
+        
+        // Send welcome email with credentials
+        try {
+            $newUser->notify(new \App\Notifications\WelcomeUserNotification($email, $plainPassword));
+            $emailStatus = 'User created successfully and welcome email sent.';
+        } catch (\Exception $e) {
+            \Log::error('Failed to send welcome email: ' . $e->getMessage());
+            $emailStatus = 'User created successfully, but welcome email could not be sent. Please inform the user of their credentials manually.';
+        }
 
         return redirect()->route('admin.users', ['tab' => 'users'])
-            ->with('user_status', 'User created successfully.')
+            ->with('user_status', $emailStatus)
             ->with('showAddModal', false);
     }
 
