@@ -232,8 +232,8 @@ step_5_clone_repository() {
         print_info "Setting ownership to $USER..."
         chown $USER:$USER $APP_DIR
 
-        read -p "Enter GitHub repository URL [https://github.com/Gadiel99/uprm_voip_monitoring_system.git]: " repo_url
-        repo_url=${repo_url:-https://github.com/Gadiel99/uprm_voip_monitoring_system.git} 
+        read -p "Enter GitHub repository URL [https://pad.uprm.edu/git/triatek.git]: " repo_url
+        repo_url=${repo_url:-https://pad.uprm.edu/git/triatek.git} 
 
         
         # Clone repository
