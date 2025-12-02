@@ -78,6 +78,17 @@ class AdminUserController extends Controller
             ->orderBy('ip_address')
             ->get();
         
+        // Get extensions for available devices to enable search by extension and user names
+        $availableDeviceIds = $availableDevices->pluck('device_id');
+        $extensionsByAvailableDevice = $availableDeviceIds->isEmpty()
+            ? collect()
+            : DB::table('device_extensions as de')
+                ->join('extensions as e', 'e.extension_id', '=', 'de.extension_id')
+                ->whereIn('de.device_id', $availableDeviceIds)
+                ->select('de.device_id', 'e.extension_number', 'e.user_first_name', 'e.user_last_name')
+                ->get()
+                ->groupBy('device_id');
+        
         // Get backup info
         $latestBackup = $backupService->getLatestBackup();
         $backupStats = null;
@@ -105,6 +116,7 @@ class AdminUserController extends Controller
             'criticalDevices' => $criticalDevices,
             'extensionsByCriticalDevice' => $extensionsByCriticalDevice,
             'availableDevices' => $availableDevices,
+            'extensionsByAvailableDevice' => $extensionsByAvailableDevice,
             'latestBackup' => $latestBackup,
             'backupStats' => $backupStats,
             'allBackups' => $allBackups,
