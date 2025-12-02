@@ -30,6 +30,10 @@
         .header img {
             max-width: 80px;
             margin-bottom: 15px;
+            background-color: white;
+            border-radius: 50%;
+            padding: 15px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
         }
         .header h1 {
             margin: 0;
