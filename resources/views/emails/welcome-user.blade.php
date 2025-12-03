@@ -190,17 +190,17 @@
                     Best regards,
                 </p>
                 <p style="margin: 10px 0 5px 0; font-weight: 600; color: #00844b; font-size: 16px;">
-                    Carlos Olivencia Rodríguez
+                    Carlos E. Olivencia Vázquez
                 </p>
                 <p style="margin: 5px 0; color: #6c757d; font-size: 14px;">
                     Director<br>
                     Department of Auxiliary Services<br>
-                    Universidad de Puerto Rico - Mayagüez
+                    University of Puerto Rico - Mayagüez
                 </p>
                 <p style="margin: 15px 0 5px 0; color: #6c757d; font-size: 13px;">
                     <i class="bi bi-envelope"></i> 📧 <a href="mailto:carlos.olivencia1@upr.edu" style="color: #00844b; text-decoration: none;">carlos.olivencia1@upr.edu</a><br>
-                    <i class="bi bi-telephone"></i> 📞 (787) 832-4040 ext. 6401<br>
-                    <i class="bi bi-building"></i> 🏢 UPRM Edificio Central Telefónica
+                    <i class="bi bi-telephone"></i> 📞 (787) 832-4040 ext. 2525<br>
+                    <i class="bi bi-building"></i> 🏢 UPRM Building Central Telefónica
                 </p>
             </div>
         </div>
