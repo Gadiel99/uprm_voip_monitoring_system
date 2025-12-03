@@ -104,16 +104,176 @@
 <div class="container-fluid">
     {{-- NAV PILLS --}}
     <ul class="nav nav-pills bg-light p-2 rounded mb-4" id="adminTab" role="tablist">
-        <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#backup"><i class="bi bi-hdd-stack me-2"></i>Backup</button></li>
-        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#logs"><i class="bi bi-file-earmark-text me-2"></i>Logs</button></li>
-        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#settings"><i class="bi bi-gear me-2"></i>Settings</button></li>
+        <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#settings"><i class="bi bi-gear me-2"></i>Settings</button></li>
         <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#users"><i class="bi bi-people me-2"></i>Users</button></li>
+        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#backup"><i class="bi bi-hdd-stack me-2"></i>Backup</button></li>
+        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#logs"><i class="bi bi-file-earmark-text me-2"></i>Logs</button></li>
     </ul>
 
     <div class="tab-content" id="adminTabContent">
 
+        {{-- SETTINGS (Critical Devices + Alert config) --}}
+        <div class="tab-pane fade show active" id="settings" role="tabpanel">
+            <div class="card border-0 shadow-sm p-4 mb-4">
+                <h5 class="fw-semibold mb-2">Critical Devices</h5>
+                <p class="text-muted small">Devices that trigger bell alerts when inactive.</p>
+
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addCriticalModal">
+                        <i class="bi bi-plus-lg me-2"></i>Add Device
+                    </button>
+                </div>
+
+                @if(session('alert_settings_status'))
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        {{ session('alert_settings_status') }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                @endif
+
+                <table class="table table-bordered table-hover align-middle" id="criticalTable">
+                    <thead class="table-light">
+                        <tr>
+                            <th>IP Address</th>
+                            <th>MAC Address</th>
+                            <th>Owner</th>
+                            <th>Status</th>
+                            <th>Extensions</th>
+                            <th style="width:120px;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($criticalDevices ?? [] as $device)
+                        @php
+                            $exts = ($extensionsByCriticalDevice ?? collect())->get($device->device_id) ?? collect();
+                            $ownerName = $device->owner;
+                            if (!$ownerName && $exts->isNotEmpty()) {
+                                $ownerName = trim($exts->first()->user_first_name . ' ' . $exts->first()->user_last_name);
+                            }
+                        @endphp
+                        <tr class="critical-device-row" data-device-id="{{ $device->device_id }}">
+                            <td class="ip-cell">{{ $device->ip_address }}</td>
+                            <td class="mac-cell">{{ $device->mac_address }}</td>
+                            <td class="owner-cell">{{ $ownerName ?? 'N/A' }}</td>
+                            <td class="status-cell">
+                                @if($device->status === 'offline')
+                                    <span class="text-danger fw-semibold">Offline</span>
+                                @else
+                                    <span class="text-success fw-semibold">Online</span>
+                                @endif
+                            </td>
+                            <td class="extensions-cell">
+                                @if($exts->isEmpty())
+                                    <span class="text-muted">—</span>
+                                @else
+                                    @foreach($exts as $e)
+                                        {{ $e->extension_number }}@if(!$loop->last), @endif
+                                    @endforeach
+                                @endif
+                            </td>
+                            <td>
+                                <form action="{{ route('admin.critical-devices.destroy', $device->device_id) }}" method="POST" style="display:inline-block;" onsubmit="return handleFormSubmit(event, 'Remove this device from critical list?', 'Remove Device')">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button class="btn btn-sm btn-danger">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        @empty
+                        <tr>
+                            <td colspan="6" class="text-center text-muted">No critical devices configured.</td>
+                        </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+
+                <hr class="my-4">
+
+                {{-- Alert Thresholds Configuration --}}
+                <h6 class="fw-semibold">Alert Thresholds</h6>
+                <p class="text-muted small mb-3">Configure offline device percentage thresholds for building alerts.</p>
+
+                <form method="POST" action="{{ route('admin.alert-settings.update') }}">
+                    @csrf
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold">Lower Threshold (%)</label>
+                            <input type="number" class="form-control @error('lower_threshold') is-invalid @enderror" 
+                                   name="lower_threshold" min="0" max="100" 
+                                   value="{{ old('lower_threshold', $alertSettings->lower_threshold ?? 30) }}">
+                            <small class="text-muted d-block mt-1">Below this is <span class="text-success fw-semibold">Normal</span></small>
+                            @error('lower_threshold')
+                                <div class="text-danger small mt-1">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold">Upper Threshold (%)</label>
+                            <input type="number" class="form-control @error('upper_threshold') is-invalid @enderror" 
+                                   name="upper_threshold" min="0" max="100" 
+                                   value="{{ old('upper_threshold', $alertSettings->upper_threshold ?? 70) }}">
+                            <small class="text-muted d-block mt-1">Above this is <span class="text-danger fw-semibold">Critical</span></small>
+                            @error('upper_threshold')
+                                <div class="text-danger small mt-1">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold d-block">&nbsp;</label>
+                            <div class="d-flex gap-2">
+                                <button type="submit" class="btn btn-success">
+                                    <i class="bi bi-check-circle me-2"></i>Save Thresholds
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary" onclick="resetThresholdsToDefault()">
+                                    <i class="bi bi-arrow-counterclockwise me-2"></i>Reset to Default
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+
+                <hr class="my-4">
+
+                {{-- Notification Settings (System-wide for all admins) --}}
+                <h6 class="fw-semibold mb-3">Notification Settings <small class="text-muted">(System-wide)</small></h6>
+                <div class="form-check form-switch mb-2">
+                    <input class="form-check-input" type="checkbox" id="emailNotifications" {{ $alertSettings->email_notifications_enabled ? 'checked' : '' }}>
+                    <label class="form-check-label fw-semibold" for="emailNotifications">Email Notifications</label>
+                    <p class="text-muted small ms-4 mb-0">Enable email alerts for all users (system-wide setting)</p>
+                </div>
+            </div>
+        </div>
+
+       
+        {{-- LOGS --}}
+        <div class="tab-pane fade" id="logs" role="tabpanel">
+            <div class="card border-0 shadow-sm p-4 mb-4">
+                <div class="d-flex mb-3">
+                    <input type="text" class="form-control form-control-sm bg-light" id="logSearchInput" placeholder="Search logs by timestamp, IP, action, or comment...">
+                    <button class="btn btn-success btn-sm ms-2 px-3" onclick="filterLogs()"><i class="bi bi-search me-1"></i>Search</button>
+                    <button class="btn btn-outline-secondary btn-sm ms-2 px-3" onclick="clearLogs()"><i class="bi bi-trash me-1"></i>Clear All</button>
+                </div>
+                
+                <div class="mb-3">
+                    <button class="btn btn-sm btn-outline-secondary me-2 py-1 px-2" onclick="filterByAction('all')">All</button>
+                    <button class="btn btn-sm btn-outline-primary me-2 py-1 px-2" onclick="filterByAction('LOGIN')">Login</button>
+                    <button class="btn btn-sm btn-outline-secondary me-2 py-1 px-2" onclick="filterByAction('LOGOUT')">Logout</button>
+                    <button class="btn btn-sm btn-outline-success me-2 py-1 px-2" onclick="filterByAction('ADD')">Add</button>
+                    <button class="btn btn-sm btn-outline-warning me-2 py-1 px-2" onclick="filterByAction('EDIT')">Edit</button>
+                    <button class="btn btn-sm btn-outline-danger me-2 py-1 px-2" onclick="filterByAction('DELETE')">Delete</button>
+                    <button class="btn btn-sm btn-outline-danger py-1 px-2" onclick="filterByAction('ERROR')">Error</button>
+                </div>
+                
+                <small class="text-muted d-block mb-3">Showing <span id="logCount">0</span> logs. Only important system actions are recorded (add, delete, edit, login, logout, errors).</small>
+                
+                <div id="logsContainer" class="border rounded bg-white" style="max-height: 500px; overflow-y: auto;">
+                    <div class="text-center text-muted py-4">No logs available. Actions will be logged here.</div>
+                </div>
+            </div>
+        </div>
+
         {{-- BACKUP --}}
-        <div class="tab-pane fade show active" id="backup" role="tabpanel">
+        <div class="tab-pane fade" id="backup" role="tabpanel">
             {{-- Success/Error Messages --}}
             @if(session('success'))
                 <div class="alert alert-success alert-dismissible fade show" role="alert">
@@ -273,165 +433,6 @@
                             <i class="bi bi-arrow-counterclockwise me-2"></i>Restore Database
                         </button>
                     </div>
-                </div>
-            </div>
-        </div>
-
-        {{-- LOGS --}}
-        <div class="tab-pane fade" id="logs" role="tabpanel">
-            <div class="card border-0 shadow-sm p-4 mb-4">
-                <div class="d-flex mb-3">
-                    <input type="text" class="form-control form-control-sm bg-light" id="logSearchInput" placeholder="Search logs by timestamp, IP, action, or comment...">
-                    <button class="btn btn-success btn-sm ms-2 px-3" onclick="filterLogs()"><i class="bi bi-search me-1"></i>Search</button>
-                    <button class="btn btn-outline-secondary btn-sm ms-2 px-3" onclick="clearLogs()"><i class="bi bi-trash me-1"></i>Clear All</button>
-                </div>
-                
-                <div class="mb-3">
-                    <button class="btn btn-sm btn-outline-secondary me-2 py-1 px-2" onclick="filterByAction('all')">All</button>
-                    <button class="btn btn-sm btn-outline-primary me-2 py-1 px-2" onclick="filterByAction('LOGIN')">Login</button>
-                    <button class="btn btn-sm btn-outline-secondary me-2 py-1 px-2" onclick="filterByAction('LOGOUT')">Logout</button>
-                    <button class="btn btn-sm btn-outline-success me-2 py-1 px-2" onclick="filterByAction('ADD')">Add</button>
-                    <button class="btn btn-sm btn-outline-warning me-2 py-1 px-2" onclick="filterByAction('EDIT')">Edit</button>
-                    <button class="btn btn-sm btn-outline-danger me-2 py-1 px-2" onclick="filterByAction('DELETE')">Delete</button>
-                    <button class="btn btn-sm btn-outline-danger py-1 px-2" onclick="filterByAction('ERROR')">Error</button>
-                </div>
-                
-                <small class="text-muted d-block mb-3">Showing <span id="logCount">0</span> logs. Only important system actions are recorded (add, delete, edit, login, logout, errors).</small>
-                
-                <div id="logsContainer" class="border rounded bg-white" style="max-height: 500px; overflow-y: auto;">
-                    <div class="text-center text-muted py-4">No logs available. Actions will be logged here.</div>
-                </div>
-            </div>
-        </div>
-
-        {{-- SETTINGS (Critical Devices + Alert config) --}}
-        <div class="tab-pane fade" id="settings" role="tabpanel">
-            <div class="card border-0 shadow-sm p-4 mb-4">
-                <h5 class="fw-semibold mb-2">Critical Devices</h5>
-                <p class="text-muted small">Devices that trigger bell alerts when inactive.</p>
-
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addCriticalModal">
-                        <i class="bi bi-plus-lg me-2"></i>Add Device
-                    </button>
-                </div>
-
-                @if(session('alert_settings_status'))
-                    <div class="alert alert-success alert-dismissible fade show" role="alert">
-                        {{ session('alert_settings_status') }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
-                @endif
-
-                <table class="table table-bordered table-hover align-middle" id="criticalTable">
-                    <thead class="table-light">
-                        <tr>
-                            <th>IP Address</th>
-                            <th>MAC Address</th>
-                            <th>Owner</th>
-                            <th>Status</th>
-                            <th>Extensions</th>
-                            <th style="width:120px;">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse($criticalDevices ?? [] as $device)
-                        @php
-                            $exts = ($extensionsByCriticalDevice ?? collect())->get($device->device_id) ?? collect();
-                            $ownerName = $device->owner;
-                            if (!$ownerName && $exts->isNotEmpty()) {
-                                $ownerName = trim($exts->first()->user_first_name . ' ' . $exts->first()->user_last_name);
-                            }
-                        @endphp
-                        <tr class="critical-device-row" data-device-id="{{ $device->device_id }}">
-                            <td class="ip-cell">{{ $device->ip_address }}</td>
-                            <td class="mac-cell">{{ $device->mac_address }}</td>
-                            <td class="owner-cell">{{ $ownerName ?? 'N/A' }}</td>
-                            <td class="status-cell">
-                                @if($device->status === 'offline')
-                                    <span class="text-danger fw-semibold">Offline</span>
-                                @else
-                                    <span class="text-success fw-semibold">Online</span>
-                                @endif
-                            </td>
-                            <td class="extensions-cell">
-                                @if($exts->isEmpty())
-                                    <span class="text-muted">—</span>
-                                @else
-                                    @foreach($exts as $e)
-                                        {{ $e->extension_number }}@if(!$loop->last), @endif
-                                    @endforeach
-                                @endif
-                            </td>
-                            <td>
-                                <form action="{{ route('admin.critical-devices.destroy', $device->device_id) }}" method="POST" style="display:inline-block;" onsubmit="return handleFormSubmit(event, 'Remove this device from critical list?', 'Remove Device')">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button class="btn btn-sm btn-danger">
-                                        <i class="bi bi-trash"></i>
-                                    </button>
-                                </form>
-                            </td>
-                        </tr>
-                        @empty
-                        <tr>
-                            <td colspan="6" class="text-center text-muted">No critical devices configured.</td>
-                        </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-
-                <hr class="my-4">
-
-                {{-- Alert Thresholds Configuration --}}
-                <h6 class="fw-semibold">Alert Thresholds</h6>
-                <p class="text-muted small mb-3">Configure offline device percentage thresholds for building alerts.</p>
-
-                <form method="POST" action="{{ route('admin.alert-settings.update') }}">
-                    @csrf
-                    <div class="row g-3">
-                        <div class="col-md-3">
-                            <label class="form-label fw-semibold">Lower Threshold (%)</label>
-                            <input type="number" class="form-control @error('lower_threshold') is-invalid @enderror" 
-                                   name="lower_threshold" min="0" max="100" 
-                                   value="{{ old('lower_threshold', $alertSettings->lower_threshold ?? 30) }}">
-                            <small class="text-muted d-block mt-1">Below this is <span class="text-success fw-semibold">Normal</span></small>
-                            @error('lower_threshold')
-                                <div class="text-danger small mt-1">{{ $message }}</div>
-                            @enderror
-                        </div>
-                        <div class="col-md-3">
-                            <label class="form-label fw-semibold">Upper Threshold (%)</label>
-                            <input type="number" class="form-control @error('upper_threshold') is-invalid @enderror" 
-                                   name="upper_threshold" min="0" max="100" 
-                                   value="{{ old('upper_threshold', $alertSettings->upper_threshold ?? 70) }}">
-                            <small class="text-muted d-block mt-1">Above this is <span class="text-danger fw-semibold">Critical</span></small>
-                            @error('upper_threshold')
-                                <div class="text-danger small mt-1">{{ $message }}</div>
-                            @enderror
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label fw-semibold d-block">&nbsp;</label>
-                            <div class="d-flex gap-2">
-                                <button type="submit" class="btn btn-success">
-                                    <i class="bi bi-check-circle me-2"></i>Save Thresholds
-                                </button>
-                                <button type="button" class="btn btn-outline-secondary" onclick="resetThresholdsToDefault()">
-                                    <i class="bi bi-arrow-counterclockwise me-2"></i>Reset to Default
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </form>
-
-                <hr class="my-4">
-
-                {{-- Notification Settings (System-wide for all admins) --}}
-                <h6 class="fw-semibold mb-3">Notification Settings <small class="text-muted">(System-wide)</small></h6>
-                <div class="form-check form-switch mb-2">
-                    <input class="form-check-input" type="checkbox" id="emailNotifications" {{ $alertSettings->email_notifications_enabled ? 'checked' : '' }}>
-                    <label class="form-check-label fw-semibold" for="emailNotifications">Email Notifications</label>
-                    <p class="text-muted small ms-4 mb-0">Enable email alerts for all users (system-wide setting)</p>
                 </div>
             </div>
         </div>
