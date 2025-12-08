@@ -95,7 +95,6 @@
             <li>
                 <strong>Monitor Alerts:</strong> Go to the <strong>Alerts</strong> tab to see current notifications. 
                 Critical alerts require immediate attention and are highlighted in red. 
-                You can sort alerts by <em>severity</em> or <em>alphabetically</em> in <strong>Admin → Settings → Alert Display Settings</strong>.
             </li>
             <li>
                 <strong>Device Management:</strong> Use the <strong>Devices</strong> tab to monitor all connected devices. 
@@ -158,7 +157,6 @@
                     <li>Use the "Reset to Default" button to restore thresholds to 10% (lower) and 25% (upper)</li>
                 </ul>
             </li>
-            <li><strong>Alert Display Settings:</strong> Choose to sort alerts <em>By Severity</em> (Critical first) or <em>Alphabetically</em> (by building name).</li>
             <li><strong>Save Changes:</strong> All changes are saved automatically or require confirmation depending on the setting type.</li>
         </ul>
 
@@ -171,10 +169,10 @@
             <ul>
                 <li><strong>Backup:</strong> Configure backup settings and download system backups as ZIP files.</li>
                 <li><strong>Logs:</strong> Review comprehensive system activity logs including user logins, logouts, page access, and all system actions. Filter logs by type (All, Info, Success, Warning, Error).</li>
-                <li><strong>Settings:</strong> Manage critical devices list and configure alert display settings (sort by severity or alphabetically).</li>
-                <li><strong>Users:</strong> View system users, their roles (Admin/User), email addresses, and online/offline status.</li>
+                <li><strong>Settings:</strong> Manage critical devices list, configure alert threshold, and disable/enable email notifications.</li>
+                <li><strong>Users:</strong> View system users, their roles (Admin/Assistant), email addresses, and online/offline status.</li>
             </ul>
-            <li><strong>Map Markers:</strong> Administrators can add and delete building markers on the campus map using the <strong>Add Marker</strong> and <strong>Delete Marker</strong> buttons on the Home page.</li>
+            <li><strong>Map Markers:</strong> Administrators can add, edit and delete building markers on the campus map using the <strong>Add Marker</strong>, <strong>Edit Marker</strong> and <strong>Delete Marker</strong> buttons on the Home page.</li>
         </ul>
     </div>
 </div>
