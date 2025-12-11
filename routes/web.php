@@ -55,6 +55,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/devices/unmapped/network/{network}', [DevicesController::class, 'unmappedNetwork'])->name('devices.unmappedNetwork');
     Route::get('/devices/building/{building}', [DevicesController::class, 'byBuilding'])->name('devices.byBuilding');
     Route::get('/devices/building/{building}/network/{network}', [DevicesController::class, 'byNetwork'])->name('devices.byNetwork');
+    
+    // Device removal (admin only)
+    Route::delete('/devices/{device}/remove', [DevicesController::class, 'removeDevice'])->name('devices.remove')->middleware('admin');
 
     // Device Activity API (AJAX) - allow any authenticated user to request device activity
     Route::get('/api/device-activity/{deviceId}', [DeviceActivityController::class, 'getActivity'])->name('api.device-activity');

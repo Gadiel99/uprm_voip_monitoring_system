@@ -51,6 +51,21 @@
       </a>
     </div>
 
+    {{-- Success/Error Messages --}}
+    @if(session('success'))
+      <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="bi bi-check-circle me-2"></i>{{ session('success') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+    @endif
+
+    @if(session('error'))
+      <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-triangle me-2"></i>{{ session('error') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+    @endif
+
     {{-- Search bar for filtering devices --}}
     <div class="mb-3 d-flex gap-2">
       <input type="text" id="deviceSearch" class="form-control form-control-sm" placeholder="Search devices... (use commas: monzon, 4542ab)" style="max-width: 400px;">
@@ -67,6 +82,7 @@
             <th>MAC Address</th>
             <th>Owner</th>
             <th>Extensions</th>
+            <th style="width: 120px;">Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -74,17 +90,17 @@
             @php
               $exts = ($extByDevice ?? collect())->get($d->device_id) ?? collect();
             @endphp
-            <tr class="device-row" onclick="showDeviceGraph('{{ $d->ip_address }}', '{{ $d->device_id }}', '{{ $building->name }}', '{{ $network }}')" style="cursor: pointer;">
-              <td class="fw-semibold device-ip">{{ $d->ip_address }}</td>
-              <td class="device-mac">{{ $d->mac_address ?? 'N/A' }}</td>
-              <td class="device-owner">
+            <tr class="device-row">
+              <td class="fw-semibold device-ip" onclick="showDeviceGraph('{{ $d->ip_address }}', '{{ $d->device_id }}', '{{ $building->name }}', '{{ $network }}')" style="cursor: pointer;">{{ $d->ip_address }}</td>
+              <td class="device-mac" onclick="showDeviceGraph('{{ $d->ip_address }}', '{{ $d->device_id }}', '{{ $building->name }}', '{{ $network }}')" style="cursor: pointer;">{{ $d->mac_address ?? 'N/A' }}</td>
+              <td class="device-owner" onclick="showDeviceGraph('{{ $d->ip_address }}', '{{ $d->device_id }}', '{{ $building->name }}', '{{ $network }}')" style="cursor: pointer;">
                 @if($exts->isNotEmpty())
                   {{ $exts->first()->user_first_name }} {{ $exts->first()->user_last_name }}
                 @else
                   <span class="text-muted">N/A</span>
                 @endif
               </td>
-              <td class="device-extensions">
+              <td class="device-extensions" onclick="showDeviceGraph('{{ $d->ip_address }}', '{{ $d->device_id }}', '{{ $building->name }}', '{{ $network }}')" style="cursor: pointer;">
                 @if($exts->isEmpty())
                   <span class="text-muted">—</span>
                 @else
@@ -97,10 +113,15 @@
                   </div>
                 @endif
               </td>
+              <td class="text-center">
+                <button type="button" class="btn btn-danger btn-sm" onclick="confirmRemoveDevice('{{ $d->device_id }}', '{{ $d->ip_address }}')">
+                  <i class="bi bi-trash"></i> Remove
+                </button>
+              </td>
             </tr>
           @empty
             <tr class="empty-devices-row">
-              <td colspan="4" class="text-center text-muted">No devices found in this network.</td>
+              <td colspan="5" class="text-center text-muted">No devices found in this network.</td>
             </tr>
           @endforelse
         </tbody>
@@ -126,6 +147,30 @@
             </div>
             <div class="modal-body">
                 <canvas id="activityChart" width="400" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{-- MODAL: CONFIRM DEVICE REMOVAL --}}
+<div class="modal fade" id="deleteConfirmModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">
+                    <i class="bi bi-exclamation-triangle me-2"></i>voipmonitor.uprm.edu says
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p class="mb-2">Are you sure you want to remove device <strong id="deleteDeviceIp"></strong> from this network?</p>
+                <p class="text-muted mb-0"><small>This action cannot be undone.</small></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger" id="confirmDeleteBtn">
+                    <i class="bi bi-trash me-1"></i> OK
+                </button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
             </div>
         </div>
     </div>
@@ -258,5 +303,54 @@ function showDeviceGraph(ip, deviceId, building, network) {
     const modal = new bootstrap.Modal(document.getElementById('graphModal'));
     modal.show();
 }
+
+// Confirm device removal
+let pendingDeleteDeviceId = null;
+let pendingDeleteDeviceIp = null;
+
+function confirmRemoveDevice(deviceId, ipAddress) {
+    // Store the device info
+    pendingDeleteDeviceId = deviceId;
+    pendingDeleteDeviceIp = ipAddress;
+    
+    // Update modal content
+    document.getElementById('deleteDeviceIp').textContent = ipAddress;
+    
+    // Show modal
+    const modal = new bootstrap.Modal(document.getElementById('deleteConfirmModal'));
+    modal.show();
+}
+
+// Handle actual deletion when OK is clicked
+document.addEventListener('DOMContentLoaded', function() {
+    const confirmBtn = document.getElementById('confirmDeleteBtn');
+    if (confirmBtn) {
+        confirmBtn.addEventListener('click', function() {
+            if (pendingDeleteDeviceId) {
+                // Create a form and submit it
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = `/devices/${pendingDeleteDeviceId}/remove`;
+                
+                // Add CSRF token
+                const csrfInput = document.createElement('input');
+                csrfInput.type = 'hidden';
+                csrfInput.name = '_token';
+                csrfInput.value = '{{ csrf_token() }}';
+                form.appendChild(csrfInput);
+                
+                // Add method spoofing for DELETE
+                const methodInput = document.createElement('input');
+                methodInput.type = 'hidden';
+                methodInput.name = '_method';
+                methodInput.value = 'DELETE';
+                form.appendChild(methodInput);
+                
+                document.body.appendChild(form);
+                form.submit();
+            }
+        });
+    }
+});
 </script>
 @endsection
