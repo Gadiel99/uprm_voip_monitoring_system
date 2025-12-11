@@ -308,5 +308,32 @@ class DevicesController extends Controller
             'extByDevice' => $extByDevice,
         ]);
     }
+
+    /**
+     * Remove a device from the network (soft delete).
+     *
+     * @param  int $device
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function removeDevice($device)
+    {
+        // Find the device
+        $deviceRecord = DB::table('devices')->where('device_id', $device)->first();
+        
+        if (!$deviceRecord) {
+            return redirect()->back()->with('error', 'Device not found.');
+        }
+
+        // Delete related device extensions
+        DB::table('device_extensions')->where('device_id', $device)->delete();
+
+        // Delete device activity records (optional - comment out if you want to keep history)
+        DB::table('device_activity')->where('device_id', $device)->delete();
+
+        // Delete the device
+        DB::table('devices')->where('device_id', $device)->delete();
+
+        return redirect()->back()->with('success', 'Device removed successfully.');
+    }
 }
 
