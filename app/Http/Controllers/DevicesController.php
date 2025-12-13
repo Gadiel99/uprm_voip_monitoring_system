@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use App\Helpers\SystemLogger;
 
 /**
  * Controlador de Dispositivos.
@@ -242,6 +243,12 @@ class DevicesController extends Controller
             $devicesByNetwork->put($network->subnet, $devices);
         }
 
+        // Get devices with Unknown IP address (no network assigned)
+        $unknownDevicesCount = DB::table('devices as d')
+            ->where('d.ip_address', 'Unknown')
+            ->whereNull('d.network_id')
+            ->count();
+
         // Create a mock building object
         $building = (object) [
             'building_id' => null,
@@ -252,6 +259,7 @@ class DevicesController extends Controller
             'building'    => $building,
             'networks'    => $networks->pluck('subnet'),
             'devicesByNetwork' => $devicesByNetwork,
+            'unknownDevicesCount' => $unknownDevicesCount,
         ]);
     }
 
@@ -310,6 +318,44 @@ class DevicesController extends Controller
     }
 
     /**
+     * Display devices with Unknown IP addresses.
+     *
+     * @return \Illuminate\Contracts\View\View
+     */
+    public function unknownIpDevices()
+    {
+        // Get devices with Unknown IP address (no network assigned)
+        $devices = DB::table('devices as d')
+            ->where('d.ip_address', 'Unknown')
+            ->whereNull('d.network_id')
+            ->orderBy('d.mac_address')
+            ->select('d.device_id', 'd.ip_address', 'd.mac_address', 'd.status', 'd.is_critical', 'd.network_id')
+            ->paginate(50); // Show more per page since these are problematic devices
+
+        // Get extensions for these devices
+        $extByDevice = $devices->isEmpty()
+            ? collect()
+            : DB::table('device_extensions as de')
+                ->join('extensions as e', 'e.extension_id', '=', 'de.extension_id')
+                ->whereIn('de.device_id', $devices->pluck('device_id'))
+                ->select('de.device_id', 'e.extension_number', 'e.user_first_name', 'e.user_last_name')
+                ->get()
+                ->groupBy('device_id');
+
+        // Create a mock building object
+        $building = (object) [
+            'building_id' => null,
+            'name' => 'Need Connection'
+        ];
+
+        return view('pages.unknown_ip_devices', [
+            'building'    => $building,
+            'devices'     => $devices,
+            'extByDevice' => $extByDevice,
+        ]);
+    }
+
+    /**
      * Remove a device from the network (soft delete).
      *
      * @param  int $device
@@ -324,6 +370,22 @@ class DevicesController extends Controller
             return redirect()->back()->with('error', 'Device not found.');
         }
 
+        // Store device info for logging
+        $deviceIp = $deviceRecord->ip_address;
+        $deviceMac = $deviceRecord->mac_address ?? 'N/A';
+        
+        // Get network info
+        $network = DB::table('networks')->where('network_id', $deviceRecord->network_id)->first();
+        $networkSubnet = $network ? $network->subnet : 'Unknown';
+        
+        // Get building info (if assigned)
+        $building = DB::table('buildings as b')
+            ->join('building_networks as bn', 'bn.building_id', '=', 'b.building_id')
+            ->where('bn.network_id', $deviceRecord->network_id)
+            ->select('b.name')
+            ->first();
+        $buildingName = $building ? $building->name : 'Unassigned';
+        
         // Delete related device extensions
         DB::table('device_extensions')->where('device_id', $device)->delete();
 
@@ -332,6 +394,12 @@ class DevicesController extends Controller
 
         // Delete the device
         DB::table('devices')->where('device_id', $device)->delete();
+
+        // Log the action
+        SystemLogger::log(
+            SystemLogger::DELETE,
+            "Device removed: {$deviceIp} (MAC: {$deviceMac}) from Network: {$networkSubnet}, Building: {$buildingName}"
+        );
 
         return redirect()->back()->with('success', 'Device removed successfully.');
     }
