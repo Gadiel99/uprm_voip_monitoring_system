@@ -579,5 +579,36 @@ class AdminController extends Controller
                 ->with('error', $result['message']);
         }
     }
+
+    /**
+     * Clear all system logs from database
+     */
+    public function clearLogs()
+    {
+        try {
+            // Delete all logs from database
+            DB::table('system_logs')->truncate();
+            
+            // Clear session logs
+            session()->forget('system_logs');
+            
+            // Log the clear action
+            SystemLogger::log(
+                SystemLogger::DELETE,
+                'All system logs were cleared by admin'
+            );
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'All logs have been cleared successfully.'
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to clear logs: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to clear logs: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 }
 
