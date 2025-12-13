@@ -53,6 +53,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/devices/critical', [DevicesController::class, 'criticalDevices'])->name('devices.critical');
     Route::get('/devices/unmapped', [DevicesController::class, 'unmapped'])->name('devices.unmapped');
     Route::get('/devices/unmapped/network/{network}', [DevicesController::class, 'unmappedNetwork'])->name('devices.unmappedNetwork');
+    Route::get('/devices/unknown-ip', [DevicesController::class, 'unknownIpDevices'])->name('devices.unknownIp');
     Route::get('/devices/building/{building}', [DevicesController::class, 'byBuilding'])->name('devices.byBuilding');
     Route::get('/devices/building/{building}/network/{network}', [DevicesController::class, 'byNetwork'])->name('devices.byNetwork');
     
@@ -134,6 +135,9 @@ Route::middleware(['auth','admin'])->group(function () {
     Route::get('/admin/backup/download', [AdminController::class, 'downloadLatestBackup'])->name('admin.backup.download');
     Route::get('/admin/backup/download/{filename}', [AdminController::class, 'downloadBackup'])->name('admin.backup.download.file');
     Route::post('/admin/backup/restore', [AdminController::class, 'restoreBackup'])->name('admin.backup.restore');
+    
+    // System logs management
+    Route::delete('/admin/logs/clear', [AdminController::class, 'clearLogs'])->name('admin.logs.clear');
     
     // Device Activity API
     // (moved to auth group to allow authenticated users to fetch activity via AJAX)
