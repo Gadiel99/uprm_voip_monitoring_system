@@ -570,14 +570,14 @@ class ETLService
                 } else {
                     // Device is defined but not registered (offline)
                     $status = 'offline';
-                    $ipAddress = null; // No IP address available for offline devices
+                    $ipAddress = 'Unknown'; // Set to 'Unknown' for offline devices without IP
                     $extensionNumber = null; // Can't determine extension if not registered
                     $this->metrics['devices_offline']++;
                 }
                 
-                // Determine network (only if we have an IP)
+                // Determine network (only if we have a real IP, not 'Unknown')
                 $network = null;
-                if ($ipAddress) {
+                if ($ipAddress && $ipAddress !== 'Unknown') {
                     $network = $this->findOrCreateNetwork($ipAddress);
                 }
                 
@@ -588,6 +588,7 @@ class ETLService
                 // Create or update device - build the data array
                 $deviceData = [
                     'status' => $status,
+                    'ip_address' => $ipAddress, // Always set IP address, even if 'Unknown'
                 ];
                 
                 // Preserve is_critical flag if device exists, otherwise set to false for new devices
@@ -595,12 +596,13 @@ class ETLService
                     $deviceData['is_critical'] = false;
                 }
                 
-                // Only set IP and network if available
-                if ($ipAddress) {
-                    $deviceData['ip_address'] = $ipAddress;
-                }
+                // Handle network assignment
                 if ($network) {
+                    // Device has a real IP and network
                     $deviceData['network_id'] = $network->network_id;
+                } else {
+                    // Device has Unknown IP or couldn't determine network - clear network_id
+                    $deviceData['network_id'] = null;
                 }
                 
                 $device = Devices::updateOrCreate(
