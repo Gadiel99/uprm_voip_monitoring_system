@@ -1318,9 +1318,30 @@ function filterByAction(action) {
 function clearLogs() {
     customConfirm('Are you sure you want to clear all logs?', 'Clear All Logs').then(confirmed => {
         if (confirmed) {
-            localStorage.removeItem('systemLogs');
-            addLog('DELETE', 'All system logs were cleared by admin', 'Admin');
-            updateLogsDisplay();
+            // Call backend to delete logs from database
+            fetch('{{ route("admin.logs.clear") }}', {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Clear localStorage as well
+                    localStorage.removeItem('systemLogs');
+                    // Reload logs from backend
+                    loadLogsFromBackend();
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error clearing logs:', error);
+                alert('Failed to clear logs. Please try again.');
+            });
         }
     });
 }
