@@ -37,6 +37,19 @@
           </tr>
         </thead>
         <tbody>
+          {{-- Unknown IP Devices Section --}}
+          @if($unknownDevicesCount > 0)
+            <tr onclick="window.location.href='{{ route('devices.unknownIp') }}'" style="cursor: pointer; background-color: #fff3cd;">
+              <td class="fw-semibold">
+                <i class="bi bi-question-circle me-2 text-danger"></i>
+                <strong>Unknown IP Addresses</strong>
+                <br>
+                <small class="text-muted">Devices defined but never registered</small>
+              </td>
+              <td>{{ $unknownDevicesCount }}</td>
+            </tr>
+          @endif
+
           @forelse($networks as $network)
             @php
               $networkDevices = $devicesByNetwork[$network] ?? collect();
@@ -50,11 +63,13 @@
               <td>{{ $totalDevices }}</td>
             </tr>
           @empty
-            <tr>
-              <td colspan="2" class="text-center text-success">
-                <i class="bi bi-check-circle me-2"></i>All networks are assigned to buildings.
-              </td>
-            </tr>
+            @if($unknownDevicesCount === 0)
+              <tr>
+                <td colspan="2" class="text-center text-success">
+                  <i class="bi bi-check-circle me-2"></i>All networks are assigned to buildings.
+                </td>
+              </tr>
+            @endif
           @endforelse
         </tbody>
       </table>
