@@ -887,18 +887,22 @@ document.addEventListener('DOMContentLoaded', function () {
     function addEditNetworkField() {
         const container = document.getElementById('editNewNetworksContainer');
         const networkGroup = document.createElement('div');
-        networkGroup.className = 'input-group mb-2';
+        networkGroup.className = 'mb-2';
+        
+        const inputGroup = document.createElement('div');
+        inputGroup.className = 'input-group';
         
         const select = document.createElement('select');
         select.className = 'form-select edit-network-select';
         select.required = true;
         
         // Get currently selected networks to exclude them
-        const selectedNetworks = Array.from(container.querySelectorAll('.edit-network-select'))
-            .map(s => s.value)
-            .filter(v => v);
+        const selectedNetworks = Array.from(container.querySelectorAll('.edit-network-select, .edit-network-manual-input'))
+            .map(el => el.classList.contains('edit-network-select') ? el.value : el.value.trim())
+            .filter(v => v && v !== '__manual__');
         
-        populateNetworkSelect(select, selectedNetworks);
+        // Populate with available networks AND manual option
+        populateNetworkSelect(select, selectedNetworks, true);
         
         const removeBtn = document.createElement('button');
         removeBtn.type = 'button';
@@ -906,27 +910,122 @@ document.addEventListener('DOMContentLoaded', function () {
         removeBtn.innerHTML = '<i class="bi bi-x-lg"></i>';
         removeBtn.onclick = () => {
             networkGroup.remove();
-            // Refresh other dropdowns
             refreshEditNetworkDropdowns();
         };
         
-        // When a network is selected, refresh other dropdowns
-        select.addEventListener('change', refreshEditNetworkDropdowns);
+        // Manual input field (hidden by default)
+        const manualInputGroup = document.createElement('div');
+        manualInputGroup.className = 'input-group mt-2';
+        manualInputGroup.style.display = 'none';
         
-        networkGroup.appendChild(select);
-        networkGroup.appendChild(removeBtn);
+        const manualInput = document.createElement('input');
+        manualInput.type = 'text';
+        manualInput.className = 'form-control edit-network-manual-input';
+        manualInput.placeholder = 'Enter network (e.g., 10.100.101.0)';
+        
+        const manualCancelBtn = document.createElement('button');
+        manualCancelBtn.type = 'button';
+        manualCancelBtn.className = 'btn btn-outline-secondary';
+        manualCancelBtn.innerHTML = '<i class="bi bi-x-lg"></i>';
+        manualCancelBtn.onclick = () => {
+            select.value = '';
+            manualInput.value = '';
+            manualInput.classList.remove('is-invalid', 'is-valid');
+            manualInputGroup.style.display = 'none';
+            select.style.display = 'block';
+            feedback.style.display = 'none';
+        };
+        
+        // Validation feedback
+        const feedback = document.createElement('div');
+        feedback.className = 'invalid-feedback';
+        feedback.style.display = 'none';
+        
+        // Network validation
+        const networkRegex = /^(\d{1,3}\.){3}\d{1,3}$/;
+        
+        const validateManualNetwork = () => {
+            const value = manualInput.value.trim();
+            if (!value) {
+                manualInput.classList.remove('is-invalid', 'is-valid');
+                feedback.style.display = 'none';
+                return false;
+            }
+            
+            if (!networkRegex.test(value)) {
+                manualInput.classList.add('is-invalid');
+                manualInput.classList.remove('is-valid');
+                feedback.style.display = 'block';
+                feedback.textContent = 'Invalid network format. Use IPv4 format (e.g., 10.100.101.0)';
+                return false;
+            }
+            
+            const octets = value.split('.');
+            const invalidOctet = octets.some(octet => {
+                const num = parseInt(octet, 10);
+                return num < 0 || num > 255;
+            });
+            
+            if (invalidOctet) {
+                manualInput.classList.add('is-invalid');
+                manualInput.classList.remove('is-valid');
+                feedback.style.display = 'block';
+                feedback.textContent = 'Each octet must be between 0 and 255';
+                return false;
+            }
+            
+            manualInput.classList.remove('is-invalid');
+            manualInput.classList.add('is-valid');
+            feedback.style.display = 'none';
+            return true;
+        };
+        
+        manualInput.addEventListener('blur', validateManualNetwork);
+        manualInput.addEventListener('input', validateManualNetwork);
+        
+        // Handle select change
+        select.addEventListener('change', function() {
+            if (this.value === '__manual__') {
+                select.style.display = 'none';
+                manualInputGroup.style.display = 'flex';
+                manualInput.focus();
+            } else {
+                refreshEditNetworkDropdowns();
+            }
+        });
+        
+        manualInputGroup.appendChild(manualInput);
+        manualInputGroup.appendChild(manualCancelBtn);
+        
+        inputGroup.appendChild(select);
+        inputGroup.appendChild(removeBtn);
+        
+        networkGroup.appendChild(inputGroup);
+        networkGroup.appendChild(manualInputGroup);
+        networkGroup.appendChild(feedback);
+        
         container.appendChild(networkGroup);
     }
     
     function refreshEditNetworkDropdowns() {
         const container = document.getElementById('editNewNetworksContainer');
         const allSelects = container.querySelectorAll('.edit-network-select');
-        const selectedValues = Array.from(allSelects).map(s => s.value).filter(v => v);
+        const allManualInputs = container.querySelectorAll('.edit-network-manual-input');
+        
+        const selectedValues = [
+            ...Array.from(allSelects).map(s => s.value),
+            ...Array.from(allManualInputs).map(i => i.value.trim())
+        ].filter(v => v && v !== '__manual__');
         
         allSelects.forEach(select => {
             const currentValue = select.value;
-            populateNetworkSelect(select, selectedValues.filter(v => v !== currentValue));
-            select.value = currentValue; // Restore selection
+            // Clear and repopulate with manual option
+            populateNetworkSelect(select, selectedValues.filter(v => v !== currentValue), true);
+            
+            // Restore previous selection if it wasn't manual
+            if (currentValue && currentValue !== '__manual__') {
+                select.value = currentValue;
+            }
         });
     }
 
@@ -992,11 +1091,52 @@ document.addEventListener('DOMContentLoaded', function () {
             return null;
         }).filter(n => n);
         
-        // Collect newly added networks from dropdowns
+        // Collect newly added networks from dropdowns and manual inputs
         const newNetworkSelects = document.querySelectorAll('#editNewNetworksContainer .edit-network-select');
-        const newNetworks = Array.from(newNetworkSelects)
-            .map(select => select.value)
-            .filter(v => v);
+        const newNetworkManualInputs = document.querySelectorAll('#editNewNetworksContainer .edit-network-manual-input');
+        const newNetworks = [];
+        let hasInvalidNetwork = false;
+        
+        // Collect from dropdowns
+        newNetworkSelects.forEach(select => {
+            if (select.value && select.value !== '__manual__') {
+                newNetworks.push(select.value);
+            }
+        });
+        
+        // Collect and validate from manual inputs
+        newNetworkManualInputs.forEach(input => {
+            const value = input.value.trim();
+            if (value && input.parentElement.style.display !== 'none') {
+                // Validate network format
+                const networkRegex = /^(\d{1,3}\.){3}\d{1,3}$/;
+                if (!networkRegex.test(value)) {
+                    hasInvalidNetwork = true;
+                    input.classList.add('is-invalid');
+                    return;
+                }
+                
+                // Validate octets
+                const octets = value.split('.');
+                const invalidOctet = octets.some(octet => {
+                    const num = parseInt(octet, 10);
+                    return num < 0 || num > 255;
+                });
+                
+                if (invalidOctet) {
+                    hasInvalidNetwork = true;
+                    input.classList.add('is-invalid');
+                    return;
+                }
+                
+                newNetworks.push(value);
+            }
+        });
+        
+        if (hasInvalidNetwork) {
+            customAlert('❌ Please enter valid network addresses in IPv4 format (e.g., 10.100.101.0)', 'Validation Error', 'error');
+            return;
+        }
         
         // Combine both lists (keeping existing + adding new)
         const networks = [...currentNetworks, ...newNetworks];
@@ -1250,18 +1390,12 @@ document.addEventListener('DOMContentLoaded', function () {
     }
     
     // ===== POPULATE NETWORK SELECT DROPDOWN (GLOBAL) =====
-    window.populateNetworkSelect = function(selectElement, excludeNetworkIds = []) {
+    window.populateNetworkSelect = function(selectElement, excludeNetworkIds = [], includeManualOption = false) {
         selectElement.innerHTML = '<option value="">Select a network...</option>';
         
         const availableNetworks = unassignedNetworks.filter(net => 
             !excludeNetworkIds.includes(net.network_id)
         );
-        
-        if (availableNetworks.length === 0) {
-            selectElement.innerHTML = '<option value="">No networks available</option>';
-            selectElement.disabled = true;
-            return;
-        }
         
         selectElement.disabled = false;
         availableNetworks.forEach(network => {
@@ -1270,6 +1404,20 @@ document.addEventListener('DOMContentLoaded', function () {
             option.textContent = `${network.subnet} (${network.total_devices || 0} devices)`;
             selectElement.appendChild(option);
         });
+        
+        // Add manual option if requested (for edit modal)
+        if (includeManualOption) {
+            const manualOption = document.createElement('option');
+            manualOption.value = '__manual__';
+            manualOption.textContent = '✏️ Enter manually...';
+            selectElement.appendChild(manualOption);
+        }
+        
+        // If no networks and no manual option, disable
+        if (availableNetworks.length === 0 && !includeManualOption) {
+            selectElement.innerHTML = '<option value="">No networks available</option>';
+            selectElement.disabled = true;
+        }
     };
 
     // ===== LOAD BUILDINGS FROM DATABASE =====
