@@ -54,6 +54,21 @@
       </a>
     </div>
 
+    {{-- Success/Error Messages --}}
+    @if(session('success'))
+      <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="bi bi-check-circle me-2"></i>{{ session('success') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+    @endif
+
+    @if(session('error'))
+      <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-triangle me-2"></i>{{ session('error') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+    @endif
+
     @if($devices->isEmpty())
         <div class="alert alert-success">
             <i class="bi bi-check-circle me-2"></i>
@@ -73,6 +88,7 @@
                 <th>IP Address</th>
                 <th>MAC Address</th>
                 <th>Extension</th>
+                <th style="width: 120px;">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -92,6 +108,11 @@
                   <td>{{ $device->ip_address }}</td>
                   <td>{{ $device->mac_address ?: 'N/A' }}</td>
                   <td>{{ $extList ?: 'No extension' }}</td>
+                  <td class="text-center">
+                    <button type="button" class="btn btn-danger btn-sm" onclick="confirmRemoveDevice('{{ $device->device_id }}', '{{ $device->ip_address }}')">
+                      <i class="bi bi-trash"></i> Remove
+                    </button>
+                  </td>
                 </tr>
               @endforeach
             </tbody>
@@ -107,4 +128,79 @@
     @endif
   </div>
 </div>
+
+{{-- MODAL: CONFIRM DEVICE REMOVAL --}}
+<div class="modal fade" id="deleteConfirmModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-danger text-white">
+        <h5 class="modal-title">
+          <i class="bi bi-exclamation-triangle me-2"></i>voipmonitor.uprm.edu says
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p class="mb-2">Are you sure you want to remove device <strong id="deleteDeviceIp"></strong> from this network?</p>
+        <p class="text-muted mb-0"><small>This action cannot be undone.</small></p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-danger" id="confirmDeleteBtn">
+          <i class="bi bi-trash me-1"></i> OK
+        </button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Confirm device removal
+let pendingDeleteDeviceId = null;
+let pendingDeleteDeviceIp = null;
+
+function confirmRemoveDevice(deviceId, ipAddress) {
+  // Store the device info
+  pendingDeleteDeviceId = deviceId;
+  pendingDeleteDeviceIp = ipAddress;
+  
+  // Update modal content
+  document.getElementById('deleteDeviceIp').textContent = ipAddress;
+  
+  // Show modal
+  const modal = new bootstrap.Modal(document.getElementById('deleteConfirmModal'));
+  modal.show();
+}
+
+// Handle actual deletion when OK is clicked
+document.addEventListener('DOMContentLoaded', function() {
+  const confirmBtn = document.getElementById('confirmDeleteBtn');
+  if (confirmBtn) {
+    confirmBtn.addEventListener('click', function() {
+      if (pendingDeleteDeviceId) {
+        // Create a form and submit it
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = `/devices/${pendingDeleteDeviceId}/remove`;
+        
+        // Add CSRF token
+        const csrfInput = document.createElement('input');
+        csrfInput.type = 'hidden';
+        csrfInput.name = '_token';
+        csrfInput.value = '{{ csrf_token() }}';
+        form.appendChild(csrfInput);
+        
+        // Add method spoofing for DELETE
+        const methodInput = document.createElement('input');
+        methodInput.type = 'hidden';
+        methodInput.name = '_method';
+        methodInput.value = 'DELETE';
+        form.appendChild(methodInput);
+        
+        document.body.appendChild(form);
+        form.submit();
+      }
+    });
+  }
+});
+</script>
 @endsection
